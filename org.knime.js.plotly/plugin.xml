@@ -10,4 +10,14 @@
             path="nodes/">
       </dynamicNodeFolder>
    </extension>
+   <extension
+         point="org.knime.workbench.repository.categories">
+      <category
+            icon="icons/missing.gif"
+            level-id="plotly"
+            locked="true"
+            name="Plotly"
+            path="/labs/js-views">
+     </category>
+    </extension>
 </plugin>
