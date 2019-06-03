@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="utf-8"?>
+<js:knimeNode
+	xmlns:js="http://knime.org/dynamicjsnode/v3.0"
+	xmlns="http://knime.org/dynamicnode/v3.0"
+	xmlns:n="http://knime.org/node/v2.12"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
+	jsNamespace="knimeContinuousErrorPlot" nodeID="plotly_continuous_error_plot"
+	categoryPath="/labs/js-views/plotly" icon="../js.png"
+	type="Visualizer">
+	<name>Continuous Error Plot (Plotly)</name>
+	<shortDescription>Continuous Error plot based on the Plotly.js library.</shortDescription>
+	<fullDescription>
+		<intro>
+			<n:p>
+				Continuous Error plot based on the Plotly.js library. This view
+				renders each
+				column or group as a line and displays the chosen
+				measure as a shaded area above and below based on the chosen calculation method.
+				Various measurement and
+				grouping options can provide insight into different
+				aspects of the
+				data set. Requires a data table with at least two
+				numeric columns.
+			</n:p>
+			<n:p>
+				The node supports custom CSS styling.
+				You can simply put CSS rules
+				into a single string and set it as a flow
+				variable 'customCSS'
+				in the
+				node configuration dialog.
+				Current KNIME classes are NOT YET
+				supported, so class names will have to be
+				deduced from the view
+				itself. We are hoping to support standard
+				KNIME
+				classes in an upcoming
+				release.
+				<!-- You will find the list of available classes and their description 
+					on our <n:a href="https://knime.com/css-styling">documentation page</n:a>. -->
+			</n:p>
+			<n:p>
+				Please note: the Plotly.js KNIME extension is currently in Beta. It
+				is recommended that you handle missing values and normalize your
+				data before using
+				visualization nodes in this extension until a more
+				stable version is released.
+				Please feel free to leave feedback and
+				suggestions on our community
+				forum
+				<n:a href="https://forum.knime.com/">here</n:a>
+				.
+			</n:p>
+		</intro>
+		<tab name="Options">
+			<description>
+				General options for the KNIME Continuous Error Plot with
+				Plotly. The columns will
+				be available for selection
+				within the view.
+			</description>
+			<options>
+				<!-- <svgOption name="Image" additionalWait="500" id="svg" portIndex="0" 
+					label="Image" enableDependency="generateImage"> Settings for image generation. 
+					</svgOption> -->
+				<columnSelectorOption name="X-Axis column"
+					id="xAxisColumn" inPortIndex="0" label="X-Axis column"
+					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue"
+					saveInView="true">
+					Select the column to be initially displayed along the
+					X-Axis.
+				</columnSelectorOption>
+				<columnFilterOption name="Included columns"
+					id="columns" inPortIndex="0" label="Included columns"
+					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue"
+					saveInView="true">
+					Select the columns to be plotted as lines or line segments.
+				</columnFilterOption>
+				<!-- <columnSelectorOption name="Y-Axis Column" id="yAxisColumn" inPortIndex="0" 
+					label="Y-Axis Column" filterClasses="org.knime.core.data.DoubleValue" saveInView="true"> 
+					Select the column to be initially displayed along the Y-Axis. </columnSelectorOption> -->
+				<checkBoxOption name="Enable grouping"
+					id="enableGroups" label="Enable grouping" defaultValue="false"
+					loadDefaults="true">
+					When enabled this will use the nominal/categorical
+					column selected as the 'Group-by' column to create separate line
+					segments for each group.
+				</checkBoxOption>
+				<!-- <checkBoxOption name="Aggregate data"
+					id="enableAggregate" label="Aggregate data" defaultValue="false"
+					loadDefaults="true">
+					When enabled this will use the columns selected in the 'Included columns' option 
+				</checkBoxOption> -->
+				<columnSelectorOption name="'Group-By' column"
+					id="groupByColumn" inPortIndex="0" label="'Group-By' Column"
+					filterClasses="org.knime.core.data.StringValue"
+					enableDependency="enableGroups" enableValue="true">
+					If a previous
+					cluster/binning
+					operation has been
+					performed, selected the column
+					containing each
+					rows membership
+					for a
+					more dynamic interactive
+					experience. These
+					nominal groups will be
+					used to categorize the data
+					as it's displayed
+					and allow you to
+					hide/show various groups by
+					clicking/double-clicking on the group
+					in
+					the legend.
+				</columnSelectorOption>
+				<radioButtonOption name="Error calculation method"
+					id="calcMethod"
+					possibleValues="Variance Standard&#160;Deviation Percent Fixed&#160;Value"
+					label="Error calculation method" defaultValue="Variance"
+					saveInView="true">
+					The error calculation method.
+				</radioButtonOption>
+				<doubleOption name="Calculation multiplier"
+					id="calcMultiplier" label="Calculation multiplier"
+					defaultValue=".5" minValue="0" maxValue="5" stepSize=".25"
+					enableDependency="calcMethod"
+					enableValue="Variance Standard&#160;Deviation">
+					The
+					scale of
+					the calculated values. For example,
+					selecting a value of
+					.5 and
+					choosing 'Standard Deviation' as the
+					calculation
+					method will
+					display
+					a shaded region above and below each line segment
+					.5 * Standard
+					Deviation.
+				</doubleOption>
+				<integerOption name="Percent" id="calcPercent"
+					label="Percent" defaultValue="5" minValue="0" maxValue="100"
+					stepSize="1" enableDependency="calcMethod" enableValue="Percent">
+					Enabled if
+					the Error calculation method is set to 'Percent',
+					this value
+					will be used to calculate the error at each point based
+					on the 'y' value for each point along the line. For
+					example, if this value is set to 5, the shaded region at point (0, 1)
+					will be
+					at (0,1.05) and (0,.95) which is +/- 5%.
+				</integerOption>
+				<doubleOption name="Fixed value" id="fixedValue"
+					label="Fixed value" defaultValue=".5" minValue="0" maxValue="5"
+					stepSize=".25" enableDependency="calcMethod"
+					enableValue="Fixed&#160;Value">
+					Enabled if the Error calculation
+					method is set to
+					'Fixed Value', this value will be the real number
+					distance between the edges of the shaded region and the actual line, +/- the
+					actual data point 'y' value. For example, if this
+					value is .5, a point at
+					(0,1) will have shaded edges at
+					(0,.5) and (0,1.5).
+				</doubleOption>
+				<!-- <checkBoxOption name="Report on missing values" id="reportMissing" 
+					label="Report on missing values" defaultValue="true" loadDefaults="true"> 
+					When enabled this will display a warning whenever there is a missing value 
+					present in the data. </checkBoxOption> <radioButtonOption name="Missing values 
+					handling" id="mValues" possibleValues="Skip&#160;rows&#160;with&#160;missing&#160;values 
+					Skip&#160;missing&#160;values Show&#160;missing&#160;values" label="Missing 
+					values" defaultValue="Skip&#160;rows&#160;with&#160;missing&#160;values" 
+					saveInView="true"> The way missing values are handled. </radioButtonOption> -->
+			</options>
+		</tab>
+		<tab name="General Plot Options">
+			<description>
+				These options control the initial state of the view.
+			</description>
+			<options>
+				<stringOption name="Title" id="title" label="Title"
+					defaultValue="Continuous Error" optional="true" saveInView="true">
+					The chart
+					title.
+				</stringOption>
+				<stringOption name="X-Axis label" id="xAxisLabel"
+					label="X-Axis label" optional="true" saveInView="true">
+					The label for the
+					X-Axis. If left blank, the current X-Axis feature name will be
+					used.
+				</stringOption>
+				<stringOption name="Y-Axis label" id="yAxisLabel"
+					label="Y-Axis label" optional="true" saveInView="true">
+					The label for the
+					Y-Axis. If left blank, the current Y-Axis feature name will be
+					used.
+				</stringOption>
+				<checkBoxOption name="Display legend" id="showLegend"
+					label="Display legend" defaultValue="true" saveInView="true">
+					When checked,
+					the chart's legend is displayed.
+				</checkBoxOption>
+				<checkBoxOption name="Show grid" id="showGrid"
+					label="Show grid" defaultValue="true" saveInView="true">
+					When checked,
+					a
+					grid is displayed on the chart.
+				</checkBoxOption>
+				<!-- <checkBoxOption name="Show warnings in view" id="showWarnings" label="Show 
+					warnings in view" defaultValue="true" saveInView="true"> When checked, the 
+					any warnings will be displayed in the view. </checkBoxOption> -->
+				<colorOption name="Background color"
+					id="backgroundColor" label="Background color" format="HexString"
+					defaultR="255" defaultG="255" defaultB="255" defaultAlpha="255">
+					The
+					background color of the plot, including the axes labels, the title
+					and the subtitle.
+				</colorOption>
+				<colorOption name="Data area color" id="daColor"
+					label="Data area color" format="HexString" defaultR="255"
+					defaultG="255" defaultB="255" defaultAlpha="255">
+					The background color of
+					the data area, within the axes.
+				</colorOption>
+			</options>
+		</tab>
+		<tab name="Control Options">
+			<description>
+				Use these options to configure the available controls
+				within the view.
+			</description>
+			<options>
+				<checkBoxOption name="Enable view controls"
+					id="enableViewControls" label="Enable view controls"
+					defaultValue="true">
+					Check to enable controls in the chart.
+				</checkBoxOption>
+				<checkBoxOption name="Show fullscreen button"
+					id="showFullscreen" label="Show fullscreen button"
+					defaultValue="true" saveInView="true"
+					enableDependency="enableViewControls" enableValue="true">
+					When checked,
+					a
+					fullscreen option is displayed in the KNIME interactive menu.
+				</checkBoxOption>
+				<checkBoxOption name="Enable tooltip toggle"
+					id="tooltipToggle" label="Enable tooltip toggle"
+					defaultValue="true" enableDependency="enableViewControls"
+					enableValue="true">
+					Check to enable toggling of the tooltip within the
+					view.
+				</checkBoxOption>
+				<checkBoxOption
+					name="Enable calculation method selection controls"
+					id="enableCalcMethodSelection"
+					label="Enable calculation method selection controls"
+					defaultValue="true" enableDependency="enableViewControls"
+					enableValue="true">
+					Check to enable
+					drop down menu's allowing you to switch
+					the error bar calculation method
+					in the view.
+				</checkBoxOption>
+				<checkBoxOption
+					name="Enable feature selection controls"
+					id="enableFeatureSelection"
+					label="Enable feature selection controls" defaultValue="true"
+					enableDependency="enableViewControls" enableValue="true">
+					Check to enable
+					drop down menu's allowing you to switch the features displayed on
+					the axes.
+				</checkBoxOption>
+				<checkBoxOption name="Enable text editing"
+					id="enableEditing" label="Enable text editing" defaultValue="true"
+					enableDependency="enableViewControls" enableValue="true">
+					Check to enable
+					the editing of the title and axis labels within the view.
+				</checkBoxOption>
+				<checkBoxOption
+					name="Enable 'Show only selected' toggle"
+					id="showSelectedOnlyToggle"
+					label="Enable 'Show only selected' toggle" defaultValue="true"
+					enableDependency="enableViewControls" enableValue="true">
+					Check to enable
+					toggling of selection-only within view.
+				</checkBoxOption>
+				<checkBoxOption
+					name="Enable publish selection toggle" id="publishSelectionToggle"
+					label="Enable publish selection toggle" defaultValue="true"
+					enableDependency="enableViewControls" enableValue="true">
+					Check to enable
+					toggling of selection publishing within view.
+				</checkBoxOption>
+				<checkBoxOption
+					name="Enable subscribe to selection toggle"
+					id="subscribeSelectionToggle"
+					label="Enable subscribe to selection toggle" defaultValue="true"
+					enableDependency="enableViewControls" enableValue="true">
+					Check to enable
+					toggling of selection subscription within view.
+				</checkBoxOption>
+				<checkBoxOption
+					name="Enable subscribe to filter toggle" id="subscribeFilterToggle"
+					label="Enable subscribe to filter toggle" defaultValue="true"
+					enableDependency="enableViewControls" enableValue="true">
+					Check to enable
+					toggling of filter subscription within view.
+				</checkBoxOption>
+				<checkBoxOption name="Enable link to Plotly editor"
+					id="enablePlotlyEditor" label="Enable link to Plotly editor"
+					defaultValue="false" enableDependency="enableViewControls"
+					enableValue="true">
+					Check to enable toggling of filter subscription within
+					view.
+				</checkBoxOption>
+			</options>
+		</tab>
+		<tab name="Interactivity">
+			<description>
+				This KNIME implementation of Plotly is compatible with
+				the other
+				interactive JavaScript views
+				in the KNIME analytics
+				platform. Use these options to control the
+				degree to which this chart
+				interacts with other views.
+			</description>
+			<options>
+				<checkBoxOption name="Enable selection"
+					id="enableSelection" label="Enable selection" defaultValue="true"
+					loadDefaults="true">
+					If checked a separate column containing checkboxes is
+					rendered in the
+					view.
+				</checkBoxOption>
+				<checkBoxOption name="Display clear selection button"
+					id="showClearSelectionButton"
+					label="Display clear selection button" defaultValue="true"
+					enableDependency="enableSelection" loadDefaults="true">
+					Displays a button
+					to clear current selection.
+				</checkBoxOption>
+				<checkBoxOption name="Subscribe to selection events"
+					id="subscribeToSelection" label="Subscribe to selection events"
+					defaultValue="true" loadDefaults="true"
+					enableDependency="enableSelection" enableValue="true"
+					saveInView="true">
+					If checked, the view reacts on notifications from other
+					interactive
+					views that the selection has
+					been changed. See also
+					"Publish selection events".
+				</checkBoxOption>
+				<checkBoxOption name="Publish selection events"
+					id="publishSelection" label="Publish selection events"
+					defaultValue="true" loadDefaults="true"
+					enableDependency="enableSelection" enableValue="true"
+					saveInView="true">
+					If checked, notifies other interactive views when user
+					changes the
+					selection in the current view.
+					See also "Subscribe to
+					selection events".
+				</checkBoxOption>
+				<checkBoxOption name="Subscribe to filter events"
+					id="subscribeToFilters" label="Subscribe to filter events"
+					defaultValue="true" loadDefaults="true" saveInView="true">
+					If checked, the
+					view reacts on notifications from other interactive
+					views that a
+					filter has
+					been created or modified.
+				</checkBoxOption>
+			</options>
+		</tab>
+	</fullDescription>
+	<interactiveView name="Continuous Error Plot">
+		The KNIME Continuous Error Plot with
+		Plotly.
+	</interactiveView>
+	<ports>
+		<inPort portType="Data" name="Display data" index="0">
+			Data table
+			containing two or more numeric columns to display in an interactive
+			Continuous Error Plot.
+		</inPort>
+	</ports>
+	<js:resources>
+		<js:resource type="js" path="continuousError.js" />
+		<js:resource type="css" path="continuousError.css" />
+	</js:resources>
+	<js:dependencies>
+		<js:dependency name="Plotly" path="plotly.js-1.47.4"
+			type="local" exports="Plotly" />
+		<js:dependency name="MultipleSelections"
+			path="MultipleSelections" type="local" exports="MultipleSelections" />
+	</js:dependencies>
+</js:knimeNode>
