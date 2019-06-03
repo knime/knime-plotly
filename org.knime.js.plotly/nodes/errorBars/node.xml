@@ -76,8 +76,7 @@
 					id="columns" inPortIndex="0" label="Included columns"
 					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue"
 					saveInView="true">
-					Select the columns to be plotted as spokes on the radar
-					plot.
+					Select the columns to be plotted as lines or line segments.
 				</columnFilterOption>
 				<!-- <columnSelectorOption name="Y-Axis Column" id="yAxisColumn" inPortIndex="0" 
 					label="Y-Axis Column" filterClasses="org.knime.core.data.DoubleValue" saveInView="true"> 
