@@ -4,7 +4,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
 	jsNamespace="knimeDensity2D" nodeID="plotly_density2D"
-    categoryPath="/labs/js-views/plotly" icon="./bar_chart.png" type="Visualizer">
+    categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
 	<name>2D Density Plot (Plotly)</name>
 	<shortDescription>A 2D Density plot with optional axis-based histograms built with the Plotly.js library.</shortDescription>
 	<fullDescription>
@@ -213,6 +213,5 @@
 	</js:resources>
 	<js:dependencies>
 		<js:dependency name="Plotly" path="plotly.js-1.47.4" type="local" exports="Plotly" />
-		<js:dependency name="Plotly_Debug" path="plotly.js-1.47.4_Debug" type="local" exports="PlotlyDebug" />
 	</js:dependencies>
 </js:knimeNode>

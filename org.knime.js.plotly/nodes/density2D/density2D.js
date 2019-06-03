@@ -1,6 +1,3 @@
-
-
-
 /////////////////PLOTLY DATA////////////////////////////
 var KnimelyDataProcessor = function () {
 
@@ -94,7 +91,7 @@ window.knimeDensity2D = (function () {
         this._columns = this._table.getColumnNames();
         this._knimelyObj = new KnimelyDataProcessor();
         this._knimelyObj.initialize(this._table,
-            this._representation.options.groupByColumn || "");
+            this._representation.options.groupByColumn || '');
         this._xAxisCol = this._value.options.xAxisColumn || this._columns[0];
         this._yAxisCol = this._value.options.yAxisColumn || this._columns[1];
         this._selected = [];
@@ -128,7 +125,7 @@ window.knimeDensity2D = (function () {
     };
 
     Density2D.createElement = function () {
-        //Create the plotly HTML element 
+        // Create the plotly HTML element
         let div = document.createElement('DIV');
         div.setAttribute('id', 'knime-density2D');
         document.body.append(div);
@@ -165,9 +162,9 @@ window.knimeDensity2D = (function () {
     Density2D.getSVG = function () {
         this.Plotly.toImage(this.Plotly.d3.select('#knime-density2D').node(),
             { format: 'svg', width: 800, height: 600 }).then(function (dataUrl) {
-                //TODO: decode URI
-                return decodeURIComponent(dataUrl)
-            })
+                // TODO: decode URI
+                return decodeURIComponent(dataUrl);
+            });
     };
 
     Density2D.ScatterTraceObject = function (xData, yData) {
@@ -178,8 +175,8 @@ window.knimeDensity2D = (function () {
         this.marker = {
             size: 4,
             opacity: 0.4
-        },
-            this.type = 'scatter';
+        };
+        this.type = 'scatter';
         this.unselected = {
             markers: {
                 opacity: .1
@@ -242,8 +239,7 @@ window.knimeDensity2D = (function () {
         };
         this.bargap = 0;
         this.xaxis = {
-            title: val.options.xAxisLabel ? val.options.xAxisLabel :
-                val.options.xAxisColumn,
+            title: val.options.xAxisLabel ? val.options.xAxisLabel : val.options.xAxisColumn,
             font: {
                 size: 12,
                 family: 'sans-serif'
@@ -258,8 +254,7 @@ window.knimeDensity2D = (function () {
 
         };
         this.yaxis = {
-            title: val.options.yAxisLabel ? val.options.yAxisLabel :
-                val.options.yAxisColumn,
+            title: val.options.yAxisLabel ? val.options.yAxisLabel : val.options.yAxisColumn,
             font: {
                 size: 12,
                 family: 'sans-serif'
@@ -399,12 +394,12 @@ window.knimeDensity2D = (function () {
                         self._selected.push(rowKey);
                         self.selectedDirectory[0].add(self._knimelyObj._rowDirectory[rowKey].pInd);
                         self.totalSelected++;
-                    })
+                    });
                 });
             } else {
                 data.points.forEach(function (pt) {
                     var rowObj = self._knimelyObj._rowDirectory[pt.text];
-                    self.selectedDirectory[pt.curveNumber].add(rowObj.pInd)
+                    self.selectedDirectory[pt.curveNumber].add(rowObj.pInd);
                     self._selected.push(pt.text);
                     self.totalSelected++;
                 });
@@ -425,7 +420,7 @@ window.knimeDensity2D = (function () {
             );
 
             this._selected.forEach(function (rowKey) {
-                var rowObj = self._knimelyObj._rowDirectory[rowKey]
+                var rowObj = self._knimelyObj._rowDirectory[rowKey];
                 if (rowObj !== undefined) { //only == undef with two different data sets 
                     self.selectedDirectory[rowObj.tInd].add(rowObj.pInd);
                     self.totalSelected++;
@@ -490,15 +485,15 @@ window.knimeDensity2D = (function () {
         var self = this;
         var changeObj = filteredObj || this.getEmptyChangeObject(['selectedpoints']);
 
-        //possible optimization. 
+        // possible optimization.
         this._knimelyObj._dataArray.forEach(function (dataObj, objInd) {
             var selPtInd = [];
-            dataObj.rowKeys.filter(function (rowKey, rowInd) {
+            dataObj.rowKeys.forEach(function (rowKey, rowInd) {
                 var rowObj = self._knimelyObj._rowDirectory[rowKey];
                 if (self.selectedDirectory[objInd].has(rowInd)) {
                     selPtInd.push(rowObj.fInd);
                 }
-            })
+            });
             changeObj['selectedpoints'][objInd] = self.totalSelected < 1 ? null : selPtInd;
         });
 
@@ -527,9 +522,9 @@ window.knimeDensity2D = (function () {
                     }
                     return included;
                 });
-            })
+            });
             changeObj['selectedpoints'][objInd] = [];
-        })
+        });
 
         changeObj = this.getSelectedChangeObject(changeObj);
 
@@ -586,7 +581,7 @@ window.knimeDensity2D = (function () {
     };
 
     Density2D.toggleShowOnlySelected = function () {
-        changeObj = this.getFilteredChangeObject(
+        var changeObj = this.getFilteredChangeObject(
             [this._xAxisCol, this._yAxisCol, 'rowColors', 'rowKeys', 'rowKeys'],
             ['x', 'y', 'marker.color', 'text', 'ids']
         );
@@ -626,7 +621,7 @@ window.knimeDensity2D = (function () {
                             changeObj['x'] = [changeObj['x'][0], changeObj['x'][0], changeObj['x'][0], null];
                             var layoutObj = {
                                 'xaxis.title': self._xAxisCol
-                            }
+                            };
                             self.Plotly.update('knime-density2D', changeObj, layoutObj);
                         }
                     }
@@ -651,7 +646,7 @@ window.knimeDensity2D = (function () {
                             changeObj['y'] = [changeObj['y'][0], changeObj['y'][0], null, changeObj['y'][0]];
                             var layoutObj = {
                                 'yaxis.title': self._yAxisCol
-                            }
+                            };
                             self.Plotly.update('knime-density2D', changeObj, layoutObj);
                         }
                     }
@@ -666,7 +661,7 @@ window.knimeDensity2D = (function () {
                 );
 
                 knimeService.addMenuDivider();
-            };
+            }
 
             if (this._representation.options.showDensityColorOptions) {
                 var colorScaleSelection = knimeService.createMenuSelect(
@@ -680,7 +675,7 @@ window.knimeDensity2D = (function () {
                             self.colorscale = this.value;
                             var changeObj = {
                                 colorscale: [null, self.colorscale, null, null]
-                            }
+                            };
                             self.Plotly.restyle('knime-density2D', changeObj);
                         }
                     }
@@ -706,8 +701,7 @@ window.knimeDensity2D = (function () {
                         if (self._representation.options.tooltipToggle !== this.checked) {
                             self._representation.options.tooltipToggle = this.checked;
                             var layoutObj = {
-                                hovermode: self._representation.options.tooltipToggle ?
-                                    'closest' : false
+                                hovermode: self._representation.options.tooltipToggle ? 'closest' : false
                             };
                             self.Plotly.relayout('knime-density2D', layoutObj);
                         }

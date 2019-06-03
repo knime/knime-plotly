@@ -13,43 +13,11 @@
    <extension
          point="org.knime.workbench.repository.categories">
       <category
-            icon="icons/missing.gif"
+            icon="nodes/js.png"
             level-id="plotly"
             locked="true"
             name="Plotly"
             path="/labs/js-views">
      </category>
     </extension>
-   <extension
-         point="org.knime.js.core.webResources">
-      <webResourceBundle
-            debug="true"
-            name="2D Density Plot"
-            usesDefine="false"
-            version="1.0.0"
-            webResourceBundleID="org.knime.js.plotly.density2DBundle">
-         <webResource
-               relativePathSource="nodes/density2D/density2D.js"
-               relativePathTarget="org/knime/js/plotly/density2D/density2D.js">
-         </webResource>
-         <webResource
-               relativePathSource="nodes/density2D/density2D.css"
-               relativePathTarget="org/knime/js/plotly/density2D/density2D.css">
-         </webResource>
-         <importResource
-               relativePath="org/knime/js/plotly/density2D/density2D.js"
-               type="JAVASCRIPT">
-         </importResource>
-         <importResource
-               relativePath="org/knime/js/plotly/density2D/density2D.css"
-               type="CSS">
-         </importResource>
-         <webDependency
-               webResourceBundleID="plotly.js-1.47.4">
-         </webDependency>
-         <webDependency
-               webResourceBundleID="plotly.js-1.47.4_Debug">
-         </webDependency>
-      </webResourceBundle>
-   </extension>
 </plugin>
