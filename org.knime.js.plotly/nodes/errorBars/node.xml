@@ -86,7 +86,7 @@
 					loadDefaults="true">
 					When enabled this will use the nominal/categorical
 					column selected as the 'Group-by' column to create separate line
-					segments for each grouped
+					segments for each group.
 				</checkBoxOption>
 				<!-- <checkBoxOption name="Aggregate data"
 					id="enableAggregate" label="Aggregate data" defaultValue="false"
