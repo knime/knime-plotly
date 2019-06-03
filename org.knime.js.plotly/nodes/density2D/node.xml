@@ -69,7 +69,7 @@
         	</description>
 			<options>
 				<stringOption name="Title" id="title" label="Title"
-					defaultValue="Scatter Plot" optional="true" saveInView="true">
+					defaultValue="Density Plot" optional="true" saveInView="true">
 					The chart title.
 				</stringOption>
 				<stringOption name="X-Axis label" id="xAxisLabel" label="X-Axis label"
