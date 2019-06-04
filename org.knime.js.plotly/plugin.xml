@@ -20,37 +20,5 @@
             path="/labs/js-views">
      </category>
     </extension>
-   <extension
-         point="org.knime.js.core.webResources">
-      <webResourceBundle
-            debug="true"
-            name="3D Scatter Plot"
-            usesDefine="false"
-            version="1.0.0"
-            webResourceBundleID="org.knime.js.plotly.scatterPlot3DBundle">
-         <webResource
-               relativePathSource="nodes/scatterPlot3D/scatterPlot3D.js"
-               relativePathTarget="org/knime/js/plotly/scatterPlot3D/scatterPlot3D.js">
-         </webResource>
-         <webResource
-               relativePathSource="nodes/scatterPlot3D/scatterPlot3D.css"
-               relativePathTarget="org/knime/js/plotly/scatterPlot3D/scatterPlot3D.css">
-         </webResource>
-         <importResource
-               relativePath="org/knime/js/plotly/scatterPlot3D/scatterPlot3D.js"
-               type="JAVASCRIPT">
-         </importResource>
-         <importResource
-               relativePath="org/knime/js/plotly/scatterPlot3D/scatterPlot3D.css"
-               type="CSS">
-         </importResource>
-         <webDependency
-               webResourceBundleID="plotly.js-1.47.4">
-         </webDependency>
-         <webDependency
-               webResourceBundleID="plotly.js-1.47.4_Debug">
-         </webDependency>
-      </webResourceBundle>
-   </extension>
 
 </plugin>

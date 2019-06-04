@@ -4,7 +4,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
 	jsNamespace="knimePlotlyScatterPlot3D" nodeID="plotly_scatter_plot_3D"
-    categoryPath="/labs/js-views/plotly" icon="./bar_chart.png" type="Visualizer">
+    categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
 	<name>3D Scatter Plot (Plotly)</name>
 	<shortDescription>A 3D scatter plot based on the Plotly.js library.</shortDescription>
 	<fullDescription>
@@ -214,6 +214,5 @@
 	</js:resources>
 	<js:dependencies>
 		<js:dependency name="Plotly" path="plotly.js-1.47.4" type="local" exports="Plotly" />
-		<js:dependency name="Plotly_Debug" path="plotly.js-1.47.4_Debug" type="local" exports="PlotlyDebug" />
 	</js:dependencies>
 </js:knimeNode>
