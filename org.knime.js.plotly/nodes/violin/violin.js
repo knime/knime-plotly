@@ -1,6 +1,3 @@
-
-
-
 /////////////////PLOTLY DATA////////////////////////////
 var KnimelyDataProcessor = function () {
 
@@ -90,7 +87,7 @@ window.knimeViolin = (function () {
         this.Plotly = arguments[2][0];
         this._representation = representation;
         this._value = value;
-        this._table = new kt()
+        this._table = new kt();
         this._table.setDataTable(representation.inObjects[0]);
         this._columns = this._table.getColumnNames();
         this._columnTypes = this._table.getColumnTypes();
@@ -98,8 +95,7 @@ window.knimeViolin = (function () {
             return self._columnTypes[i] === 'number';
         });
         this._knimelyObj = new KnimelyDataProcessor();
-        this._knimelyObj.initialize(this._table,
-            "this._representation.options.groupByColumn");
+        this._knimelyObj.initialize(this._table, 'this._representation.options.groupByColumn');
         this._axisCol = this._value.options.axisColumn || this._columns[0];
         this._groupByCol = this._representation.options.groupByColumn || 'Data Set';
         this._selected = [];
@@ -137,8 +133,8 @@ window.knimeViolin = (function () {
     };
 
     ViolinPlot.createElement = function () {
-        //Create the plotly HTML element 
-        let div = document.createElement('DIV');
+        // Create the plotly HTML element
+        let div = document.createElement('div');
         div.setAttribute('id', 'knime-violin');
         document.body.append(div);
     };
@@ -146,7 +142,8 @@ window.knimeViolin = (function () {
     ViolinPlot.createTraces = function () {
         var self = this;
         var traces = this._knimelyObj._dataArray.map(function (dataObj) {
-            var trace = new self.TraceObject(dataObj[self._axisCol], self, dataObj[self._groupByCol], dataObj.rowColors);
+            var trace = new self.TraceObject(dataObj[self._axisCol], self, dataObj[self._groupByCol],
+                dataObj.rowColors);
             trace.text = dataObj.rowKeys;
             trace.name = dataObj.name;
             trace.ids = dataObj.rowKeys;
@@ -158,10 +155,10 @@ window.knimeViolin = (function () {
     ViolinPlot.getSVG = function () {
         this.Plotly.toImage(this.Plotly.d3.select('#knime-violin').node(),
             { format: 'svg', width: 800, height: 600 }).then(function (dataUrl) {
-                //TODO: decode URI
-                return decodeURIComponent(dataUrl)
-            })
-    }
+                // TODO: decode URI
+                return decodeURIComponent(dataUrl);
+            });
+    };
 
     ViolinPlot.TraceObject = function (numData, self, groupData, colors) {
         var style = [];
@@ -183,13 +180,13 @@ window.knimeViolin = (function () {
 
         Array.from(groupSet).forEach(function (group) {
             var min = 0;
-            var color = '#8dd3c7'
+            var color = '#8dd3c7';
             groupColors.get(group).forEach(function (value, key) {
                 if (value > min) {
                     min = value;
                     color = key;
                 }
-            })
+            });
             style.push({
                 target: group,
                 value: {
@@ -197,12 +194,10 @@ window.knimeViolin = (function () {
                         color: color
                     }
                 }
-            })
-        })
-        this.x = self._value.options.plotDirection === 'Vertical' ? groupData :
-            numData;
-        this.y = self._value.options.plotDirection === 'Vertical' ? numData :
-            '0';
+            });
+        });
+        this.x = self._value.options.plotDirection === 'Vertical' ? groupData : numData;
+        this.y = self._value.options.plotDirection === 'Vertical' ? numData : '0';
         this.type = 'violin';
         this.points = 'none';
         this.box = {
@@ -212,7 +207,7 @@ window.knimeViolin = (function () {
             visible: true
         };
         this.line = {
-            color: 'green',
+            color: 'green'
         };
         this.transforms = [{
             type: 'groupby',
@@ -221,11 +216,11 @@ window.knimeViolin = (function () {
         }];
 
         return this;
-    }
+    };
 
     ViolinPlot.LayoutObject = function (rep, val) {
         var groupedColLabel = rep.options.groupedAxisLabel || rep.options.groupByColumn;
-        var numericColLabel = val.options.numAxisLabel || val.options.axisColumn
+        var numericColLabel = val.options.numAxisLabel || val.options.axisColumn;
         this.title = {
             text: val.options.title || 'Violin Plot',
             y: 1,
@@ -236,42 +231,38 @@ window.knimeViolin = (function () {
         this.autoSize = true;
         this.legend = {
             x: 1,
-            y: 1,
+            y: 1
         };
         this.font = {
             size: 12,
             family: 'sans-serif'
         };
         this.xaxis = {
-            title: val.options.plotDirection === 'Vertical' ? groupedColLabel :
-                numericColLabel,
+            title: val.options.plotDirection === 'Vertical' ? groupedColLabel : numericColLabel,
             font: {
                 size: 12,
                 family: 'sans-serif'
             },
             showgrid: val.options.plotDirection === 'Vertical' ? false : val.options.showGrid,
-            gridcolor: '#fffff', //potential option
-            linecolor: '#fffff', //potential option
+            gridcolor: '#fffff', // potential option
+            linecolor: '#fffff', // potential option
             linewidth: 1,
             zeroline: val.options.plotDirection === 'Vertical' ? val.options.showGrid : false
         };
         this.yaxis = {
-            title: val.options.plotDirection === 'Vertical' ? numericColLabel :
-                groupedColLabel,
+            title: val.options.plotDirection === 'Vertical' ? numericColLabel : groupedColLabel,
             font: {
                 size: 12,
                 family: 'sans-serif'
             },
-            showgrid: val.options.plotDirection === 'Vertical' ? val.options.showGrid :
-                false,
-            gridcolor: '#fffff', //potential option
-            linecolor: '#fffff', //potential option
+            showgrid: val.options.plotDirection === 'Vertical' ? val.options.showGrid : false,
+            gridcolor: '#fffff', // potential option
+            linecolor: '#fffff', // potential option
             linewidth: 1,
             zeroline: val.options.plotDirection === 'Vertical' ? false : val.options.showGrid
         };
         this.margin = {
-            l: val.options.plotDirection === 'Vertical' ? 55 :
-            90,
+            l: val.options.plotDirection === 'Vertical' ? 55 : 90,
             r: 20,
             b: 55,
             t: 60,
@@ -296,8 +287,7 @@ window.knimeViolin = (function () {
         this.editable = rep.options.enableEditing;
         this.scrollZoom = true;
         this.showLink = rep.options.enablePlotlyEditor;
-        this.modeBarButtonsToRemove = ['hoverClosestCartesian',
-            'hoverCompareCartesian'];
+        this.modeBarButtonsToRemove = ['hoverClosestCartesian', 'hoverCompareCartesian'];
         return this;
     };
 
@@ -339,7 +329,7 @@ window.knimeViolin = (function () {
 
     ViolinPlot.onSelectionChange = function (data) {
         this.updateSelected(data);
-        if (knimeService.getGlobalService()) { //prevents boxes going away in single view
+        if (knimeService.getGlobalService()) { // prevents boxes going away in single view
             var changeObj;
             if (this.showOnlySelected) {
                 var changeObj = this.getFilteredChangeObject(
@@ -379,7 +369,7 @@ window.knimeViolin = (function () {
 
             data.points.forEach(function (pt) {
                 var rowObj = self._knimelyObj._rowDirectory[pt.text];
-                self.selectedDirectory[pt.curveNumber].add(rowObj.pInd)
+                self.selectedDirectory[pt.curveNumber].add(rowObj.pInd);
                 self._selected.push(pt.text);
                 self.totalSelected++;
             });
@@ -399,7 +389,7 @@ window.knimeViolin = (function () {
             );
 
             this._selected.forEach(function (rowKey) {
-                var rowObj = self._knimelyObj._rowDirectory[rowKey]
+                var rowObj = self._knimelyObj._rowDirectory[rowKey];
                 if (rowObj !== undefined) { //only == undef with two different data sets 
                     self.selectedDirectory[rowObj.tInd].add(rowObj.pInd);
                     self.totalSelected++;
@@ -454,7 +444,7 @@ window.knimeViolin = (function () {
                             }
                         });
                         self.includedDirectory[objInd] = filteredIndicies;
-                    })
+                    });
                 }
             }
         });
@@ -464,14 +454,15 @@ window.knimeViolin = (function () {
         var self = this;
         var changeObj = filteredObj || this.getEmptyChangeObject(['selectedpoints']);
 
-        //possible optimization. 
+        // possible optimization.
         this._knimelyObj._dataArray.forEach(function (dataObj, objInd) {
-            changeObj['selectedpoints'][objInd] = self.totalSelected < 1 ? null : dataObj.rowKeys.map(function (rowKey, rowInd) {
-                var rowObj = self._knimelyObj._rowDirectory[rowKey];
-                if (self.selectedDirectory[objInd].has(rowInd)) {
-                    return rowObj.fInd;
-                }
-            })
+            changeObj['selectedpoints'][objInd] = self.totalSelected < 1 ? null
+                : dataObj.rowKeys.map(function (rowKey, rowInd) {
+                    var rowObj = self._knimelyObj._rowDirectory[rowKey];
+                    if (self.selectedDirectory[objInd].has(rowInd)) {
+                        return rowObj.fInd;
+                    }
+                });
         });
 
         return changeObj;
@@ -499,9 +490,9 @@ window.knimeViolin = (function () {
                     }
                     return included;
                 });
-            })
+            });
             changeObj['selectedpoints'][objInd] = [];
-        })
+        });
 
         changeObj = this.getSelectedChangeObject(changeObj);
 
@@ -522,28 +513,28 @@ window.knimeViolin = (function () {
         var groupSet = new Set([]);
         var groupColors = new Map([]);
         groupData.forEach(function (group, gInd) {
-            if (!groupSet.has(group)) {
-                groupSet.add(group);
-                var gColorMap = new Map([]);
-                gColorMap.set(colors[gInd], 1);
-                groupColors.set(group, gColorMap);
-            } else {
+            if (groupSet.has(group)) {
                 var gColorMap = groupColors.get(group);
                 var count = gColorMap.has(colors[gInd]) ? gColorMap.get(colors[gInd]) + 1 : 1;
                 gColorMap.set(colors[gInd], count);
+                groupColors.set(group, gColorMap);
+            } else {
+                groupSet.add(group);
+                var gColorMap = new Map([]);
+                gColorMap.set(colors[gInd], 1);
                 groupColors.set(group, gColorMap);
             }
         });
 
         Array.from(groupSet).forEach(function (group) {
             var min = 0;
-            var color = '#8dd3c7'
+            var color = '#8dd3c7';
             groupColors.get(group).forEach(function (value, key) {
                 if (value > min) {
                     min = value;
                     color = key;
                 }
-            })
+            });
             style.push({
                 target: group,
                 value: {
@@ -551,7 +542,7 @@ window.knimeViolin = (function () {
                         color: color
                     }
                 }
-            })
+            });
         });
 
         var transforms = [{
@@ -561,7 +552,7 @@ window.knimeViolin = (function () {
         }];
 
         return transforms;
-    }
+    };
 
     ViolinPlot.getEmptyChangeObject = function (pKeys) {
         var self = this;
@@ -653,7 +644,7 @@ window.knimeViolin = (function () {
                             var layoutObjKey = self.plotlyNumColKey + 'axis.title';
                             var layoutObj = {
                                 [layoutObjKey]: self._axisCol
-                            }
+                            };
                             self.Plotly.update('knime-violin', changeObj, layoutObj);
                         }
                     }
@@ -703,8 +694,7 @@ window.knimeViolin = (function () {
                         if (self._representation.options.tooltipToggle !== this.checked) {
                             self._representation.options.tooltipToggle = this.checked;
                             var layoutObj = {
-                                hovermode: self._representation.options.tooltipToggle ?
-                                    'closest' : false
+                                hovermode: self._representation.options.tooltipToggle ? 'closest' : false
                             };
                             self.Plotly.relayout('knime-violin', layoutObj);
                         }

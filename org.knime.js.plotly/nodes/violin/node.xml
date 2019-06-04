@@ -78,7 +78,7 @@
         	</description>
 			<options>
 				<stringOption name="Title" id="title" label="Title"
-					defaultValue="Scatter Plot" optional="true" saveInView="true">
+					defaultValue="Violin Plot" optional="true" saveInView="true">
 					The chart title.
 				</stringOption>
 				<stringOption name="Numeric axis label" id="numAxisLabel" label="Numeric axis label"
