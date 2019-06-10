@@ -1,12 +1,11 @@
 /* global kt:false, KnimePlotlyInterface:false  */
-window.knimePlotlyScatterPlot3D = (function () {
+window.knimeDensity = (function () {
 
-    var ScatterPlot3D = {};
+    var Density = {};
 
-    ScatterPlot3D.init = function (representation, value) {
+    Density.init = function (representation, value) {
 
         var self = this;
-        this.Plotly = arguments[2][0];
         this.KPI = new KnimePlotlyInterface();
         this.KPI.initialize(representation, value, new kt(), arguments[2][0]);
         this.columns = this.KPI.table.getColumnNames();
@@ -16,58 +15,80 @@ window.knimePlotlyScatterPlot3D = (function () {
         });
         this.xAxisCol = this.KPI.value.options.xAxisColumn || this.columns[0];
         this.yAxisCol = this.KPI.value.options.yAxisColumn || this.columns[1];
-        this.zAxisCol = this.KPI.value.options.zAxisColumn || this.columns[2];
         this.onSelectionChange = this.onSelectionChange.bind(this);
         this.onFilterChange = this.onFilterChange.bind(this);
+        this.colorscale = 'Hot';
 
         this.drawChart();
         this.drawKnimeMenu();
         this.KPI.mountAndSubscribe(this.onSelectionChange, this.onFilterChange);
     };
 
-    ScatterPlot3D.drawChart = function () {
+    Density.drawChart = function () {
         var t = this.createTraces();
         var l = new this.LayoutObject(this.KPI.representation, this.KPI.value);
         var c = new this.ConfigObject(this.KPI.representation, this.KPI.value);
-        this.KPI.createElement('knime-scatter3D');
+        this.KPI.createElement('knime-density');
         this.KPI.drawChart(t, l, c);
     };
 
-    ScatterPlot3D.createTraces = function () {
+    Density.createTraces = function () {
         var self = this;
         var traces = [];
         var keys = {
-            dataKeys: [self.xAxisCol, self.yAxisCol, self.zAxisCol, 'rowKeys', 'rowColors'],
-            plotlyKeys: [['x'], ['y'], ['z'], ['text', 'ids'], ['marker.color']]
+            dataKeys: [self.xAxisCol, self.yAxisCol, 'rowKeys', 'rowColors'],
+            plotlyKeys: [['x'], ['y'], ['text', 'ids'], ['marker.color']]
         };
 
         var data = this.KPI.getData(keys);
 
         data.names.forEach(function (group, groupInd) {
-            var newTrace = new self.TraceObject(data[self.xAxisCol][groupInd],
-                data[self.yAxisCol][groupInd], data[self.zAxisCol][groupInd]);
+
+            var newTrace = new self.ScatterTraceObject(data[self.xAxisCol][groupInd],
+                data[self.yAxisCol][groupInd]);
             newTrace.marker.color = data.rowColors[groupInd];
             newTrace.text = data.rowKeys[groupInd];
             newTrace.ids = data.rowKeys[groupInd];
             newTrace.dataKeys = keys.dataKeys;
             newTrace.name = group;
             traces.push(newTrace);
+
+            var densityTrace = new self.DensityTraceObject(data[self.xAxisCol][groupInd],
+                data[self.yAxisCol][groupInd]);
+            densityTrace.text = data.rowKeys[groupInd];
+            densityTrace.ids = data.rowKeys[groupInd];
+            densityTrace.dataKeys = keys.dataKeys;
+            densityTrace.name = group;
+            traces.push(densityTrace);
+
+            var xHistTrace = new self.XHistogramTraceObject(data[self.xAxisCol][groupInd]);
+            xHistTrace.text = data.rowKeys[groupInd];
+            xHistTrace.ids = data.rowKeys[groupInd];
+            xHistTrace.dataKeys = [self.xAxisCol, null, 'rowKeys', 'rowColors'];
+            xHistTrace.name = group;
+            traces.push(xHistTrace);
+
+            var yHistTrace = new self.YHistogramTraceObject(data[self.yAxisCol][groupInd]);
+            yHistTrace.text = data.rowKeys[groupInd];
+            yHistTrace.ids = data.rowKeys[groupInd];
+            yHistTrace.dataKeys = [null, self.yAxisCol, 'rowKeys', 'rowColors'];
+            yHistTrace.name = group;
+            traces.push(yHistTrace);
         });
+
         return traces;
     };
 
-    ScatterPlot3D.TraceObject = function (xData, yData, zData) {
+    Density.ScatterTraceObject = function (xData, yData) {
         this.x = xData;
         this.y = yData;
-        this.z = zData;
         this.mode = 'markers';
-        this.type = 'scatter3d'; // possible to do scattergl
-        this.name = '';
+        this.name = 'points';
         this.marker = {
-            color: [],
-            opacity: .3,
-            size: 5
+            size: 4,
+            opacity: 0.4
         };
+        this.type = 'scatter';
         this.unselected = {
             marker: {
                 opacity: .1
@@ -81,9 +102,39 @@ window.knimePlotlyScatterPlot3D = (function () {
         return this;
     };
 
-    ScatterPlot3D.LayoutObject = function (rep, val) {
+    Density.DensityTraceObject = function (xData, yData) {
+        this.x = xData;
+        this.y = yData;
+        this.name = 'density';
+        this.ncontours = 20;
+        this.colorscale = 'Hot';
+        this.reversescale = true;
+        this.showscale = false;
+        this.type = 'histogram2dcontour';
+        return this;
+    };
+
+    Density.XHistogramTraceObject = function (xData) {
+        this.x = xData;
+        this.name = 'x density';
+        this.marker = { color: 'rgb(102,0,0)' };
+        this.yaxis = 'y2';
+        this.type = 'histogram';
+        return this;
+    };
+
+    Density.YHistogramTraceObject = function (yData) {
+        this.y = yData;
+        this.name = 'y density';
+        this.marker = { color: 'rgb(102,0,0)' };
+        this.xaxis = 'x2';
+        this.type = 'histogram';
+        return this;
+    };
+
+    Density.LayoutObject = function (rep, val) {
         this.title = {
-            text: val.options.title || '3D Scatter Plot',
+            text: val.options.title || 'Density Plot',
             y: 1,
             yref: 'paper',
             yanchor: 'bottom'
@@ -98,6 +149,48 @@ window.knimePlotlyScatterPlot3D = (function () {
             size: 12,
             family: 'sans-serif'
         };
+        this.bargap = 0;
+        this.xaxis = {
+            title: val.options.xAxisLabel ? val.options.xAxisLabel : val.options.xAxisColumn,
+            font: {
+                size: 12,
+                family: 'sans-serif'
+            },
+            domain: [0, 0.84],
+            type: 'linear',
+            showgrid: false,
+            gridcolor: '#fffff', // potential option
+            linecolor: '#fffff', // potential option
+            linewidth: 1,
+            nticks: 10
+
+        };
+        this.yaxis = {
+            title: val.options.yAxisLabel ? val.options.yAxisLabel : val.options.yAxisColumn,
+            font: {
+                size: 12,
+                family: 'sans-serif'
+            },
+            domain: [0, 0.84],
+            type: 'linear',
+            showgrid: false,
+            gridcolor: '#fffff', // potential option
+            linecolor: '#fffff', // potential option
+            linewidth: 1,
+            nticks: 10
+        };
+        this.xaxis2 = {
+            title: '',
+            domain: [0.85, 1],
+            showgrid: false,
+            zeroline: false
+        };
+        this.yaxis2 = {
+            title: '',
+            domain: [0.85, 1],
+            showgrid: false,
+            zeroline: false
+        };
         this.margin = {
             l: 55,
             r: 20,
@@ -105,61 +198,12 @@ window.knimePlotlyScatterPlot3D = (function () {
             t: 60,
             pad: 0
         };
-        this.scene = {
-            camera: {
-                eye: {
-                    x: 1.5,
-                    y: 1.5,
-                    z: .5
-                }
-            },
-            zaxis: {
-                title: val.options.zAxisLabel ? val.options.zAxisLabel : val.options.zAxisColumn,
-                font: {
-                    size: 12,
-                    family: 'sans-serif'
-                },
-                type: 'linear',
-                showgrid: val.options.showGrid,
-                gridcolor: '#fffff', // potential option
-                linecolor: '#fffff', // potential option
-                linewidth: 1,
-                nticks: 10
-            },
-            yaxis: {
-                title: val.options.yAxisLabel ? val.options.yAxisLabel : val.options.yAxisColumn,
-                font: {
-                    size: 12,
-                    family: 'sans-serif'
-                },
-                type: 'linear',
-                showgrid: val.options.showGrid,
-                gridcolor: '#fffff', // potential option
-                linecolor: '#fffff', // potential option
-                linewidth: 1,
-                nticks: 10
-            },
-            xaxis: {
-                title: val.options.xAxisLabel ? val.options.xAxisLabel : val.options.xAxisColumn,
-                font: {
-                    size: 12,
-                    family: 'sans-serif'
-                },
-                type: 'linear',
-                showgrid: val.options.showGrid,
-                gridcolor: '#fffff', // potential option
-                linecolor: '#fffff', // potential option
-                linewidth: 1,
-                nticks: 10
-
-            }
-        };
         this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none';
         this.paper_bgcolor = rep.options.daColor || '#ffffff';
         this.plot_bgcolor = rep.options.backgroundColor || '#ffffff';
     };
 
-    ScatterPlot3D.ConfigObject = function (rep, val) {
+    Density.ConfigObject = function (rep, val) {
         this.toImageButtonOptions = {
             format: 'svg', // one of png, svg, jpeg, webp
             filename: 'custom_image',
@@ -173,100 +217,26 @@ window.knimePlotlyScatterPlot3D = (function () {
         this.scrollZoom = true;
         this.showLink = rep.options.enablePlotlyEditor;
         this.modeBarButtonsToRemove = ['hoverClosestCartesian',
-            'hoverCompareCartesian', 'hovermode'];
+            'hoverCompareCartesian'];
         return this;
     };
 
-    ScatterPlot3D.onSelectionChange = function (data) {
-        this.updateSelected(data);
-        if (knimeService.getGlobalService()) { // prevents boxes going away in single view
-            var changeObj;
-            if (this.showOnlySelected) {
-                changeObj = this.getFilteredChangeObject(
-                    [this.xAxisCol, this.yAxisCol, 'rowColors', 'rowKeys', this.zAxisCol, 'rowKeys'],
-                    ['x', 'y', 'marker.color', 'text', 'z', 'ids']
-                );
-            } else {
-                changeObj = this.getSelectedChangeObject();
-            }
-            this.Plotly.restyle('knime-scatter3D', changeObj);
+    Density.onSelectionChange = function (data) {
+        if (data) {
+            this.KPI.updateSelected(data);
+            this.KPI.update();
         }
     };
 
-    ScatterPlot3D.onFilterChange = function (data) {
-        this.updateFilter(data);
-        var changeObj = this.getFilteredChangeObject(
-            [this.xAxisCol, this.yAxisCol, 'rowColors', 'rowKeys', this.zAxisCol, 'rowKeys'],
-            ['x', 'y', 'marker.color', 'text', 'z', 'ids']
-        );
-        this.Plotly.restyle('knime-scatter3D', changeObj);
+    Density.onFilterChange = function (data) {
+        if (data) {
+            this.KPI.updateFilter(data);
+            var changeObj = this.KPI.getFilteredChangeObject();
+            this.KPI.update(changeObj);
+        }
     };
 
-    ScatterPlot3D.getSelectedChangeObject = function (filteredObj) {
-        var self = this;
-        var changeObj = filteredObj || this.getEmptyChangeObject(['selectedpoints', 'marker.color']);
-        changeObj['marker.opacity'] = [];
-
-        this.knimelyObj.dataArray.forEach(function (dataObj, objInd) {
-            var selectedPoints = [];
-            dataObj.rowKeys.forEach(function (rowKey, rowInd) {
-                var rowObj = self.knimelyObj.rowDirectory[rowKey];
-                if (self.totalSelected > 0) {
-                    if (self.selectedDirectory[objInd].has(rowInd)) {
-                        changeObj['marker.color'][objInd][rowObj.fInd] = dataObj.rowColors[rowInd];
-                        selectedPoints.push(rowObj.fInd);
-                    }
-                    changeObj['marker.color'][objInd][rowObj.fInd] = '#d3d3d3';
-                } else {
-                    changeObj['marker.color'][objInd][rowObj.fInd] = dataObj.rowColors[rowInd];
-                }
-            });
-
-            changeObj.selectedpoints[objInd] = selectedPoints;
-
-            if (self.showOnlySelected) {
-                changeObj['marker.opacity'][objInd] = self.selected.length < 1 ? 0.00001 : 0.4;
-            } else {
-                changeObj['marker.opacity'][objInd] = .4;
-            }
-        });
-        return changeObj;
-    };
-
-    ScatterPlot3D.getFilteredChangeObject = function (keys, pKeys) {
-
-        var self = this;
-        var changeObj = this.getEmptyChangeObject(pKeys);
-        changeObj.selectedpoints = [];
-        changeObj['marker.color'] = [];
-
-        this.knimelyObj.dataArray.forEach(function (dataObj, objInd) {
-            keys.forEach(function (key, keyInd) {
-                var count = 0;
-                changeObj[pKeys[keyInd]][objInd] = dataObj[key].filter(function (val, valInd) {
-                    var included = self.includedDirectory[objInd].has(valInd);
-                    if (self.showOnlySelected && included && self.selected.length > 0) {
-                        included = self.selectedDirectory[objInd].has(valInd);
-                    }
-                    if (included) {
-                        self.knimelyObj.rowDirectory[dataObj.rowKeys[valInd]].fInd = count;
-                        count++;
-                    } else {
-                        self.knimelyObj.rowDirectory[dataObj.rowKeys[valInd]].fInd = -1;
-                    }
-                    return included;
-                });
-            });
-            changeObj.selectedpoints[objInd] = null;
-            changeObj['marker.color'][objInd] = [];
-        });
-
-        changeObj = this.getSelectedChangeObject(changeObj);
-
-        return changeObj;
-    };
-
-    ScatterPlot3D.drawKnimeMenu = function () {
+    Density.drawKnimeMenu = function () {
 
         var self = this;
 
@@ -300,8 +270,7 @@ window.knimePlotlyScatterPlot3D = (function () {
                                 'xaxis.title': self.xAxisCol
                             };
                             var keys = {
-                                dataKeys: [self.xAxisCol, self.yAxisCol, self.zAxisCol, 'rowKeys', 'rowColors'],
-                                plotlyKeys: [['x'], ['y'], ['z'], ['text', 'ids'], ['marker.color']]
+                                dataKeys: [self.xAxisCol, null, null, null]
                             };
                             var valueObj = {
                                 xAxisColumn: self.xAxisCol
@@ -329,11 +298,10 @@ window.knimePlotlyScatterPlot3D = (function () {
                         if (self.yAxisCol !== this.value) {
                             self.yAxisCol = this.value;
                             var layoutObj = {
-                                'yaxis.title': self.yAxisCol
+                                'xaxis.title': self.yAxisCol
                             };
                             var keys = {
-                                dataKeys: [self.xAxisCol, self.yAxisCol, self.zAxisCol, 'rowKeys', 'rowColors'],
-                                plotlyKeys: [['x'], ['y'], ['z'], ['text', 'ids'], ['marker.color']]
+                                dataKeys: [null, self.yAxisCol, null, null]
                             };
                             var valueObj = {
                                 yAxisColumn: self.yAxisCol
@@ -353,41 +321,37 @@ window.knimePlotlyScatterPlot3D = (function () {
                     knimeService.SMALL_ICON
                 );
 
-                var zAxisSelection = knimeService.createMenuSelect(
-                    'z-axis-menu-item',
-                    this.columns.indexOf(this.yAxisCol),
-                    this.columns,
+                knimeService.addMenuDivider();
+            }
+
+            if (self.KPI.representation.options.showDensityColorOptions) {
+                var colorScaleSelection = knimeService.createMenuSelect(
+                    'colorscale-menu-item',
+                    0,
+                    ['Hot', 'Greys', 'YlGnBu', 'Greens', 'YlOrRd', 'Bluered', 'RdBu', 'Reds', 'Blues',
+                        'Picnic', 'Rainbow', 'Portland', 'Jet', 'Blackbody', 'Earth',
+                        'Electric', 'Viridis', 'Cividis.'],
                     function () {
-                        if (self.zAxisCol !== this.value) {
-                            self.zAxisCol = this.value;
-                            var layoutObj = {
-                                'zaxis.title': self.zAxisCol
+                        if (self.colorscale !== this.value) {
+                            self.colorscale = this.value;
+                            var changeObj = {
+                                colorscale: [self.colorscale]
                             };
-                            var keys = {
-                                dataKeys: [self.xAxisCol, self.yAxisCol, self.zAxisCol, 'rowKeys', 'rowColors'],
-                                plotlyKeys: [['x'], ['y'], ['z'], ['text', 'ids'], ['marker.color']]
-                            };
-                            var valueObj = {
-                                zAxisColumn: self.zAxisCol
-                            };
-                            self.KPI.updateValue(valueObj);
-                            self.KPI.updateKeys(keys);
-                            self.KPI.update(false, layoutObj);
+                            self.KPI.update(changeObj);
                         }
                     }
                 );
 
                 knimeService.addMenuItem(
-                    'Z-Axis',
-                    'z',
-                    zAxisSelection,
+                    'Density color',
+                    'palette',
+                    colorScaleSelection,
                     null,
                     knimeService.SMALL_ICON
                 );
 
                 knimeService.addMenuDivider();
             }
-
 
             if (self.KPI.representation.options.tooltipToggle) {
 
@@ -447,6 +411,32 @@ window.knimePlotlyScatterPlot3D = (function () {
 
             if (knimeService.isInteractivityAvailable()) {
 
+                if (self.KPI.representation.options.enableSelection &&
+                    self.KPI.representation.options.publishSelectionToggle) {
+
+                    var publishSelectionCheckbox = knimeService.createMenuCheckbox(
+                        'publish-selection-checkbox',
+                        self.KPI.value.options.publishSelection,
+                        function () {
+                            if (self.KPI.value.options.publishSelection !== this.checked) {
+                                self.KPI.value.options.publishSelection = this.checked;
+                                self.KPI.togglePublishSelection();
+                            }
+                        },
+                        true
+                    );
+
+                    knimeService.addMenuItem(
+                        'Publish Selection',
+                        knimeService.createStackedIcon('check-square-o',
+                            'angle-right', 'faded left sm', 'right bold'),
+                        publishSelectionCheckbox,
+                        null,
+                        knimeService.SMALL_ICON
+                    );
+
+                }
+
                 if (self.KPI.representation.options.subscribeSelectionToggle) {
 
                     var subscribeToSelectionCheckbox = knimeService.createMenuCheckbox(
@@ -498,6 +488,6 @@ window.knimePlotlyScatterPlot3D = (function () {
         }
     };
 
-    return ScatterPlot3D;
+    return Density;
 
 })();

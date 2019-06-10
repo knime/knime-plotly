@@ -3,23 +3,22 @@
 	xmlns="http://knime.org/dynamicnode/v3.0" xmlns:n="http://knime.org/node/v2.12"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
-	jsNamespace="knimeDensity2D" nodeID="plotly_density2D"
+	jsNamespace="knimePlotlyStackedArea" nodeID="plotly_stacked_plot"
     categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
-	<name>2D Density Plot (Plotly)</name>
-	<shortDescription>A 2D Density plot with optional axis-based histograms built with the Plotly.js library.</shortDescription>
+	<name>Stacked Area Chart (Plotly)</name>
+	<shortDescription>A Stacked Area Chart based on the Plotly.js library.</shortDescription>
 	<fullDescription>
 		<intro>
 			<n:p>
-			A 2D Density plot with optional axis-based histograms built with the Plotly.js library. This plot is useful for exploring the distribution and density in a 
-			dataset. You can compare two features at a time and optionally display histograms with the linear distribution of each feature along the axis. This node requires 
-			a table with at least two numeric columns, though it will process categorical data as well (not recommended).
+			A Stacked Area Chart based on the Plotly.js library. This is the standard implementation of a traditional Stacked Area Chart, with additional Plotly.js user controls 
+			enabled within KNIME's interactive view framework. This node requires a table with at least two numeric columns.
 			</n:p>
 			<n:p>
             The node supports custom CSS styling. 
             You can simply put CSS rules into a single string and set it as a flow variable 'customCSS' 
             in the node configuration dialog. 
             Current KNIME classes are NOT YET supported, so class names will have to be deduced from the view itself. We are hoping to support standard KNIME
-            classes in an upcoming update.
+            classes in an upcoming release.
             <!-- You will find the list of available classes and their description on our <n:a href="https://knime.com/css-styling">documentation page</n:a>.-->
             </n:p>
             <n:p>
@@ -30,7 +29,8 @@
 		</intro>
 		<tab name="Options">
 			<description>
-        		General options for the KNIME 2D Density plot with Plotly.
+        		General options for the KNIME Stacked Area Chart with Plotly. The columns will be available for selection
+        		within the view.
         	</description>
 			<options>
 				<!-- <svgOption name="Image" additionalWait="500"
@@ -38,19 +38,27 @@
 					Settings for image generation.
 				</svgOption>-->
 				<columnSelectorOption name="X-Axis Column"
-					id="xAxisColumn" inPortIndex="0" label="X-Axis Column" filterClasses="org.knime.core.data.DoubleValue"
+					id="xAxisColumn" inPortIndex="0" label="X-Axis Column" filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue"
 					saveInView="true">
 					Select the column to be initially displayed along the X-Axis.
 				</columnSelectorOption>
-				<columnSelectorOption name="Y-Axis Column"
+				<columnFilterOption name="Included columns (lines)"
+					id="columns" inPortIndex="0" label="Included columns (lines)" filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue"
+					 saveInView="true">
+					Select the columns to be plotted as spokes on the radar plot.
+				</columnFilterOption>
+				<!-- <columnSelectorOption name="Y-Axis Column"
 					id="yAxisColumn" inPortIndex="0" label="Y-Axis Column" filterClasses="org.knime.core.data.DoubleValue"
 					saveInView="true">
 					Select the column to be initially displayed along the Y-Axis.
-				</columnSelectorOption>
-				<checkBoxOption name="Show histograms" id="showHistogram"
-					label="Show histograms" defaultValue="true" saveInView="true">
-					When checked, a histogram for the x and y features will be displayed along the corresponding axis.
-				</checkBoxOption>
+				</columnSelectorOption>				
+				<columnSelectorOption name="'Group-By' Column"
+					id="groupByColumn" inPortIndex="0" label="'Group-By' Column" filterClasses="org.knime.core.data.StringValue">
+					If a previous cluster/binning operation has been performed, selected the column containing each rows membership
+					for a more dynamic interactive experience. These nominal groups will be used to categorize the data as it's displayed
+					and allow you to hide/show various groups by clicking/double-clicking on the group in the legend.
+				</columnSelectorOption> -->
+
 				<!-- <checkBoxOption name="Report on missing values" id="reportMissing"
 					label="Report on missing values" defaultValue="true" loadDefaults="true">
 					When enabled this will display a warning whenever there is a missing value present in the data.
@@ -69,7 +77,7 @@
         	</description>
 			<options>
 				<stringOption name="Title" id="title" label="Title"
-					defaultValue="Density Plot" optional="true" saveInView="true">
+					defaultValue="Stacked Area Chart" optional="true" saveInView="true">
 					The chart title.
 				</stringOption>
 				<stringOption name="X-Axis label" id="xAxisLabel" label="X-Axis label"
@@ -85,11 +93,20 @@
 					When checked,
 					the chart's legend is displayed.
 				</checkBoxOption>
+				<checkBoxOption name="Show grid" id="showGrid"
+					label="Show grid" defaultValue="true" saveInView="true">
+					When checked,
+					a grid is displayed on the chart.
+				</checkBoxOption>
 				<!-- <checkBoxOption name="Show warnings in view" id="showWarnings"
 					label="Show warnings in view" defaultValue="true" saveInView="true">
 					When checked,
 					the any warnings will be displayed in the view.
 				</checkBoxOption> -->
+				<checkBoxOption name="Fill total area" id="enableFillArea"
+					label="Fill total area" defaultValue="false">
+					When checked, the filled areas will overlap with each other shaded area below.
+				</checkBoxOption>
 				<colorOption name="Background color" id="backgroundColor" label="Background color"
                     format="HexString" defaultR="255" defaultG="255" defaultB="255" defaultAlpha="255">
                     The background color of the plot, including the axes labels, the title and the subtitle.
@@ -120,18 +137,13 @@
 					enableDependency="enableViewControls" enableValue="true">
 					Check to enable toggling of the tooltip within the view.
 				</checkBoxOption>
-				<checkBoxOption name="Enable density color controls" id="showDensityColorOptions"
-					label="Enable density color controls" defaultValue="true" enableDependency="enableViewControls">
-					When checked, a menu with available color scales will be displayed in the KNIME menu for changing the
-					 density gradient.
-				</checkBoxOption>
 				<checkBoxOption name="Enable feature selection controls" id="enableFeatureSelection"
 					label="Enable feature selection controls" defaultValue="true" enableDependency="enableViewControls"
 					enableValue="true">
 					Check to enable drop down menu's allowing you to switch the features displayed on the axes.
 				</checkBoxOption>
 				<checkBoxOption name="Enable text editing" id="enableEditing"
-					label="Enable text editing" defaultValue="true" enableDependency="enableViewControls"
+					label="Enable text editing" defaultValue="false" enableDependency="enableViewControls"
 					enableValue="true">
 					Check to enable the editing of the title and axis labels within the view.
 				</checkBoxOption>
@@ -199,19 +211,21 @@
         	</options>
         </tab>
 	</fullDescription>
-	<interactiveView name="2D Density Plot">
-		The KNIME 2D Density Plot with Plotly.
+	<interactiveView name="Stacked Area Chart">
+		The KNIME Stacked Area Chart with Plotly.
 	</interactiveView>
 	<ports>
 		<inPort portType="Data" name="Display data" index="0">
-			Data table containing two or more numeric columns to display in an interactive 2D Density Plot.
+			Data table containing two or more numeric columns to display in an interactive Stacked Area Chart.
 		</inPort>
 	</ports>
 	<js:resources>
-		<js:resource type="js" path="density2D.js" />
-		<js:resource type="css" path="density2D.css" />
+		<js:resource type="js" path="../kpi/knimePlotlyInterface.js" />
+		<js:resource type="js" path="stackedArea.js" />
+		<js:resource type="css" path="stackedArea.css" />
 	</js:resources>
 	<js:dependencies>
 		<js:dependency name="Plotly" path="plotly.js-1.47.4" type="local" exports="Plotly" />
+		<js:dependency name="MultipleSelections" path="MultipleSelections" type="local" exports="MultipleSelections" />
 	</js:dependencies>
 </js:knimeNode>

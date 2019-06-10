@@ -3,17 +3,16 @@
 	xmlns="http://knime.org/dynamicnode/v3.0" xmlns:n="http://knime.org/node/v2.12"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
-	jsNamespace="knimeViolin" nodeID="plotly_violin"
-   categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
-	<name>Violin Plot (Plotly)</name>
-	<shortDescription>A Violin plot built with the Plotly.js library.</shortDescription>
+	jsNamespace="knimeDensity" nodeID="plotly_density"
+    categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
+	<name>Density Plot (Plotly)</name>
+	<shortDescription>A Density plot with optional axis-based histograms built with the Plotly.js library.</shortDescription>
 	<fullDescription>
 		<intro>
 			<n:p>
-			A Violin plot built with the Plotly.js library. This plot is used to visualize multiple plots simultaneously across various categories or group-memberships.
-			The plot displays a traditional boxplot with quartile notations for each group as well as single points for outliers in the data set. It also conveniently displays
-			a histogram of the data distribution. This node also provides real time statistic values when you "hover" over a particular violin, such as mean, median, and more.
-			This node requires at least one numeric column and at least one categorical/nominal column and may be displayed either vertically or horizontally.
+			A Density plot with optional axis-based histograms built with the Plotly.js library. This plot is useful for exploring the distribution and density in a 
+			dataset. You can compare two features at a time and optionally display histograms with the linear distribution of each feature along the axis. This node requires 
+			a table with at least two numeric columns, though it will process categorical data as well (not recommended).
 			</n:p>
 			<n:p>
             The node supports custom CSS styling. 
@@ -23,7 +22,7 @@
             classes in an upcoming update.
             <!-- You will find the list of available classes and their description on our <n:a href="https://knime.com/css-styling">documentation page</n:a>.-->
             </n:p>
-                        <n:p>
+            <n:p>
             Please note: the Plotly.js KNIME extension is currently in Beta. It is recommended that you handle missing values and normalize your data before using
             visualization nodes in this extension until a more stable version is released. Please feel free to leave feedback and suggestions on our community forum
             <n:a href="https://forum.knime.com/">here</n:a>.
@@ -31,35 +30,27 @@
 		</intro>
 		<tab name="Options">
 			<description>
-        		General options for the KNIME Violin plot with Plotly.
+        		General options for the KNIME Density plot with Plotly.
         	</description>
 			<options>
 				<!-- <svgOption name="Image" additionalWait="500"
 					id="svg" portIndex="0" label="Image" enableDependency="generateImage">
 					Settings for image generation.
 				</svgOption>-->
-				<columnSelectorOption name="Comparator Column"
-					id="axisColumn" inPortIndex="0" label="Comparator Column" filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue"
+				<columnSelectorOption name="X-Axis Column"
+					id="xAxisColumn" inPortIndex="0" label="X-Axis Column" filterClasses="org.knime.core.data.DoubleValue"
 					saveInView="true">
-					Select the column to be initially compared.
+					Select the column to be initially displayed along the X-Axis.
 				</columnSelectorOption>
-				<!--  <columnFilterOption name="Columns to plot"
-					id="columns" inPortIndex="0" label="Columns to plot" filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue" saveInView="true">
-					Select the columns to be plotted. You can change these columns later in the view if you enable feature selection.
-				</columnFilterOption> -->
-				<columnSelectorOption name="'Group-By' Column"
-					id="groupByColumn" inPortIndex="0" label="'Group-By' Column" filterClasses="org.knime.core.data.StringValue org.knime.core.data.NominalValue">
-					Select the column containing each rows group membership (if applicable)
-					for a more dynamic interactive experience. These nominal groups will be used to categorize the data as it's displayed
-					and allow you to hide/show various groups by clicking/double-clicking on the group in the legend.
-				</columnSelectorOption>
-				<radioButtonOption name="Plot direction" id="plotDirection" 
-                possibleValues="Vertical Horizontal" 
-                label="Plot direction" defaultValue="Vertical" 
+				<columnSelectorOption name="Y-Axis Column"
+					id="yAxisColumn" inPortIndex="0" label="Y-Axis Column" filterClasses="org.knime.core.data.DoubleValue"
 					saveInView="true">
-					The direction to plot the chart. Choosing horizontal will display the numeric column along the x-axis, whereas
-					vertical will display the numeric column along the y-axis.
-				</radioButtonOption>
+					Select the column to be initially displayed along the Y-Axis.
+				</columnSelectorOption>
+				<checkBoxOption name="Show histograms" id="showHistogram"
+					label="Show histograms" defaultValue="true" saveInView="true">
+					When checked, a histogram for the x and y features will be displayed along the corresponding axis.
+				</checkBoxOption>
 				<!-- <checkBoxOption name="Report on missing values" id="reportMissing"
 					label="Report on missing values" defaultValue="true" loadDefaults="true">
 					When enabled this will display a warning whenever there is a missing value present in the data.
@@ -78,16 +69,16 @@
         	</description>
 			<options>
 				<stringOption name="Title" id="title" label="Title"
-					defaultValue="Violin Plot" optional="true" saveInView="true">
+					defaultValue="Density Plot" optional="true" saveInView="true">
 					The chart title.
 				</stringOption>
-				<stringOption name="Numeric axis label" id="numAxisLabel" label="Numeric axis label"
+				<stringOption name="X-Axis label" id="xAxisLabel" label="X-Axis label"
 					optional="true" saveInView="true">
-					The label for the axis displaying the numeric column.
+					The label for the X-Axis. If left blank, the current X-Axis feature name will be used.
 				</stringOption>
-				<stringOption name="Grouped axis label" id="groupedAxisLabel" label="Grouped axis label"
+				<stringOption name="Y-Axis label" id="yAxisLabel" label="Y-Axis label"
 					optional="true" saveInView="true">
-					The label for the axis displaying the grouped column values.
+					The label for the Y-Axis. If left blank, the current Y-Axis feature name will be used.
 				</stringOption>
 				<checkBoxOption name="Display legend" id="showLegend"
 					label="Display legend" defaultValue="true" saveInView="true">
@@ -129,6 +120,11 @@
 					enableDependency="enableViewControls" enableValue="true">
 					Check to enable toggling of the tooltip within the view.
 				</checkBoxOption>
+				<checkBoxOption name="Enable density color controls" id="showDensityColorOptions"
+					label="Enable density color controls" defaultValue="true" enableDependency="enableViewControls">
+					When checked, a menu with available color scales will be displayed in the KNIME menu for changing the
+					 density gradient.
+				</checkBoxOption>
 				<checkBoxOption name="Enable feature selection controls" id="enableFeatureSelection"
 					label="Enable feature selection controls" defaultValue="true" enableDependency="enableViewControls"
 					enableValue="true">
@@ -144,11 +140,11 @@
 					enableDependency="enableViewControls" enableValue="true">
 					Check to enable toggling of selection-only within view.
 				</checkBoxOption>
-				<!-- <checkBoxOption name="Enable publish selection toggle" id="publishSelectionToggle"
+				<checkBoxOption name="Enable publish selection toggle" id="publishSelectionToggle"
 					label="Enable publish selection toggle" defaultValue="true"
 					enableDependency="enableViewControls" enableValue="true">
 					Check to enable toggling of selection publishing within view.
-				</checkBoxOption>-->
+				</checkBoxOption>
 				<checkBoxOption name="Enable subscribe to selection toggle" id="subscribeSelectionToggle"
 					label="Enable subscribe to selection toggle" defaultValue="true"
 					enableDependency="enableViewControls" enableValue="true">
@@ -173,27 +169,27 @@
         		interacts with other views.
         	</description>
         	<options>
-	            <!-- <checkBoxOption name="Enable selection" id="enableSelection" label="Enable selection" 
+	            <checkBoxOption name="Enable selection" id="enableSelection" label="Enable selection" 
 	        		defaultValue="true" loadDefaults="true">
 	        		If checked a separate column containing checkboxes is rendered in the view.
-	        	</checkBoxOption>-->
+	        	</checkBoxOption>
 	        	<checkBoxOption name="Display clear selection button" id="showClearSelectionButton"
-	               label="Display clear selection button" defaultValue="true"
+	               label="Display clear selection button" defaultValue="true" enableDependency="enableSelection" 
 	               loadDefaults="true">
 	               Displays a button to clear current selection.
 	           </checkBoxOption>
 	        	<checkBoxOption name="Subscribe to selection events" id="subscribeToSelection" 
 	        		label="Subscribe to selection events" defaultValue="true" loadDefaults="true" 
-	        		enableValue="true" saveInView="true">
+	        		enableDependency="enableSelection" enableValue="true" saveInView="true">
 	        	    If checked, the view reacts on notifications from other interactive views that the selection has 
 	        	    been changed. See also "Publish selection events".
 	        	</checkBoxOption>
-	        	<!-- <checkBoxOption name="Publish selection events" id="publishSelection" 
+	        	<checkBoxOption name="Publish selection events" id="publishSelection" 
 	        		label="Publish selection events" defaultValue="true" loadDefaults="true" 
 	        		enableDependency="enableSelection" enableValue="true" saveInView="true">
 	        	    If checked, notifies other interactive views when user changes the selection in the current view. 
 	        	    See also "Subscribe to selection events".
-	        	</checkBoxOption>-->
+	        	</checkBoxOption>
 	        	<checkBoxOption name="Subscribe to filter events" id="subscribeToFilters" 
 	        		label="Subscribe to filter events" defaultValue="true" loadDefaults="true" 
 	        		saveInView="true">
@@ -203,18 +199,18 @@
         	</options>
         </tab>
 	</fullDescription>
-	<interactiveView name="Violin Plot">
-		The KNIME Violin Plot with Plotly.
+	<interactiveView name="Density Plot">
+		The KNIME Density Plot with Plotly.
 	</interactiveView>
 	<ports>
 		<inPort portType="Data" name="Display data" index="0">
-			Data table containing one or more numeric columns to display in an interactive Violin Plot.
+			Data table containing two or more numeric columns to display in an interactive Density Plot.
 		</inPort>
 	</ports>
 	<js:resources>
 		<js:resource type="js" path="../kpi/knimePlotlyInterface.js" />
-		<js:resource type="js" path="violin.js" />
-		<js:resource type="css" path="violin.css" />
+		<js:resource type="js" path="density.js" />
+		<js:resource type="css" path="density.css" />
 	</js:resources>
 	<js:dependencies>
 		<js:dependency name="Plotly" path="plotly.js-1.47.4" type="local" exports="Plotly" />

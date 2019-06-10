@@ -1,12 +1,11 @@
-/* global kt:false, KnimePlotlyInterface:false  */
-window.knimePlotlyScatterPlot = (function () {
+/* global kt:false, twinlistMultipleSelections:false, KnimePlotlyInterface:false  */
+window.knimePlotlyStackedArea = (function () {
 
-    var ScatterPlot = {};
+    var StackedArea = {};
 
-    ScatterPlot.init = function (representation, value) {
+    StackedArea.init = function (representation, value) {
 
         var self = this;
-        this.Plotly = arguments[2][0];
         this.KPI = new KnimePlotlyInterface();
         this.KPI.initialize(representation, value, new kt(), arguments[2][0]);
         this.columns = this.KPI.table.getColumnNames();
@@ -16,7 +15,7 @@ window.knimePlotlyScatterPlot = (function () {
         });
 
         this.xAxisCol = this.KPI.value.options.xAxisColumn || this.columns[0];
-        this.yAxisCol = this.KPI.value.options.yAxisColumn || this.columns[1];
+        this.lineColumns = this.KPI.value.options.columns || [];
         this.onSelectionChange = this.onSelectionChange.bind(this);
         this.onFilterChange = this.onFilterChange.bind(this);
 
@@ -25,47 +24,77 @@ window.knimePlotlyScatterPlot = (function () {
         this.KPI.mountAndSubscribe(this.onSelectionChange, this.onFilterChange);
     };
 
-    ScatterPlot.drawChart = function () {
+    StackedArea.drawChart = function () {
+
         var t = this.createTraces();
         var l = new this.LayoutObject(this.KPI.representation, this.KPI.value);
         var c = new this.ConfigObject(this.KPI.representation, this.KPI.value);
-        this.KPI.createElement('knime-scatter');
+        this.KPI.createElement('knime-stacked-area');
         this.KPI.drawChart(t, l, c);
+        this.KPI.update();
     };
 
-    ScatterPlot.createTraces = function () {
+    StackedArea.createTraces = function () {
         var self = this;
         var traces = [];
+        this.KPI.updateOrderedIndicies(this.xAxisCol);
         var keys = {
-            dataKeys: [self.xAxisCol, self.yAxisCol, 'rowKeys', 'rowColors'],
-            plotlyKeys: [['x'], ['y'], ['text', 'ids'], ['marker.color']]
+            dataKeys: [self.xAxisCol, 'rowKeys', 'rowColors'],
+            plotlyKeys: [['x'], ['text', 'ids'], ['marker.color']]
         };
+        this.KPI.updateKeys(keys);
+        var data = self.KPI.getData(keys);
 
-        var data = this.KPI.getData(keys);
+        self.lineColumns.forEach(function (col, colInd) {
+            var yData = self.KPI.getData({ dataKeys: [col] });
+            var xData = data[self.xAxisCol][0];
+            var newTrace = new self.TraceObject(xData, yData[col][0]);
 
-        data.names.forEach(function (group, groupInd) {
-            var newTrace = new self.TraceObject(data[self.xAxisCol][groupInd],
-                data[self.yAxisCol][groupInd]);
-            newTrace.marker.color = data.rowColors[groupInd];
-            newTrace.text = data.rowKeys[groupInd];
-            newTrace.ids = data.rowKeys[groupInd];
-            newTrace.dataKeys = keys.dataKeys;
-            newTrace.name = group;
+            newTrace.marker.color = data.rowColors[0];
+            // newTrace.line.color = data.rowColors[0];
+            newTrace.text = data.rowKeys[0];
+            newTrace.ids = data.rowKeys[0];
+            newTrace.name = col;
+            newTrace.dataKeys = [self.xAxisCol, col, 'rowKeys', 'rowColors'];
+            if (self.KPI.representation.options.enableFillArea) {
+                if (colInd === 0) {
+                    newTrace.fill = 'tozeroy';
+                } else {
+                    newTrace.fill = 'tonexty';
+                }
+                newTrace.mode = 'lines+markers';
+                newTrace.type = 'scattergl';
+            } else {
+                newTrace.stackgroup = 'one';
+            }
             traces.push(newTrace);
         });
 
+        keys = {
+            plotlyKeys: [['x'], ['y'], ['text', 'ids'], ['marker.color']]
+        };
+        this.KPI.updateKeys(keys);
         return traces;
     };
 
-    ScatterPlot.TraceObject = function (xData, yData) {
+    StackedArea.TraceObject = function (xData, yData) {
         this.x = xData;
         this.y = yData;
-        this.mode = 'markers';
-        this.type = 'scatter';
+        // this.mode = 'lines+markers';
+        // this.type = 'scattergl';
         this.name = '';
         this.marker = {
             color: [],
-            opacity: .5
+            opacity: .5,
+            size: 4
+            // line: {
+            //     width: 1
+            // }
+        };
+        this.line = {
+            color: [],
+            opacity: .1,
+            width: 1
         };
         this.unselected = {
             marker: {
@@ -74,15 +103,20 @@ window.knimePlotlyScatterPlot = (function () {
         };
         this.selected = {
             marker: {
-                opacity: 1
+                opacity: 1,
+                size: 10,
+                line: {
+                    width: 10,
+                    color: '#ffffff'
+                }
             }
         };
         return this;
     };
 
-    ScatterPlot.LayoutObject = function (rep, val) {
+    StackedArea.LayoutObject = function (rep, val) {
         this.title = {
-            text: val.options.title || 'Scatter Plot',
+            text: val.options.title || 'Stacked Area Chart',
             y: 1,
             yref: 'paper',
             yanchor: 'bottom'
@@ -138,7 +172,7 @@ window.knimePlotlyScatterPlot = (function () {
         this.plot_bgcolor = rep.options.backgroundColor || '#ffffff';
     };
 
-    ScatterPlot.ConfigObject = function (rep, val) {
+    StackedArea.ConfigObject = function (rep, val) {
         this.toImageButtonOptions = {
             format: 'svg', // one of png, svg, jpeg, webp
             filename: 'custom_image',
@@ -152,28 +186,23 @@ window.knimePlotlyScatterPlot = (function () {
         this.scrollZoom = true;
         this.showLink = rep.options.enablePlotlyEditor;
         this.modeBarButtonsToRemove = ['hoverClosestCartesian',
-            'hoverCompareCartesian'];
+            'hoverCompareCartesian', 'toggleSpikelines'];
         return this;
     };
 
-    ScatterPlot.onSelectionChange = function (data) {
-        if (data) {
-            this.KPI.updateSelected(data);
-            var changeObj = {};
-            changeObj = this.KPI.getFilteredChangeObject();
-            this.KPI.update(changeObj);
-        }
+    StackedArea.onSelectionChange = function (data) {
+        this.updateSelected(data);
+        var changeObj = this.getFilteredChangeObject();
+        this.Plotly.restyle('knime-stacked-area', changeObj);
     };
 
-    ScatterPlot.onFilterChange = function (data) {
-        if (data) {
-            this.KPI.updateFilter(data);
-            var changeObj = this.KPI.getFilteredChangeObject();
-            this.KPI.update(changeObj);
-        }
+    StackedArea.onFilterChange = function (data) {
+        this.updateFilter(data);
+        var changeObj = this.getFilteredChangeObject();
+        this.Plotly.restyle('knime-stacked-area', changeObj);
     };
 
-    ScatterPlot.drawKnimeMenu = function () {
+    StackedArea.drawKnimeMenu = function () {
 
         var self = this;
 
@@ -199,7 +228,7 @@ window.knimePlotlyScatterPlot = (function () {
                 var xAxisSelection = knimeService.createMenuSelect(
                     'x-axis-menu-item',
                     this.columns.indexOf(this.xAxisCol),
-                    this.columns,
+                    this.numericColumns,
                     function () {
                         if (self.xAxisCol !== this.value) {
                             self.xAxisCol = this.value;
@@ -207,13 +236,13 @@ window.knimePlotlyScatterPlot = (function () {
                                 'xaxis.title': self.xAxisCol
                             };
                             var keys = {
-                                dataKeys: [self.xAxisCol, self.yAxisCol, 'rowKeys', 'rowColors'],
-                                plotlyKeys: [['x'], ['y'], ['text', 'ids'], ['marker.color']]
+                                dataKeys: [self.xAxisCol, null, null, null]
                             };
                             var valueObj = {
                                 xAxisColumn: self.xAxisCol
                             };
                             self.KPI.updateValue(valueObj);
+                            self.KPI.updateOrderedIndicies(self.xAxisCol);
                             self.KPI.updateKeys(keys);
                             self.KPI.update(false, layoutObj);
                         }
@@ -228,37 +257,44 @@ window.knimePlotlyScatterPlot = (function () {
                     knimeService.SMALL_ICON
                 );
 
-                var yAxisSelection = knimeService.createMenuSelect(
-                    'y-axis-menu-item',
-                    this.columns.indexOf(this.yAxisCol),
-                    this.columns,
-                    function () {
-                        if (self.yAxisCol !== this.value) {
-                            self.yAxisCol = this.value;
-                            var layoutObj = {
-                                'yaxis.title': self.yAxisCol
-                            };
-                            var keys = {
-                                dataKeys: [self.xAxisCol, self.yAxisCol, 'rowKeys', 'rowColors'],
-                                plotlyKeys: [['x'], ['y'], ['text', 'ids'], ['marker.color']]
-                            };
-                            var valueObj = {
-                                yAxisColumn: self.yAxisCol
-                            };
-                            self.KPI.updateValue(valueObj);
-                            self.KPI.updateKeys(keys);
-                            self.KPI.update(false, layoutObj);
-                        }
-                    }
-                );
+                // temporarily use controlContainer to solve th resizing problem with ySelect
+                var controlContainer = this.KPI.Plotly.d3.select('#knime-line').insert('table', '#radarContainer ~ *')
+                    .attr('id', 'lineControls')
+                    /* .style("width", "100%") */
+                    .style('padding', '10px')
+                    .style('margin', '0 auto')
+                    .style('box-sizing', 'border-box')
+                    .style('font-family', 'san-serif')
+                    .style('font-size', 12 + 'px')
+                    .style('border-spacing', 0)
+                    .style('border-collapse', 'collapse');
+                var columnChangeContainer = controlContainer.append('tr');
+                var columnSelect = new twinlistMultipleSelections();
+                var columnSelectComponent = columnSelect.getComponent().get(0);
+                columnChangeContainer.append('td').attr('colspan', '3').node().appendChild(columnSelectComponent);
+                columnSelect.setChoices(this.numericColumns);
+                columnSelect.setSelections(this.lineColumns);
+                columnSelect.addValueChangedListener(function () {
+                    var newSelected = columnSelect.getSelections();
+                    var valObj = {
+                        columns: newSelected
+                    };
+                    var changeObj = {
+                        visible: []
+                    };
 
-                knimeService.addMenuItem(
-                    'Y-Axis',
-                    'y',
-                    yAxisSelection,
-                    null,
-                    knimeService.SMALL_ICON
-                );
+                    self.KPI.traceDirectory.forEach(function (trace) {
+                        if (newSelected.indexOf(trace.dataKeys[1]) > -1) {
+                            changeObj.visible.push(true);
+                        } else {
+                            changeObj.visible.push(false);
+                        }
+                    });
+                    self.KPI.updateValue(valObj);
+                    self.KPI.update(changeObj);
+                });
+                knimeService.addMenuItem('Columns (lines):', 'long-arrow-up', columnSelectComponent);
+                controlContainer.remove();
 
                 knimeService.addMenuDivider();
             }
@@ -272,7 +308,7 @@ window.knimePlotlyScatterPlot = (function () {
                         if (self.KPI.representation.options.tooltipToggle !== this.checked) {
                             self.KPI.representation.options.tooltipToggle = this.checked;
                             var layoutObj = {
-                                hovermode: self.KPI.representation.options.tooltipToggle
+                                hovermode: self.representation.options.tooltipToggle
                                     ? 'closest' : false
                             };
                             self.KPI.update(false, layoutObj, true);
@@ -299,7 +335,7 @@ window.knimePlotlyScatterPlot = (function () {
                     'show-only-selected-checkbox',
                     this.showOnlySelected,
                     function () {
-                        if (self.KPI.showOnlySelected !== this.checked) {
+                        if (self.showOnlySelected !== this.checked) {
                             self.KPI.updateShowOnlySelected(this.checked);
                             self.KPI.update();
                         }
@@ -398,6 +434,6 @@ window.knimePlotlyScatterPlot = (function () {
         }
     };
 
-    return ScatterPlot;
+    return StackedArea;
 
 })();

@@ -144,7 +144,7 @@
 					Check to enable drop down menu's allowing you to switch the features displayed on the axes.
 				</checkBoxOption>
 				<checkBoxOption name="Enable text editing" id="enableEditing"
-					label="Enable text editing" defaultValue="true" enableDependency="enableViewControls"
+					label="Enable text editing" defaultValue="false" enableDependency="enableViewControls"
 					enableValue="true">
 					Check to enable the editing of the title and axis labels within the view.
 				</checkBoxOption>
@@ -209,6 +209,7 @@
 		</outPort>-->
 	</ports>
 	<js:resources>
+		<js:resource type="js" path="../kpi/knimePlotlyInterface.js" />
 		<js:resource type="js" path="scatterPlot3D.js" />
 		<js:resource type="css" path="scatterPlot3D.css" />
 	</js:resources>

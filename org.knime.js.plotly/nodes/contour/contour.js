@@ -1,9 +1,9 @@
 /* global kt:false, twinlistMultipleSelections:false, KnimePlotlyInterface:false  */
-window.knimeSurface3DPlot = (function () {
+window.knimeContourPlot = (function () {
 
-    var SurfacePlot = {};
+    var Contour = {};
 
-    SurfacePlot.init = function (representation, value) {
+    Contour.init = function (representation, value) {
         var self = this;
         this.Plotly = arguments[2][0];
         this.KPI = new KnimePlotlyInterface();
@@ -23,15 +23,15 @@ window.knimeSurface3DPlot = (function () {
         this.KPI.mountAndSubscribe(null, this.onFilterChange);
     };
 
-    SurfacePlot.drawChart = function () {
+    Contour.drawChart = function () {
         var t = this.createTraces();
         var l = new this.LayoutObject(this.KPI.representation, this.KPI.value);
         var c = new this.ConfigObject(this.KPI.representation, this.KPI.value);
-        this.KPI.createElement('knime-surface');
+        this.KPI.createElement('knime-contour');
         this.KPI.drawChart(t, l, c);
     };
 
-    SurfacePlot.createTraces = function () {
+    Contour.createTraces = function () {
         var self = this;
         var traces = [];
 
@@ -59,16 +59,16 @@ window.knimeSurface3DPlot = (function () {
         return traces;
     };
 
-    SurfacePlot.TraceObject = function (zData) {
+    Contour.TraceObject = function (zData) {
         this.z = zData;
-        this.type = 'surface';
+        this.type = 'contour';
         this.name = '';
         return this;
     };
 
-    SurfacePlot.LayoutObject = function (rep, val) {
+    Contour.LayoutObject = function (rep, val) {
         this.title = {
-            text: val.options.title || 'Surface Plot',
+            text: val.options.title || 'Contour Plot',
             y: 1,
             yref: 'paper',
             yanchor: 'bottom'
@@ -147,7 +147,7 @@ window.knimeSurface3DPlot = (function () {
         this.plot_bgcolor = rep.options.backgroundColor || '#ffffff';
     };
 
-    SurfacePlot.ConfigObject = function (rep, val) {
+    Contour.ConfigObject = function (rep, val) {
         this.toImageButtonOptions = {
             format: 'svg', // one of png, svg, jpeg, webp
             filename: 'custom_image',
@@ -165,14 +165,14 @@ window.knimeSurface3DPlot = (function () {
         return this;
     };
 
-    SurfacePlot.onFilterChange = function (data) {
+    Contour.onFilterChange = function (data) {
         if (data) {
             this.KPI.updateFilter(data);
             this.KPI.update();
         }
     };
 
-    SurfacePlot.drawKnimeMenu = function () {
+    Contour.drawKnimeMenu = function () {
 
         var self = this;
 
@@ -332,6 +332,6 @@ window.knimeSurface3DPlot = (function () {
         }
     };
 
-    return SurfacePlot;
+    return Contour;
 
 })();

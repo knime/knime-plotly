@@ -1,152 +1,87 @@
-
-/////////////////PLOTLY DATA////////////////////////////
-var KnimelyDataProcessor = function () {
-
-    //Created during processData step
-    this._rowDirectory;
-    this._domain;
-    this._rowCount;
-
-    this.initialize = function (knimeDataTable, nameColumnInd) {
-        var self = this;
-        var rowColors = knimeDataTable.getRowColors();
-        var rowCount = 0;
-
-        this._rowDirectory = {};
-        this._domain = [Number.MAX_VALUE, -Number.MIN_VALUE];
-
-        knimeDataTable.getRows().forEach(function (row, rowInd) {
-
-            self._rowDirectory[row.rowKey] = {
-                id: row.rowKey,
-                tInd: rowInd,
-                pInd: rowInd,
-                fInd: rowInd,
-                data: row.data,
-                color: rowColors[rowInd] || 'lightblue',
-                name: row.data[nameColumnInd]
-            };
-
-            rowCount++;
-        });
-
-        this._rowCount = rowCount;
-        return this;
-    };
-
-    return this;
-};
-/////////////////END PLOTLY DATA////////////////////////////
-
-
-/* global kt:false */
+/* global kt:false, twinlistMultipleSelections:false, KnimePlotlyInterface:false  */
 window.knimeRadarPlot = (function () {
 
     var RadarPlot = {};
 
     RadarPlot.init = function (representation, value) {
         var self = this;
+        this.KPI = new KnimePlotlyInterface();
+        this.KPI.initialize(representation, value, new kt(), arguments[2][0]);
+        this.columns = this.KPI.table.getColumnNames();
+        this.columnTypes = this.KPI.table.getColumnTypes();
+        this.numericColumns = this.columns.filter(function (c, i) {
+            return self.columnTypes[i] === 'number';
+        });
+        this.inclColumns = this.KPI.value.options.columns;
+        this.onSelectionChange = this.onSelectionChange.bind(this);
+        this.onFilterChange = this.onFilterChange.bind(this);
+        // this.opacity = this.knimelyObj.rowCount > 2500 ? .5 / Math.log10(this.knimelyObj.rowCount)
+        //     : .5 / Math.log10(this.knimelyObj.rowCount);
+        this.opacity = .5;
 
-        this.Plotly = arguments[2][0];
-        this._representation = representation;
-        this._value = value;
-        this._table = new kt()
-        this._table.setDataTable(representation.inObjects[0]);
-        this._columns = this._table.getColumnNames();
-        this._columnTypes = this._table.getColumnTypes();
-        this._numericColumns = this._columns.filter(function (col, colInd) {
-            return self._columnTypes[colInd] === 'number';
-        })
-        this._nameColInd = this._columns.indexOf(this._representation.options.groupByColumn);
-        this._inclColumns = this._value.options.columns;
-        this._inclColInd = [];
-        this._columns.forEach(function (col, colInd) {
-            if (self._inclColumns.indexOf(col) > -1) {
-                self._inclColInd.push(colInd);
-            }
-        })
-        this._knimelyObj = new KnimelyDataProcessor();
-        this._knimelyObj.initialize(this._table, this._groupByColInd);
-        this._opacity = this._knimelyObj._rowCount > 2500 ? .5 / (Math.log10(this._knimelyObj._rowCount)) :
-            .5 / (Math.log10(this._knimelyObj._rowCount));
-
-        this.createElement();
         this.drawChart();
-        this.drawKnimeMenu();
-        this.collectGarbage();
+        // this.drawKnimeMenu();
+        this.KPI.mountAndSubscribe(this.onSelectionChange, this.onFilterChange);
     };
 
     RadarPlot.drawChart = function () {
-        var traces = this.createTraces();
-        var layout = new this.LayoutObject(this._representation, this._value);
-        var config = new this.ConfigObject(this._representation, this._value);
-
-        this._knimelyObj._domain[0] -= this._knimelyObj._domain[0] * .01;
-        this._knimelyObj._domain[1] += this._knimelyObj._domain[1] * .01;
-        layout.polar.radialaxis.range = this._knimelyObj._domain;
-
-        this.Plotly.newPlot('knime-radar', traces, layout, config);
-    };
-
-    RadarPlot.createElement = function () {
-        //Create the plotly HTML element 
-        let div = document.createElement('DIV');
-        div.setAttribute('id', 'knime-radar');
-        document.body.append(div);
+        var t = this.createTraces();
+        var l = new this.LayoutObject(this.KPI.representation, this.KPI.value);
+        var c = new this.ConfigObject(this.KPI.representation, this.KPI.value);
+        this.KPI.createElement('knime-radar');
+        this.KPI.drawChart(t, l, c);
     };
 
     RadarPlot.createTraces = function () {
         var self = this;
         var traces = [];
 
-        Object.values(this._knimelyObj._rowDirectory).forEach(function (rowObj) {
-            var data = [];
-            var columns = [];
-            self._inclColInd.forEach(function (ind) {
-                data.push(rowObj.data[ind]);
-                columns.push(self._columns[ind]);
-                self._knimelyObj._domain[0] = Math.min(self._knimelyObj._domain[0], rowObj.data[ind]);
-                self._knimelyObj._domain[1] = Math.max(self._knimelyObj._domain[1], rowObj.data[ind]);
-            });
-            data.push(data[0]);
-            columns.push(columns[0]);
+        this.KPI.data.rowKeys.forEach(function (rowKey, rowInd) {
+            var d = [];
+            var t = self.inclColumns;
+            var color = self.KPI.data.rowColors[rowInd];
+            var fc = ['rgba(159, 159, 159, 0.1)'];
+            var lc = [self.KPI.hexToRGBA(color, self.opacity)];
+            var n = self.KPI.data[self.KPI.representation.groupByColumn] ?
+                self.KPI.data[self.KPI.representation.groupByColumn][rowInd] : rowKey;
+            var o = self.opacity;
 
-            traces.push(new self.TraceObject(data, columns, rowObj.id,
-                rowObj.color, rowObj.name, self._opacity));
+            t.forEach(function (col, colInd) {
+                d.push(self.KPI.data[col][rowInd]);
+            });
+
+            d.push(d[0]);
+            t.push(t[0]);
+
+            var trace = new self.TraceObject(d, t, rowKey, fc, lc, n, o);
+            trace.ids = [rowKey];
+            traces.push(trace);
         });
 
         return traces;
     };
 
-
-    RadarPlot.getSVG = function () {
-        this.Plotly.toImage(this.Plotly.d3.select('#knime-radar').node(),
-            { format: 'svg', width: 800, height: 600 }).then(function (dataUrl) {
-                //TODO: decode URI
-                return decodeURIComponent(dataUrl)
-            })
-    }
-
-    RadarPlot.TraceObject = function (rData, thetaData, rowId, color, name, opacity) {
+    RadarPlot.TraceObject = function (rData, thetaData, rowId, fillColor, lineColor, name) {
         this.r = rData;
         this.theta = thetaData;
         this.type = 'scatterpolar';
         this.fill = 'toself';
+        this.connectends = true;
         // this.fillcolor = 'rgba(159, 159, 159, 0.1)';
-        this.fillcolor = RadarPlot.hexToRGBA(color, 0);
+        this.fillcolor = fillColor;
         this.name = name || rowId;
         this.id = rowId;
         this.marker = {
-            color: RadarPlot.hexToRGBA(color, opacity),
+            color: lineColor,
             size: 6,
             opacity: .3
-        }
+        };
         this.line = {
             width: 3,
-            color: RadarPlot.hexToRGBA(color, opacity)
+            color: lineColor
         };
         return this;
-    }
+    };
 
     RadarPlot.LayoutObject = function (rep, val) {
         this.title = {
@@ -162,16 +97,16 @@ window.knimeRadarPlot = (function () {
         this.autoSize = true;
         this.legend = {
             x: 1,
-            y: 1,
+            y: 1
         };
         this.polar = {
             radialaxis: {
                 visible: true,
                 title: {
-                    text: val.options.axisLabel || '',
+                    text: val.options.axisLabel || ''
                 }
             }
-        }
+        };
         this.font = {
             size: 12,
             family: 'sans-serif'
@@ -183,7 +118,7 @@ window.knimeRadarPlot = (function () {
             t: 60,
             pad: 0
         };
-        this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none'
+        this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none';
         this.paper_bgcolor = rep.options.daColor || '#ffffff';
         this.plot_bgcolor = rep.options.backgroundColor || '#ffffff';
     };
@@ -207,49 +142,103 @@ window.knimeRadarPlot = (function () {
         return this;
     };
 
-    RadarPlot.collectGarbage = function () {
-        this._representation.inObjects[0].rows = null;
-        this._table.setDataTable(this._representation.inObjects[0]);
+    RadarPlot.onSelectionChange = function (data) {
+        if (data) {
+            this.KPI.updateSelected(data);
+            var changeObj = {
+                ['line.width']: [],
+                visible: []
+            };
+            if (this.KPI.showOnlySelected) {
+                this.KPI.data.rowKeys.forEach(function (rowKey) {
+                    if (self.KPI.filtered.has(rowKey) && self.KPI.selected.has(rowKey)) {
+                        changeObj.visible.push(true);
+                    } else {
+                        changeObj.visible.push(false);
+                    }
+                });
+            } else {
+                this.KPI.data.rowKeys.forEach(function (rowKey) {
+                    if (self.KPI.selected.has(rowKey)) {
+                        changeObj['line.width.width'].push(3);
+                    } else {
+                        changeObj['line.width.width'].push(1);
+                    }
+                });
+            }
+            this.KPI.update(changeObj);
+        }
+    };
+
+    RadarPlot.onFilterChange = function (data) {
+        if (data) {
+            var self = this;
+            this.KPI.updateFilter(data);
+            var changeObj = {
+                visible: []
+            };
+            this.KPI.data.rowKeys.forEach(function (rowKey) {
+                changeObj.visible.push(self.KPI.filtered.has(rowKey));
+            });
+            this.KPI.update(changeObj);
+        }
     };
 
     RadarPlot.drawKnimeMenu = function () {
 
         var self = this;
 
-        if (this._representation.options.enableViewControls) {
 
-            if (this._representation.options.enableFeatureSelection) {
+        if (self.KPI.representation.options.enableViewControls) {
+
+            if (self.KPI.representation.options.showFullscreen) {
+                knimeService.allowFullscreen();
+            }
+
+            if (self.KPI.representation.options.enableSelection &&
+                self.KPI.representation.options.showClearSelectionButton) {
+                knimeService.addButton(
+                    'clear-selection-button',
+                    'minus-square',
+                    'Clear Selection',
+                    function () {
+                        self.onSelectionChange({ points: [] });
+                    }
+                );
+            }
+
+            if (this.representation.options.enableFeatureSelection) {
                 // temporarily use controlContainer to solve th resizing problem with ySelect
-                var controlContainer = this.Plotly.d3.select("#knime-radar").insert("table", "#radarContainer ~ *")
-                    .attr("id", "radarControls")
-                    /*.style("width", "100%")*/
-                    .style("padding", "10px")
-                    .style("margin", "0 auto")
-                    .style("box-sizing", "border-box")
-                    .style("font-family", 'san-serif')
-                    .style("font-size", 12 + "px")
-                    .style("border-spacing", 0)
-                    .style("border-collapse", "collapse");
-                var columnChangeContainer = controlContainer.append("tr");
+                var controlContainer = this.Plotly.d3.select('#knime-radar').insert('table', '#radarContainer ~ *')
+                    .attr('id', 'radarControls')
+                    /* .style("width", "100%") */
+                    .style('padding', '10px')
+                    .style('margin', '0 auto')
+                    .style('box-sizing', 'border-box')
+                    .style('font-family', 'san-serif')
+                    .style('font-size', 12 + 'px')
+                    .style('border-spacing', 0)
+                    .style('border-collapse', 'collapse');
+                var columnChangeContainer = controlContainer.append('tr');
                 var columnSelect = new twinlistMultipleSelections();
                 var columnSelectComponent = columnSelect.getComponent().get(0);
-                columnChangeContainer.append("td").attr("colspan", "3").node().appendChild(columnSelectComponent);
-                columnSelect.setChoices(this._numericColumns);
-                columnSelect.setSelections(this._inclColumns);
+                columnChangeContainer.append('td').attr('colspan', '3').node().appendChild(columnSelectComponent);
+                columnSelect.setChoices(this.numericColumns);
+                columnSelect.setSelections(this.inclColumns);
                 columnSelect.addValueChangedListener(function () {
-                    self._inclColumns = columnSelect.getSelections();
-                    self._inclColInd = [];
-                    self._columns.forEach(function (col, colInd) {
-                        if (self._inclColumns.indexOf(col) > -1) {
-                            self._inclColInd.push(colInd);
+                    self.inclColumns = columnSelect.getSelections();
+                    self.inclColInd = [];
+                    self.columns.forEach(function (col, colInd) {
+                        if (self.inclColumns.indexOf(col) > -1) {
+                            self.inclColInd.push(colInd);
                         }
-                    })
+                    });
 
-                    self._knimelyObj._domain[0] -= self._knimelyObj._domain[0] * .01;
-                    self._knimelyObj._domain[1] += self._knimelyObj._domain[1] * .01;
+                    self.knimelyObj.domain[0] -= self.knimelyObj.domain[0] * .01;
+                    self.knimelyObj.domain[1] += self.knimelyObj.domain[1] * .01;
 
                     var changeObj = self.createTraces();
-                    var x = new self.LayoutObject(self._representation, self._value);
+                    var x = new self.LayoutObject(self.representation, self.value);
                     x.polar.radialaxis.range = null;
 
                     self.Plotly.react('knime-radar', changeObj, x);
@@ -261,17 +250,17 @@ window.knimeRadarPlot = (function () {
                 knimeService.addMenuDivider();
             }
 
-            if (this._representation.options.tooltipToggle) {
+            if (this.representation.options.tooltipToggle) {
 
                 var tooltipToggleCheckBox = knimeService.createMenuCheckbox(
                     'show-tooltips-checkbox',
-                    this._representation.options.tooltipToggle,
+                    this.representation.options.tooltipToggle,
                     function () {
-                        if (self._representation.options.tooltipToggle !== this.checked) {
-                            self._representation.options.tooltipToggle = this.checked;
+                        if (self.representation.options.tooltipToggle !== this.checked) {
+                            self.representation.options.tooltipToggle = this.checked;
                             var layoutObj = {
-                                hovermode: self._representation.options.tooltipToggle ?
-                                    'closest' : false
+                                hovermode: self.representation.options.tooltipToggle
+                                    ? 'closest' : false
                             };
                             self.Plotly.relayout('knime-radar', layoutObj);
                         }
@@ -299,16 +288,16 @@ window.knimeRadarPlot = (function () {
             r: [],
             theta: []
         };
-        this._knimelyObj._domain = [Number.MAX_VALUE, -Number.MIN_VALUE];
+        this.knimelyObj.domain = [Number.MAX_VALUE, -Number.MIN_VALUE];
 
-        Object.values(this._knimelyObj._rowDirectory).forEach(function (rowObj) {
+        Object.values(this.knimelyObj.rowDirectory).forEach(function (rowObj) {
             var data = [];
             var columns = [];
-            self._inclColInd.forEach(function (ind) {
+            self.inclColInd.forEach(function (ind) {
                 data.push(rowObj.data[ind]);
-                columns.push(self._columns[ind]);
-                self._knimelyObj._domain[0] = Math.min(self._knimelyObj._domain[0], rowObj.data[ind]);
-                self._knimelyObj._domain[1] = Math.max(self._knimelyObj._domain[1], rowObj.data[ind]);
+                columns.push(self.columns[ind]);
+                self.knimelyObj.domain[0] = Math.min(self.knimelyObj.domain[0], rowObj.data[ind]);
+                self.knimelyObj.domain[1] = Math.max(self.knimelyObj.domain[1], rowObj.data[ind]);
             });
             data.push(data[0]);
             columns.push(columns[0]);
@@ -318,13 +307,7 @@ window.knimeRadarPlot = (function () {
         });
 
         return traces;
-    }
-
-    RadarPlot.hexToRGBA = function (hColor, alph) {
-        return 'rgba(' + parseInt(hColor.slice(1, 3), 16) + ', ' +
-            parseInt(hColor.slice(3, 5), 16) + ', ' +
-            parseInt(hColor.slice(5, 7), 16) + ', ' + alph + ')';
-    }
+    };
 
     return RadarPlot;
 

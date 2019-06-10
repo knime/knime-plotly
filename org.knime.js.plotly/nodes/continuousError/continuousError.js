@@ -1,174 +1,67 @@
-
-/////////////////PLOTLY DATA////////////////////////////
-var KnimelyDataProcessor = function () {
-
-    //Created during initialization
-    this._columns;
-    this._rowColors;
-    this._groupByColumnInd;
-
-    //Created during processData step
-    this._rowDirectory;
-    this._dataArray;
-
-    this.initialize = function (knimeDataTable, groupByColumnInd) {
-        var self = this;
-
-        this._columns = knimeDataTable.getColumnNames();
-        this._rowColors = knimeDataTable.getRowColors();
-        this._groupByColumnInd = this._columns.indexOf(groupByColumnInd);
-        this._rowDirectory = {};
-        this._dataArray = [];
-        this.groupBySet = [];
-
-        knimeDataTable.getRows().forEach(function (row, rowInd) {
-
-            var rowGroup = row.data[self._groupByColumnInd] || '';
-            var traceIndex = self.groupBySet.indexOf(rowGroup);
-            var rowColor = self._rowColors[rowInd] || 'lightblue';
-
-            if (traceIndex < 0) {
-                traceIndex = self.groupBySet.push(rowGroup) - 1;
-                self._dataArray[traceIndex] = new self.DataObj(rowGroup, self._columns);
-            }
-            var pInd = self._dataArray[traceIndex].consumeRow(row, rowColor);
-
-            self._rowDirectory[row.rowKey] = {
-                tInd: traceIndex,
-                pInd: pInd,
-                fInd: pInd
-            };
-        });
-        return this;
-    };
-
-    this.DataObj = function (name, columns) {
-        var self = this;
-        this.rowKeys = [];
-        this.rowColors = [];
-        this.columns = columns;
-        this.name = name;
-
-        columns.forEach(function (column) {
-            self[column] = [];
-        });
-
-        this.consumeRow = function (row, rowColor, start, end) {
-            var self = this;
-            start = start || 0;
-            end = end || row.data.length;
-
-            for (var i = start; i < end; i++) {
-                self[self.columns[i]].push(row.data[i]);
-            }
-
-            self.rowColors.push(rowColor);
-            return self.rowKeys.push(row.rowKey) - 1;
-        };
-
-        this.produceColumn = function (columnName) {
-            return this[columnName];
-        };
-
-        return this;
-    };
-    return this;
-};
-/////////////////END PLOTLY DATA////////////////////////////
-
-
-/* global kt:false */
+/* global kt:false, twinlistMultipleSelections:false, KnimePlotlyInterface:false  */
 window.knimeContinuousErrorPlot = (function () {
 
     var ContinuousError = {};
 
     ContinuousError.init = function (representation, value) {
-
         var self = this;
-        this.Plotly = arguments[2][0];
-        this._representation = representation;
-        this._value = value;
-        this._table = new kt()
-        this._table.setDataTable(representation.inObjects[0]);
-        this._columns = this._table.getColumnNames();
-        this._columnTypes = this._table.getColumnTypes();
-        this._numericColumns = this._columns.filter(function (col, colInd) {
-            return self._columnTypes[colInd] === 'number';
-        })
-        this._knimelyObj = new KnimelyDataProcessor();
-        this._knimelyObj.initialize(this._table,
-            this._representation.options.enableGroups ? this._representation.options.groupByColumn : '');
-        this._xAxisCol = this._value.options.xAxisColumn || this._columns[0];
-        this._yAxisCol = this._value.options.yAxisColumn || this._columns[1];
-        this._lineColumns = this._value.options.columns || [];
-        this._selected = [];
-        this.includedDirectory = [];
-        this.selectedDirectory = [];
-        this.orderedIndicies = [];
-        this.orderedXData = [];
+        this.KPI = new KnimePlotlyInterface();
+        this.KPI.initialize(representation, value, new kt(), arguments[2][0]);
+        this.columns = this.KPI.table.getColumnNames();
+        this.columnTypes = this.KPI.table.getColumnTypes();
+        this.numericColumns = this.columns.filter(function (c, i) {
+            return self.columnTypes[i] === 'number';
+        });
+
+        this.xAxisCol = this.KPI.value.options.xAxisColumn || this.columns[0];
+        this.lineColumns = this.KPI.value.options.columns || [];
         this.onSelectionChange = this.onSelectionChange.bind(this);
         this.onFilterChange = this.onFilterChange.bind(this);
-        this.showOnlySelected = false;
-        this.totalSelected = 0;
         this.calculationMethods = ['Variance', 'Standard Deviation', 'Percent', 'Fixed Value'];
         this.needsTypeChange = false;
 
-        this.createElement();
         this.drawChart();
-        this.drawKnimeMenu();
-        this.mountAndSubscribe();
-        this.collectGarbage();
+        // this.drawKnimeMenu();
+        this.KPI.mountAndSubscribe(this.onSelectionChange, this.onFilterChange);
     };
 
     ContinuousError.drawChart = function () {
 
-        if (!knimeService.getGlobalService()) {
-            this.createAllInclusiveFilter();
-        }
-
-        this.createAllExclusiveSelected();
-        this.createOrderedIndicies();
-
-        var traces = this.createTraces();
-        var layout = new this.LayoutObject(this._representation, this._value);
-        var config = new this.ConfigObject(this._representation, this._value)
+        var t = this.createTraces();
+        var l = new this.LayoutObject(this.KPI.representation, this.KPI.value);
+        var c = new this.ConfigObject(this.KPI.representation, this.KPI.value);
         if (this.needsTypeChange) {
-            traces.forEach(function (trace) {
+            t.forEach(function (trace) {
                 trace.type = 'scatter';
-            })
+            });
         }
-        // debugger
-        // var test = this.getFilteredChangeObject();
-        debugger
-
-        this.Plotly.newPlot('knime-continuous-error', traces, layout, config);
-
-        // this.Plotly.restyle('knime-continuous-error', test);
-    };
-
-    ContinuousError.createElement = function () {
-        //Create the plotly HTML element 
-        let div = document.createElement('DIV');
-        div.setAttribute('id', 'knime-continuous-error');
-        document.body.append(div);
+        this.KPI.createElement('knime-continuous-error');
+        this.KPI.drawChart(t, l, c);
+        this.KPI.update();
     };
 
     ContinuousError.createTraces = function () {
         var self = this;
         var traces = [];
         var auxillaryTraces = [];
+        this.KPI.updateOrderedIndicies(this.xAxisCol);
+        var keys = {
+            dataKeys: [self.xAxisCol, 'rowKeys', 'rowColors'],
+            plotlyKeys: [['x'], ['text', 'ids'], ['marker.color']]
+        };
+        this.KPI.updateKeys(keys);
+        var data = self.KPI.getData(keys);
         this._knimelyObj._dataArray.forEach(function (dataObj, objInd) {
             var rowKeys = self.applyOrderedIndicies(dataObj.rowKeys, objInd);
             var rowColors = self.applyOrderedIndicies(dataObj.rowColors, objInd);
             var xData = self.orderedXData[objInd];
             var color = null;
             var hasColor = false;
-            var colorSet = Array.from(new Set(self._knimelyObj._rowColors));
+            var colorSet = new self._knimelyObj.kSet(self._knimelyObj._rowColors).getArray();
             if (self._representation.options.enableGroups) {
                 color = self.getMostFrequentColor(rowColors.slice());
                 hasColor = true;
             }
-
 
 
             self._lineColumns.forEach(function (col, colInd) {
@@ -204,19 +97,18 @@ window.knimeContinuousErrorPlot = (function () {
                     trace.error_y = eData;
                 }
                 traces.push(trace);
-            })
+            });
 
         });
-        return [...traces, ...auxillaryTraces];
+        var allTraces = [];
+        traces.forEach(function (t) {
+            allTraces.push(t);
+        });
+        auxillaryTraces.forEach(function (at) {
+            allTraces.push(at);
+        });
+        return [allTraces];
     };
-
-    ContinuousError.getSVG = function () {
-        this.Plotly.toImage(this.Plotly.d3.select('#knime-continuous-error').node(),
-            { format: 'svg', width: 800, height: 600 }).then(function (dataUrl) {
-                //TODO: decode URI
-                return decodeURIComponent(dataUrl)
-            })
-    }
 
     ContinuousError.TraceObject = function (xData, yData) {
         this.x = xData;
@@ -227,32 +119,32 @@ window.knimeContinuousErrorPlot = (function () {
         this.marker = {
             color: [],
             opacity: .1,
-            size: .00001,
+            size: .00001
         };
         // this.error_y = eData;
         this.line = {
             width: 1,
             shape: 'spline',
             smoothing: .1
-        }
+        };
         this.unselected = {
             marker: {
                 opacity: .1,
-                size: .00001,
+                size: .00001
             }
         };
         this.selected = {
             marker: {
                 opacity: 1,
-                size: 10,
+                size: 10
             }
         };
         return this;
-    }
+    };
 
     ContinuousError.LayoutObject = function (rep, val) {
         this.title = {
-            text: val.options.title || 'Line Plot',
+            text: val.options.title || 'Continuous Error Plot',
             y: 1,
             yref: 'paper',
             yanchor: 'bottom'
@@ -261,40 +153,40 @@ window.knimeContinuousErrorPlot = (function () {
         this.autoSize = true;
         this.legend = {
             x: 1,
-            y: 1,
+            y: 1
         };
         this.font = {
             size: 12,
             family: 'sans-serif'
         };
         this.xaxis = {
-            title: val.options.xAxisLabel ? val.options.xAxisLabel :
-                val.options.xAxisColumn,
+            title: val.options.xAxisLabel ? val.options.xAxisLabel
+                : val.options.xAxisColumn,
             font: {
                 size: 12,
                 family: 'sans-serif'
             },
             type: 'linear',
             showgrid: val.options.showGrid,
-            gridcolor: '#fffff', //potential option
-            linecolor: '#fffff', //potential option
+            gridcolor: '#fffff', // potential option
+            linecolor: '#fffff', // potential option
             linewidth: 1,
-            nticks: 10,
+            nticks: 10
 
         };
         this.yaxis = {
-            title: val.options.yAxisLabel ? val.options.yAxisLabel :
-                val.options.yAxisColumn,
+            title: val.options.yAxisLabel ? val.options.yAxisLabel
+                : val.options.yAxisColumn,
             font: {
                 size: 12,
                 family: 'sans-serif'
             },
             type: 'linear',
             showgrid: val.options.showGrid,
-            gridcolor: '#fffff', //potential option
-            linecolor: '#fffff', //potential option
+            gridcolor: '#fffff', // potential option
+            linecolor: '#fffff', // potential option
             linewidth: 1,
-            nticks: 10,
+            nticks: 10
         };
         this.margin = {
             l: 55,
@@ -303,7 +195,7 @@ window.knimeContinuousErrorPlot = (function () {
             t: 60,
             pad: 0
         };
-        this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none'
+        this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none';
         this.paper_bgcolor = rep.options.daColor || '#ffffff';
         this.plot_bgcolor = rep.options.backgroundColor || '#ffffff';
     };
@@ -326,46 +218,7 @@ window.knimeContinuousErrorPlot = (function () {
         return this;
     };
 
-    ContinuousError.collectGarbage = function () {
-        this._representation.inObjects[0].rows = null;
-        this._table.setDataTable(this._representation.inObjects[0]);
-    };
-
-    ContinuousError.createAllInclusiveFilter = function () {
-        var self = this;
-        self._knimelyObj._dataArray.forEach(function (dataObj, objInd) {
-            var filteredIndicies = self.includedDirectory[objInd] || new Set([]);
-            for (var i = 0; i < dataObj[self._xAxisCol].length; i++) {
-                filteredIndicies.add(i);
-            }
-            self.includedDirectory[objInd] = filteredIndicies;
-        });
-    };
-
-    ContinuousError.createAllExclusiveSelected = function () {
-        var self = this;
-        var count = 0;
-        this._knimelyObj._dataArray.forEach(function () {
-            self.selectedDirectory[count] = new Set([]);
-            count++;
-        });
-    };
-
-    ContinuousError.mountAndSubscribe = function () {
-        var self = this;
-        document.getElementById('knime-continuous-error').on('plotly_selected', function (plotlyEvent) {
-            self.onSelectionChange(plotlyEvent);
-        });
-        document.getElementById('knime-continuous-error').on('plotly_deselect', function () {
-            self.onSelectionChange({ points: [] });
-        });
-        this.togglePublishSelection();
-        this.toggleSubscribeToFilters();
-        this.toggleSubscribeToSelection();
-    };
-
     ContinuousError.onSelectionChange = function (data) {
-        debugger
         if (data) {
             this.updateSelected(data);
             var changeObj = this.getFilteredChangeObject();
@@ -379,142 +232,6 @@ window.knimeContinuousErrorPlot = (function () {
         this.Plotly.restyle('knime-continuous-error', changeObj);
     };
 
-    ContinuousError.updateSelected = function (data) {
-        var self = this;
-
-        if (!data) {
-            return;
-        }
-
-        this._selected = [];
-        this.totalSelected = 0;
-        this.createAllExclusiveSelected();
-
-        if (data.points) { // this is for Plotly events
-
-            var selectedSet = new Set([]);
-
-            data.points.forEach(function (pt) {
-                var rowObj = self._knimelyObj._rowDirectory[pt.id];
-                if (rowObj !== undefined) {
-                    if (!selectedSet.has(pt.id)) {
-                        self.totalSelected++;
-                        self.selectedDirectory[rowObj.tInd].add(rowObj.pInd);
-                        selectedSet.add(pt.id);
-                    }
-                }
-            });
-
-            this._selected = Array.from(selectedSet);
-
-            if (self._value.options.publishSelection && knimeService.getGlobalService()) {
-                knimeService.setSelectedRows(
-                    this._table.getTableId(),
-                    this._selected,
-                    this.onSelectionChange
-                );
-            }
-
-        } else { // this is for incoming knime events
-
-            this._selected = knimeService.getAllRowsForSelection(
-                this._table.getTableId()
-            );
-
-            this._selected.forEach(function (rowKey) {
-                var rowObj = self._knimelyObj._rowDirectory[rowKey]
-                if (rowObj !== undefined) { //only == undef with two different data sets 
-                    self.selectedDirectory[rowObj.tInd].add(rowObj.pInd);
-                    self.totalSelected++;
-                }
-            });
-        }
-    };
-
-    ContinuousError.updateFilter = function (data) {
-
-        if (!data) {
-            this.createAllInclusiveFilter();
-            return;
-        }
-
-        var self = this;
-
-        data.elements.forEach(function (filterElement, filterInd) {
-            if (filterElement.type === 'range' && filterElement.columns) {
-                for (var col = 0; col < filterElement.columns.length; col++) {
-                    var column = filterElement.columns[col];
-                    self._knimelyObj._dataArray.forEach(function (dataObj, objInd) {
-                        var filteredIndicies = self.includedDirectory[objInd] || new Set([]);
-                        dataObj[column.columnName].map(function (colVal, colInd) {
-                            if (typeof colVal === 'undefined' || colVal === null) {
-                                return;
-                            }
-                            var included = true;
-                            if (column.type === 'numeric') {
-                                if (column.minimumInclusive) {
-                                    included = included && colVal >= column.minimum;
-                                } else {
-                                    included = included && colVal > column.minimum;
-                                }
-                                if (column.maximumInclusive) {
-                                    included = included && colVal <= column.maximum;
-                                } else {
-                                    included = included && colVal < column.maximum;
-                                }
-                            } else if (column.type === 'nominal') {
-                                included = included && column.values.indexOf(colVal) >= 0;
-                            }
-                            if (!included) {
-                                if (filteredIndicies.has(colInd)) {
-                                    filteredIndicies.delete(colInd);
-                                }
-                            } else {
-                                if (filterInd > 0 && !filteredIndicies.has(colInd)) {
-                                    return;
-                                }
-                                filteredIndicies.add(colInd);
-                            }
-                        });
-                        self.includedDirectory[objInd] = filteredIndicies;
-                    })
-                }
-            }
-        });
-    };
-
-    ContinuousError.getSelectedChangeObject = function (filteredObj) {
-        var self = this;
-        var changeObj = filteredObj;
-        var count = 0;
-
-        this._knimelyObj._dataArray.forEach(function (dataObj, objInd) {
-
-            var selected = new Set([]);
-            var dataKeys = new Set(dataObj.rowKeys)
-            self._selected.forEach(function (rowKey) {
-                if (dataKeys.has(rowKey)) {
-                    var rowObj = self._knimelyObj._rowDirectory[rowKey];
-                    if (self._value.options.enableAggregate) {
-                        //TODO: insert aggregate code
-                    } else {
-                        selected.add(rowObj.fInd);
-                    }
-                }
-            })
-            for (var j = 0; j < self._lineColumns.length; j++) {
-                if (Array.from(selected).length > 0 && self._lineColumns[j] !== null) {
-                    changeObj['selectedpoints'][count] = Array.from(selected);
-                } else if (self.totalSelected < 1) {
-                    changeObj['selectedpoints'][count] = null;
-                }
-                count++;
-            }
-        })
-
-        return changeObj;
-    };
-
     ContinuousError.getFilteredChangeObject = function (keys, pKeys) {
 
         var self = this;
@@ -526,14 +243,14 @@ window.knimeContinuousErrorPlot = (function () {
             ids: [],
             ['marker.color']: [],
             error_y: []
-        }
+        };
         var auxChangeObj = {
             selectedpoints: [],
             x: [],
             y: [],
             text: [],
-            ids: [],
-        }
+            ids: []
+        };
 
         this._knimelyObj._dataArray.forEach(function (dataObj, objInd) {
 
@@ -553,7 +270,7 @@ window.knimeContinuousErrorPlot = (function () {
             var count = 0;
             var orderedData = [];
 
-            //TODO: Implemented this bug fix vvvvvv
+            // TODO: Implemented this bug fix vvvvvv
             // for (var i = 0; i < filteredRowKeys.length; i++) {
             //     var rowKey = filteredRowKeys[this.orderedIndicies[objInd][i]];
             //     var rowObj = self._knimelyObj._rowDirectory[rowKey];
@@ -578,7 +295,7 @@ window.knimeContinuousErrorPlot = (function () {
             var xData = self.applyFilter(dataObj[self._xAxisCol], objInd);
 
             self._lineColumns.forEach(function (col, colInd) {
-                changeObj['selectedpoints'].push([]);
+                changeObj.selectedpoints.push([]);
                 if (col) {
                     var traceName = col + '<br>' + dataObj.name;
                     var yData = self.applyFilter(dataObj[col], objInd);
@@ -604,180 +321,32 @@ window.knimeContinuousErrorPlot = (function () {
                 } else {
                     changeObj.error_y.push(null);
                     changeObj['marker.color'].push([]);
-                    changeObj.text.push([])
+                    changeObj.text.push([]);
                     changeObj.ids.push([]);
                     changeObj.x.push([]);
                     changeObj.y.push([]);
                     if (dataObj[self._xAxisCol].length > 1) {
                         auxChangeObj.x.push([]);
-                        auxChangeObj.y.push([])
+                        auxChangeObj.y.push([]);
                     }
                 }
-            })
+            });
 
         });
 
         for (var i = 0; i < auxChangeObj.x.length; i++) {
-            changeObj.x.push(auxChangeObj.x[i])
-            changeObj.y.push(auxChangeObj.y[i])
+            changeObj.x.push(auxChangeObj.x[i]);
+            changeObj.y.push(auxChangeObj.y[i]);
             changeObj['marker.color'].push([]);
             changeObj.error_y.push(null);
             changeObj.text.push(auxChangeObj.text[i]);
             changeObj.ids.push(auxChangeObj.ids[i]);
-            changeObj['selectedpoints'].push(self.totalSelected > 0 ? [] : null);
+            changeObj.selectedpoints.push(self.totalSelected > 0 ? [] : null);
         }
 
         changeObj = this.getSelectedChangeObject(changeObj);
 
         return changeObj;
-    };
-
-    ContinuousError.toggleSubscribeToFilters = function () {
-        if (this._value.options.subscribeToFilters) {
-            knimeService.subscribeToFilter(
-                this._table.getTableId(),
-                this.onFilterChange,
-                this._table.getFilterIds()
-            );
-        } else {
-            knimeService.unsubscribeFilter(
-                this._table.getTableId(),
-                this.onFilterChange
-            );
-        }
-    };
-
-    ContinuousError.toggleSubscribeToSelection = function () {
-        if (this._value.options.subscribeToSelection) {
-            knimeService.subscribeToSelection(
-                this._table.getTableId(),
-                this.onSelectionChange
-            );
-        } else {
-            knimeService.unsubscribeSelection(
-                this._table.getTableId(),
-                this.onSelectionChange
-            );
-        }
-    };
-
-    ContinuousError.togglePublishSelection = function () {
-        if (this._value.options.publishSelection) {
-            knimeService.setSelectedRows(
-                this._table.getTableId(),
-                this._selected
-            );
-        }
-    };
-
-    ContinuousError.toggleShowOnlySelected = function () {
-        var changeObj = this.getFilteredChangeObject();
-
-        this.Plotly.restyle('knime-continuous-error', changeObj);
-    };
-
-    ContinuousError.createOrderedIndicies = function () {
-        var self = this;
-
-        this._knimelyObj._dataArray.forEach(function (dataObj, objInd) {
-            var array = dataObj[self._xAxisCol];
-            var indicies = [];
-
-            for (var i = 0; i < array.length; i++) {
-                indicies.push(i);
-            }
-
-            var mergeSort = function (subArr, indArr) {
-                if (subArr.length <= 1) {
-                    return [subArr, indArr];
-                }
-
-                var centInd = Math.floor(subArr.length / 2);
-                var leftArr = subArr.slice(0, centInd);
-                var rightArr = subArr.slice(centInd);
-                var lIndArr = indArr.slice(0, centInd);
-                var rIndArr = indArr.slice(centInd);
-
-                var lSortArr = mergeSort(leftArr, lIndArr);
-                var rSortArr = mergeSort(rightArr, rIndArr);
-                return merge(lSortArr, rSortArr);
-            }
-
-            var merge = function (lArr, rArr) {
-                var sortedArr = [];
-                var sortedInd = [];
-                var lInd = 0;
-                var rInd = 0;
-
-                while (lInd < lArr[0].length && rInd < rArr[0].length) {
-                    if (lArr[0][lInd] < rArr[0][rInd]) {
-                        sortedArr.push(lArr[0][lInd]);
-                        sortedInd.push(lArr[1][lInd]);
-                        lInd++;
-                    } else {
-                        sortedArr.push(rArr[0][rInd]);
-                        sortedInd.push(rArr[1][rInd]);
-                        rInd++;
-                    }
-                }
-
-                return [sortedArr.concat(lArr[0].slice(lInd)).concat(rArr[0].slice(rInd)),
-                sortedInd.concat(lArr[1].slice(lInd)).concat(rArr[1].slice(rInd))];
-            }
-
-            var xYz = mergeSort(array, indicies);
-            self.orderedXData[objInd] = xYz[0];
-            self.orderedIndicies[objInd] = xYz[1];
-
-            var orderedRows = self.applyOrderedIndicies(dataObj.rowKeys, objInd);
-
-            orderedRows.forEach(function (rowKey, pointInd) {
-                self._knimelyObj._rowDirectory[rowKey].fInd = pointInd;
-            })
-        })
-    };
-
-    ContinuousError.applyOrderedIndicies = function (array, objInd) {
-        var orderedData = [];
-
-        for (var i = 0; i < array.length; i++) {
-            orderedData[i] = array[this.orderedIndicies[objInd][i]];
-        }
-
-        return orderedData.filter(function (val) { return (val === 0 || val) });
-    };
-
-    ContinuousError.applyFilter = function (array, objInd) {
-        var self = this;
-        var filteredArr = [];
-        array.map(function (val, valInd) {
-            var included = self.includedDirectory[objInd].has(valInd);
-            if (self.showOnlySelected && included && self._selected.length > 0) {
-                included = self.selectedDirectory[objInd].has(valInd);
-            }
-            if (included) {
-                filteredArr.push(val);
-            } else {
-                filteredArr.push(null);
-            }
-        });
-        return this.applyOrderedIndicies(filteredArr, objInd);
-    };
-
-    ContinuousError.hexToRGBA = function (hColor, alph) {
-        return 'rgba(' + parseInt(hColor.slice(1, 3), 16) + ', ' +
-            parseInt(hColor.slice(3, 5), 16) + ', ' +
-            parseInt(hColor.slice(5, 7), 16) + ', ' + alph + ')';
-    };
-
-    ContinuousError.getMostFrequentColor = function (rowColors) {
-        return rowColors.sort(function (c1, c2) {
-            return (rowColors.filter(function (c3) {
-                return c3 === c1;
-            }).length - rowColors.filter(function (c4) {
-                return c4 === c2;
-            }));
-        }).pop();
     };
 
     ContinuousError.getErrorLineData = function (yValues, xValues) {
@@ -786,65 +355,65 @@ window.knimeContinuousErrorPlot = (function () {
         var yData = [];
 
         switch (String(this._value.options.calcMethod.replace(/\s/g, ' '))) {
-            case 'Variance':
-            case 'Standard Deviation':
-                var sum = 0;
-                var count = 0;
-                var mean = 0;
-                yValues.forEach(function (val) {
-                    if (val === 0 || val) {
-                        sum += val
-                        count++;
-                    }
-                })
-                mean = sum / count;
-                var variance = 0;
-                yValues.forEach(function (val) {
-                    if (val === 0 || val) {
-                        variance += Math.pow((val - mean), 2);
-                    }
-                })
-                variance /= count - 1;
-                if (!variance) {
-                    variance = 0;
+        case 'Variance':
+        case 'Standard Deviation':
+            var sum = 0;
+            var count = 0;
+            var mean = 0;
+            yValues.forEach(function (val) {
+                if (val === 0 || val) {
+                    sum += val;
+                    count++;
                 }
-                if (this._value.options.calcMethod.replace(/\s/g, ' ') === 'Standard Deviation') {
-                    variance = Math.sqrt(variance);
-                    // variance = Math.pow(Math.E, Math.log(variance) / 2);
+            });
+            mean = sum / count;
+            var variance = 0;
+            yValues.forEach(function (val) {
+                if (val === 0 || val) {
+                    variance += Math.pow(val - mean, 2);
                 }
+            });
+            variance /= count - 1;
+            if (!variance) {
+                variance = 0;
+            }
+            if (this._value.options.calcMethod.replace(/\s/g, ' ') === 'Standard Deviation') {
+                variance = Math.sqrt(variance);
+                // variance = Math.pow(Math.E, Math.log(variance) / 2);
+            }
 
-                for (var i = 0; i < yValues.length; i++) {
-                    yData.push(yValues[i] + (variance * self._representation.options.calcMultiplier));
-                    xData.push(xValues[i]);
-                }
-                for (var i = yValues.length - 1; i >= 0; i--) {
-                    yData.push(yValues[i] + (-1 * variance * self._representation.options.calcMultiplier));
-                    xData.push(xValues[i]);
-                }
+            for (var i = 0; i < yValues.length; i++) {
+                yData.push(yValues[i] + variance * self._representation.options.calcMultiplier);
+                xData.push(xValues[i]);
+            }
+            for (var j = yValues.length - 1; j >= 0; j--) {
+                yData.push(yValues[j] + -1 * variance * self._representation.options.calcMultiplier);
+                xData.push(xValues[j]);
+            }
 
-                break;
-            case 'Percent':
-                for (var i = 0; i < yValues.length; i++) {
-                    yData.push(yValues[i] + (yValues[i] * (self._representation.options.calcPercent / 100)));
-                    xData.push(xValues[i]);
-                }
-                for (var i = yValues.length - 1; i >= 0; i--) {
-                    yData.push(yValues[i] + (-1 * yValues[i] * (self._representation.options.calcPercent / 100)));
-                    xData.push(xValues[i]);
-                }
-                break;
-            case 'Fixed Value':
-                for (var i = 0; i < yValues.length; i++) {
-                    yData.push(yValues[i] + self._representation.options.fixedValue);
-                    xData.push(xValues[i]);
-                }
-                for (var i = yValues.length - 1; i >= 0; i--) {
-                    yData.push(yValues[i] + (-1 * self._representation.options.fixedValue));
-                    xData.push(xValues[i]);
-                }
-                break;
-            default:
-                break;
+            break;
+        case 'Percent':
+            for (var k = 0; k < yValues.length; k++) {
+                yData.push(yValues[k] + yValues[k] * (self._representation.options.calcPercent / 100));
+                xData.push(xValues[k]);
+            }
+            for (var x = yValues.length - 1; x >= 0; x--) {
+                yData.push(yValues[x] + -1 * yValues[x] * (self._representation.options.calcPercent / 100));
+                xData.push(xValues[x]);
+            }
+            break;
+        case 'Fixed Value':
+            for (var y = 0; y < yValues.length; y++) {
+                yData.push(yValues[y] + self._representation.options.fixedValue);
+                xData.push(xValues[y]);
+            }
+            for (var z = yValues.length - 1; z >= 0; z--) {
+                yData.push(yValues[z] + -1 * self._representation.options.fixedValue);
+                xData.push(xValues[z]);
+            }
+            break;
+        default:
+            break;
         }
 
         var errorTrace = {
@@ -865,13 +434,13 @@ window.knimeContinuousErrorPlot = (function () {
             unselected: {
                 marker: {
                     opacity: .00001,
-                    size: .00001,
+                    size: .00001
                 }
             },
             selected: {
                 marker: {
                     opacity: .00001,
-                    size: .00001,
+                    size: .00001
                 }
             }
         };
@@ -885,51 +454,51 @@ window.knimeContinuousErrorPlot = (function () {
             type: '',
             value: [],
             visible: true
-        }
+        };
 
         switch (String(this._value.options.calcMethod.replace(/\s/g, ' '))) {
-            case 'Variance':
-            case 'Standard Deviation':
-                var sum = 0;
-                var count = 0;
-                var mean = 0;
-                yValues.forEach(function (val) {
-                    if (val === 0 || val) {
-                        sum += val
-                        count++;
-                    }
-                })
-                mean = sum / count;
-                var variance = 0;
-                yValues.forEach(function (val) {
-                    if (val === 0 || val) {
-                        variance += Math.pow((val - mean), 2);
-                    }
-                })
-                variance /= count - 1;
-                if (!variance) {
-                    variance = 0;
+        case 'Variance':
+        case 'Standard Deviation':
+            var sum = 0;
+            var count = 0;
+            var mean = 0;
+            yValues.forEach(function (val) {
+                if (val === 0 || val) {
+                    sum += val;
+                    count++;
                 }
-                error_y.type = 'constant';
-                if (this._value.options.calcMethod.replace(/\s/g, ' ') === 'Standard Deviation') {
-                    variance = Math.sqrt(variance);
-                    // variance = Math.pow(Math.E, Math.log(variance) / 2);
+            });
+            mean = sum / count;
+            var variance = 0;
+            yValues.forEach(function (val) {
+                if (val === 0 || val) {
+                    variance += Math.pow(val - mean, 2);
                 }
-                error_y.value = variance * self._representation.options.calcMultiplier;
-                break;
-            case 'Percent':
-                error_y.type = 'percent';
-                error_y.value = self._representation.options.calcPercent;
-                break;
-            case 'Fixed Value':
-                error_y.type = 'constant';
-                error_y.value = self._representation.options.fixedValue;
-                break;
-            default:
-                break;
+            });
+            variance /= count - 1;
+            if (!variance) {
+                variance = 0;
+            }
+            error_y.type = 'constant';
+            if (this._value.options.calcMethod.replace(/\s/g, ' ') === 'Standard Deviation') {
+                variance = Math.sqrt(variance);
+                // variance = Math.pow(Math.E, Math.log(variance) / 2);
+            }
+            error_y.value = variance * self._representation.options.calcMultiplier;
+            break;
+        case 'Percent':
+            error_y.type = 'percent';
+            error_y.value = self._representation.options.calcPercent;
+            break;
+        case 'Fixed Value':
+            error_y.type = 'constant';
+            error_y.value = self._representation.options.fixedValue;
+            break;
+        default:
+            break;
         }
 
-        if (error_y.value === NaN || error_y.value === null || error_y.value === undefined) {
+        if (isNaN(error_y.value) || error_y.value === null || typeof error_y.value === 'undefined') {
             error_y.value = 0;
         }
 
@@ -937,11 +506,11 @@ window.knimeContinuousErrorPlot = (function () {
     };
 
     ContinuousError.getHoverText = function (rowKeys, colName, groupName) {
-        var text = []
+        var text = [];
         var nameString = this._representation.options.enableGroups ? ', ' + groupName : '';
         rowKeys.forEach(function (key) {
             text.push(key + ', ' + colName + nameString);
-        })
+        });
         return text;
     };
 
@@ -950,6 +519,10 @@ window.knimeContinuousErrorPlot = (function () {
         var self = this;
 
         if (this._representation.options.enableViewControls) {
+
+            if (this._representation.options.showFullscreen) {
+                knimeService.allowFullscreen();
+            }
 
             if (this._representation.options.enableSelection &&
                 this._representation.options.showClearSelectionButton) {
@@ -964,7 +537,7 @@ window.knimeContinuousErrorPlot = (function () {
             }
 
             if (this._representation.options.enableCalcMethodSelection) {
-                var xAxisSelection = knimeService.createMenuSelect(
+                var calcMethodSelection = knimeService.createMenuSelect(
                     'calc-method-menu-item',
                     this.calculationMethods.indexOf(this._value.options.calcMethod.replace(/\s/g, ' ')),
                     this.calculationMethods,
@@ -981,7 +554,7 @@ window.knimeContinuousErrorPlot = (function () {
                 knimeService.addMenuItem(
                     'Calculation Method',
                     'calculator',
-                    xAxisSelection,
+                    calcMethodSelection,
                     null,
                     knimeService.SMALL_ICON
                 );
@@ -999,7 +572,7 @@ window.knimeContinuousErrorPlot = (function () {
                             var changeObj = self.getFilteredChangeObject();
                             var layoutObj = {
                                 'xaxis.title': self._xAxisCol
-                            }
+                            };
                             self.Plotly.update('knime-continuous-error', changeObj, layoutObj);
                         }
                     }
@@ -1016,7 +589,7 @@ window.knimeContinuousErrorPlot = (function () {
                 // temporarily use controlContainer to solve th resizing problem with ySelect
                 var controlContainer = this.Plotly.d3.select('#knime-continuous-error').insert('table', '#radarContainer ~ *')
                     .attr('id', 'lineControls')
-                    /*.style('width', '100%')*/
+                    /* .style('width', '100%') */
                     .style('padding', '10px')
                     .style('margin', '0 auto')
                     .style('box-sizing', 'border-box')
@@ -1035,7 +608,7 @@ window.knimeContinuousErrorPlot = (function () {
                     var updatedSelect = [];
                     var changeObj = {
                         visible: []
-                    }
+                    };
                     self._knimelyObj._dataArray.forEach(function (dataObj, objInd) {
                         self._lineColumns.forEach(function (colName, colInd) {
                             if (newSelected.indexOf(colName) >= 0) {
@@ -1045,8 +618,8 @@ window.knimeContinuousErrorPlot = (function () {
                                 updatedSelect[colInd] = null;
                                 changeObj.visible.push(false);
                             }
-                        })
-                    })
+                        });
+                    });
 
                     self.Plotly.restyle('knime-continuous-error', changeObj);
                 });
@@ -1065,8 +638,8 @@ window.knimeContinuousErrorPlot = (function () {
                         if (self._representation.options.tooltipToggle !== this.checked) {
                             self._representation.options.tooltipToggle = this.checked;
                             var layoutObj = {
-                                hovermode: self._representation.options.tooltipToggle ?
-                                    'closest' : false
+                                hovermode: self._representation.options.tooltipToggle
+                                    ? 'closest' : false
                             };
                             self.Plotly.relayout('knime-continuous-error', layoutObj);
                         }
@@ -1112,78 +685,81 @@ window.knimeContinuousErrorPlot = (function () {
 
             }
 
-            if (this._representation.options.enableSelection &&
-                this._representation.options.publishSelectionToggle) {
+            if (knimeService.isInteractivityAvailable()) {
 
-                var publishSelectionCheckbox = knimeService.createMenuCheckbox(
-                    'publish-selection-checkbox',
-                    this._value.options.publishSelection,
-                    function () {
-                        if (self._value.options.publishSelection !== this.checked) {
-                            self._value.options.publishSelection = this.checked;
-                            self.togglePublishSelection();
-                        }
-                    },
-                    true
-                );
+                if (this._representation.options.enableSelection &&
+                    this._representation.options.publishSelectionToggle) {
 
-                knimeService.addMenuItem(
-                    'Publish Selection',
-                    knimeService.createStackedIcon('check-square-o',
-                        'angle-right', 'faded left sm', 'right bold'),
-                    publishSelectionCheckbox,
-                    null,
-                    knimeService.SMALL_ICON
-                );
+                    var publishSelectionCheckbox = knimeService.createMenuCheckbox(
+                        'publish-selection-checkbox',
+                        this._value.options.publishSelection,
+                        function () {
+                            if (self._value.options.publishSelection !== this.checked) {
+                                self._value.options.publishSelection = this.checked;
+                                self.togglePublishSelection();
+                            }
+                        },
+                        true
+                    );
 
-            }
+                    knimeService.addMenuItem(
+                        'Publish Selection',
+                        knimeService.createStackedIcon('check-square-o',
+                            'angle-right', 'faded left sm', 'right bold'),
+                        publishSelectionCheckbox,
+                        null,
+                        knimeService.SMALL_ICON
+                    );
 
-            if (this._representation.options.subscribeSelectionToggle) {
+                }
 
-                var subscribeToSelectionCheckbox = knimeService.createMenuCheckbox(
-                    'subscribe-to-selection-checkbox',
-                    this._value.options.subscribeToSelection,
-                    function () {
-                        if (self._value.options.subscribeToSelection !== this.checked) {
-                            self._value.options.subscribeToSelection = this.checked;
-                            self.toggleSubscribeToSelection();
-                        }
-                    },
-                    true
-                );
+                if (this._representation.options.subscribeSelectionToggle) {
 
-                knimeService.addMenuItem(
-                    'Subscribe to Selection',
-                    knimeService.createStackedIcon('check-square-o',
-                        'angle-double-right', 'faded right sm', 'left bold'),
-                    subscribeToSelectionCheckbox,
-                    null,
-                    knimeService.SMALL_ICON
-                );
-            }
+                    var subscribeToSelectionCheckbox = knimeService.createMenuCheckbox(
+                        'subscribe-to-selection-checkbox',
+                        this._value.options.subscribeToSelection,
+                        function () {
+                            if (self._value.options.subscribeToSelection !== this.checked) {
+                                self._value.options.subscribeToSelection = this.checked;
+                                self.toggleSubscribeToSelection();
+                            }
+                        },
+                        true
+                    );
 
-            if (this._representation.options.subscribeFilterToggle) {
+                    knimeService.addMenuItem(
+                        'Subscribe to Selection',
+                        knimeService.createStackedIcon('check-square-o',
+                            'angle-double-right', 'faded right sm', 'left bold'),
+                        subscribeToSelectionCheckbox,
+                        null,
+                        knimeService.SMALL_ICON
+                    );
+                }
 
-                var subscribeToFilterCheckbox = knimeService.createMenuCheckbox(
-                    'subscribe-to-filter-checkbox',
-                    this._value.options.subscribeToFilters,
-                    function () {
-                        if (self._value.options.subscribeToFilters !== this.checked) {
-                            self._value.options.subscribeToFilters = this.checked;
-                            self.toggleSubscribeToFilters();
-                        }
-                    },
-                    true
-                );
+                if (this._representation.options.subscribeFilterToggle) {
 
-                knimeService.addMenuItem(
-                    'Subscribe to Filter',
-                    knimeService.createStackedIcon('filter',
-                        'angle-double-right', 'faded right sm', 'left bold'),
-                    subscribeToFilterCheckbox,
-                    null,
-                    knimeService.SMALL_ICON
-                );
+                    var subscribeToFilterCheckbox = knimeService.createMenuCheckbox(
+                        'subscribe-to-filter-checkbox',
+                        this._value.options.subscribeToFilters,
+                        function () {
+                            if (self._value.options.subscribeToFilters !== this.checked) {
+                                self._value.options.subscribeToFilters = this.checked;
+                                self.toggleSubscribeToFilters();
+                            }
+                        },
+                        true
+                    );
+
+                    knimeService.addMenuItem(
+                        'Subscribe to Filter',
+                        knimeService.createStackedIcon('filter',
+                            'angle-double-right', 'faded right sm', 'left bold'),
+                        subscribeToFilterCheckbox,
+                        null,
+                        knimeService.SMALL_ICON
+                    );
+                }
             }
         }
     };

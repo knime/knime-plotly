@@ -3,7 +3,8 @@ const lineLength = 120;
 
 module.exports = {
     root: true,
-    extends: ['eslint:recommended'],
+    extends: ['eslint:recommended',
+    './eslint.json'],
     parserOptions: {
         ecmaVersion: 2018,
         sourceType: 'module'

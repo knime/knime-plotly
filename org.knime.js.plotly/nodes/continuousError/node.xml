@@ -272,7 +272,7 @@
 					the axes.
 				</checkBoxOption>
 				<checkBoxOption name="Enable text editing"
-					id="enableEditing" label="Enable text editing" defaultValue="true"
+					id="enableEditing" label="Enable text editing" defaultValue="false"
 					enableDependency="enableViewControls" enableValue="true">
 					Check to enable
 					the editing of the title and axis labels within the view.
@@ -387,6 +387,7 @@
 		</inPort>
 	</ports>
 	<js:resources>
+		<js:resource type="js" path="../kpi/knimePlotlyInterface.js" />
 		<js:resource type="js" path="continuousError.js" />
 		<js:resource type="css" path="continuousError.css" />
 	</js:resources>
