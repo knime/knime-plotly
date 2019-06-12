@@ -730,7 +730,7 @@ propagated with or for interoperation with KNIME.
    </license>
 
    <requires>
-      <import feature="org.knime.features.js.quickforms" version="4.0.0.v201906051516"/>
+      <import feature="org.knime.features.js.quickforms"/>
    </requires>
 
    <plugin
