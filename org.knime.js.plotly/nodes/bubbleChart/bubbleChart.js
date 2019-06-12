@@ -105,7 +105,7 @@ window.knimeBubbleChart = (function () {
             family: 'sans-serif'
         };
         this.xaxis = {
-            title: val.options.xAxisLabel ? val.options.xAxisLabel
+            title: val.options.xAxisLabel.length === 0 ? val.options.xAxisLabel
                 : val.options.xAxisColumn,
             font: {
                 size: 12,
@@ -120,7 +120,7 @@ window.knimeBubbleChart = (function () {
 
         };
         this.yaxis = {
-            title: val.options.yAxisLabel ? val.options.yAxisLabel
+            title: val.options.yAxisLabel.length === 0 ? val.options.yAxisLabel
                 : val.options.yAxisColumn,
             font: {
                 size: 12,
@@ -161,6 +161,18 @@ window.knimeBubbleChart = (function () {
         this.modeBarButtonsToRemove = ['hoverClosestCartesian',
             'hoverCompareCartesian'];
         return this;
+    };
+
+    BubbleChart.getSVG = function () {
+        return this.KPI.getSVG();
+    };
+
+    BubbleChart.validate = function () {
+        return true;
+    };
+
+    BubbleChart.getComponentValue = function () {
+        return this.KPI.getComponentValue();
     };
 
     BubbleChart.onSelectionChange = function (data) {
@@ -209,7 +221,7 @@ window.knimeBubbleChart = (function () {
             if (self.KPI.representation.options.enableFeatureSelection) {
                 var xAxisSelection = knimeService.createMenuSelect(
                     'x-axis-menu-item',
-                    this.columns.indexOf(this.xAxisCol),
+                    this.xAxisCol,
                     this.columns,
                     function () {
                         if (self.xAxisCol !== this.value) {
@@ -241,7 +253,7 @@ window.knimeBubbleChart = (function () {
 
                 var yAxisSelection = knimeService.createMenuSelect(
                     'y-axis-menu-item',
-                    this.columns.indexOf(this.yAxisCol),
+                    this.yAxisCol,
                     this.columns,
                     function () {
                         if (self.yAxisCol !== this.value) {
@@ -273,7 +285,7 @@ window.knimeBubbleChart = (function () {
 
                 var sizeSelection = knimeService.createMenuSelect(
                     'size-menu-item',
-                    self.columns.indexOf(self.sizeCol),
+                    self.sizeCol,
                     this.numericColumns,
                     function () {
                         if (self.sizeCol !== this.value) {

@@ -98,7 +98,7 @@ window.knimePlotlyScatterPlot = (function () {
             family: 'sans-serif'
         };
         this.xaxis = {
-            title: val.options.xAxisLabel ? val.options.xAxisLabel
+            title: val.options.xAxisLabel.length === 0 ? val.options.xAxisLabel
                 : val.options.xAxisColumn,
             font: {
                 size: 12,
@@ -113,7 +113,7 @@ window.knimePlotlyScatterPlot = (function () {
 
         };
         this.yaxis = {
-            title: val.options.yAxisLabel ? val.options.yAxisLabel
+            title: val.options.yAxisLabel.length === 0 ? val.options.yAxisLabel
                 : val.options.yAxisColumn,
             font: {
                 size: 12,
@@ -154,6 +154,18 @@ window.knimePlotlyScatterPlot = (function () {
         this.modeBarButtonsToRemove = ['hoverClosestCartesian',
             'hoverCompareCartesian'];
         return this;
+    };
+
+    ScatterPlot.getSVG = function () {
+        return this.KPI.getSVG();
+    };
+
+    ScatterPlot.validate = function () {
+        return true;
+    };
+
+    ScatterPlot.getComponentValue = function () {
+        return this.KPI.getComponentValue();
     };
 
     ScatterPlot.onSelectionChange = function (data) {
@@ -198,7 +210,7 @@ window.knimePlotlyScatterPlot = (function () {
             if (self.KPI.representation.options.enableFeatureSelection) {
                 var xAxisSelection = knimeService.createMenuSelect(
                     'x-axis-menu-item',
-                    this.columns.indexOf(this.xAxisCol),
+                    this.xAxisCol,
                     this.columns,
                     function () {
                         if (self.xAxisCol !== this.value) {
@@ -230,7 +242,7 @@ window.knimePlotlyScatterPlot = (function () {
 
                 var yAxisSelection = knimeService.createMenuSelect(
                     'y-axis-menu-item',
-                    this.columns.indexOf(this.yAxisCol),
+                    this.yAxisCol,
                     this.columns,
                     function () {
                         if (self.yAxisCol !== this.value) {

@@ -16,7 +16,7 @@ window.knimeContourPlot = (function () {
         this.zAxisCol = this.KPI.value.options.zAxisColumn || this.columns[0];
         this.vectorColumns = this.KPI.value.options.columns || [];
         this.onFilterChange = this.onFilterChange.bind(this);
-        this.colorscale = 'Hot';
+        this.colorscale = this.KPI.value.options.colorscale || 'Hot';
 
         this.drawChart();
         this.drawKnimeMenu();
@@ -83,57 +83,34 @@ window.knimeContourPlot = (function () {
             size: 12,
             family: 'sans-serif'
         };
-        this.scene = {
-            camera: {
-                eye: {
-                    x: 1.5,
-                    y: 1.5,
-                    z: .5
-                }
+        this.xaxis = {
+            title: val.options.zAxisLabel.length === 0 ? val.options.zAxisLabel
+                : val.options.zAxisColumn,
+            font: {
+                size: 12,
+                family: 'sans-serif'
             },
-            zaxis: {
-                title: val.options.zAxisLabel ? val.options.zAxisLabel
-                    : 'z',
-                font: {
-                    size: 12,
-                    family: 'sans-serif'
-                },
-                type: 'linear',
-                showgrid: val.options.showGrid,
-                gridcolor: '#fffff', // potential option
-                linecolor: '#fffff', // potential option
-                linewidth: 1,
-                nticks: 10
-            },
-            yaxis: {
-                title: val.options.yAxisLabel ? val.options.yAxisLabel
-                    : 'y',
-                font: {
-                    size: 12,
-                    family: 'sans-serif'
-                },
-                type: 'linear',
-                showgrid: val.options.showGrid,
-                gridcolor: '#fffff', // potential option
-                linecolor: '#fffff', // potential option
-                linewidth: 1,
-                nticks: 10
-            },
-            xaxis: {
-                title: val.options.xAxisLabel ? val.options.xAxisLabel
-                    : 'x',
-                font: {
-                    size: 12,
-                    family: 'sans-serif'
-                },
-                type: 'linear',
-                showgrid: val.options.showGrid,
-                gridcolor: '#fffff', // potential option
-                linecolor: '#fffff', // potential option
-                linewidth: 1,
-                nticks: 10
+            type: 'linear',
+            showgrid: val.options.showGrid,
+            gridcolor: '#fffff', // potential option
+            linecolor: '#fffff', // potential option
+            linewidth: 1,
+            nticks: 10
 
-            }
+        };
+        this.yaxis = {
+            title: val.options.yAxisLabel.length === 0 ? val.options.yAxisLabel
+                : '',
+            font: {
+                size: 12,
+                family: 'sans-serif'
+            },
+            type: 'linear',
+            showgrid: val.options.showGrid,
+            gridcolor: '#fffff', // potential option
+            linecolor: '#fffff', // potential option
+            linewidth: 1,
+            nticks: 10
         };
         this.margin = {
             l: 55,
@@ -165,6 +142,18 @@ window.knimeContourPlot = (function () {
         return this;
     };
 
+    Contour.getSVG = function () {
+        return this.KPI.getSVG();
+    };
+
+    Contour.validate = function () {
+        return true;
+    };
+
+    Contour.getComponentValue = function () {
+        return this.KPI.getComponentValue();
+    };
+
     Contour.onFilterChange = function (data) {
         if (data) {
             this.KPI.updateFilter(data);
@@ -185,7 +174,7 @@ window.knimeContourPlot = (function () {
             if (self.KPI.representation.options.enableFeatureSelection) {
                 var zAxisSelection = knimeService.createMenuSelect(
                     'z-axis-menu-item',
-                    self.columns.indexOf(self.zAxisCol),
+                    self.zAxisCol,
                     self.columns,
                     function () {
                         if (self.zAxisCol !== this.value) {
@@ -216,7 +205,7 @@ window.knimeContourPlot = (function () {
                 );
 
                 // temporarily use controlContainer to solve th resizing problem with ySelect
-                var controlContainer = this.KPI.Plotly.d3.select('#knime-surface').insert('table', '#radarContainer ~ *')
+                var controlContainer = this.KPI.Plotly.d3.select('#' + this.KPI.divID).insert('table', '#radarContainer ~ *')
                     .attr('id', 'surfaceControls')
                     /* .style('width', '100%') */
                     .style('padding', '10px')
@@ -233,10 +222,12 @@ window.knimeContourPlot = (function () {
                 columnSelect.setChoices(this.numericColumns);
                 columnSelect.setSelections(this.vectorColumns);
                 columnSelect.addValueChangedListener(function () {
-                    var newSelected = columnSelect.getSelections();
-
-                    self.vectorColumns = newSelected;
+                    self.vectorColumns = columnSelect.getSelections();
+                    var valueObj = {
+                        columns: self.vectorColumns
+                    };
                     self.KPI.traceDirectory[0].dataKeys = [self.zAxisCol, self.vectorColumns, 'rowKeys'];
+                    self.KPI.updateValue(valueObj);
                     self.KPI.update();
                 });
                 knimeService.addMenuItem('Vectors:', 'long-arrow-up', columnSelectComponent);
@@ -244,13 +235,13 @@ window.knimeContourPlot = (function () {
                 knimeService.addMenuDivider();
             }
 
-            if (self.KPI.representation.options.showSurfaceColorOptions) {
+            if (self.KPI.representation.options.showContourColorOptions) {
                 var colorScaleSelection = knimeService.createMenuSelect(
                     'colorscale-menu-item',
-                    0,
+                    self.colorscale,
                     ['Hot', 'Greys', 'YlGnBu', 'Greens', 'YlOrRd', 'Bluered', 'RdBu', 'Reds', 'Blues',
                         'Picnic', 'Rainbow', 'Portland', 'Jet', 'Blackbody', 'Earth',
-                        'Electric', 'Viridis', 'Cividis.'],
+                        'Electric', 'Viridis', 'Cividis'],
                     function () {
                         if (self.colorscale !== this.value) {
                             self.colorscale = this.value;

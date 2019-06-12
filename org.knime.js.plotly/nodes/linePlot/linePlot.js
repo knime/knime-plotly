@@ -50,7 +50,6 @@ window.knimePlotlyLinePlot = (function () {
             var newTrace = new self.TraceObject(xData, yData[col][0]);
 
             newTrace.marker.color = data.rowColors[0];
-            // newTrace.line.color = data.rowColors[0];
             newTrace.text = data.rowKeys[0];
             newTrace.ids = data.rowKeys[0];
             newTrace.name = col;
@@ -120,7 +119,7 @@ window.knimePlotlyLinePlot = (function () {
             family: 'sans-serif'
         };
         this.xaxis = {
-            title: val.options.xAxisLabel ? val.options.xAxisLabel
+            title: val.options.xAxisLabel.length === 0 ? val.options.xAxisLabel
                 : val.options.xAxisColumn,
             font: {
                 size: 12,
@@ -135,7 +134,7 @@ window.knimePlotlyLinePlot = (function () {
 
         };
         this.yaxis = {
-            title: val.options.yAxisLabel ? val.options.yAxisLabel
+            title: val.options.yAxisLabel.length === 0 ? val.options.yAxisLabel
                 : val.options.yAxisColumn,
             font: {
                 size: 12,
@@ -176,6 +175,18 @@ window.knimePlotlyLinePlot = (function () {
         this.modeBarButtonsToRemove = ['hoverClosestCartesian',
             'hoverCompareCartesian', 'toggleSpikelines'];
         return this;
+    };
+
+    LinePlot.getSVG = function () {
+        return this.KPI.getSVG();
+    };
+
+    LinePlot.validate = function () {
+        return true;
+    };
+
+    LinePlot.getComponentValue = function () {
+        return this.KPI.getComponentValue();
     };
 
     LinePlot.onSelectionChange = function (data) {
@@ -220,7 +231,7 @@ window.knimePlotlyLinePlot = (function () {
             if (self.KPI.representation.options.enableFeatureSelection) {
                 var xAxisSelection = knimeService.createMenuSelect(
                     'x-axis-menu-item',
-                    this.columns.indexOf(this.xAxisCol),
+                    this.xAxisCol,
                     this.numericColumns,
                     function () {
                         if (self.xAxisCol !== this.value) {
@@ -251,7 +262,7 @@ window.knimePlotlyLinePlot = (function () {
                 );
 
                 // temporarily use controlContainer to solve th resizing problem with ySelect
-                var controlContainer = this.KPI.Plotly.d3.select('#knime-line').insert('table', '#radarContainer ~ *')
+                var controlContainer = this.KPI.Plotly.d3.select('#' + this.KPI.divID).insert('table', '#radarContainer ~ *')
                     .attr('id', 'lineControls')
                     /* .style("width", "100%") */
                     .style('padding', '10px')
@@ -268,16 +279,15 @@ window.knimePlotlyLinePlot = (function () {
                 columnSelect.setChoices(this.numericColumns);
                 columnSelect.setSelections(this.lineColumns);
                 columnSelect.addValueChangedListener(function () {
-                    var newSelected = columnSelect.getSelections();
+                    self.columns = columnSelect.getSelections();
                     var valObj = {
-                        columns: newSelected
+                        columns: self.columns
                     };
                     var changeObj = {
                         visible: []
                     };
-
                     self.KPI.traceDirectory.forEach(function (trace) {
-                        if (newSelected.indexOf(trace.dataKeys[1]) > -1) {
+                        if (self.columns.indexOf(trace.dataKeys[1]) > -1) {
                             changeObj.visible.push(true);
                         } else {
                             changeObj.visible.push(false);

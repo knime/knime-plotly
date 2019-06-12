@@ -16,7 +16,7 @@ window.knimeSurface3DPlot = (function () {
         this.zAxisCol = this.KPI.value.options.zAxisColumn || this.columns[0];
         this.vectorColumns = this.KPI.value.options.columns || [];
         this.onFilterChange = this.onFilterChange.bind(this);
-        this.colorscale = 'Hot';
+        this.colorscale = this.KPI.value.options.colorscale || 'Hot';
 
         this.drawChart();
         this.drawKnimeMenu();
@@ -92,7 +92,7 @@ window.knimeSurface3DPlot = (function () {
                 }
             },
             zaxis: {
-                title: val.options.zAxisLabel ? val.options.zAxisLabel
+                title: val.options.zAxisLabel.length === 0 ? val.options.zAxisLabel
                     : 'z',
                 font: {
                     size: 12,
@@ -106,7 +106,7 @@ window.knimeSurface3DPlot = (function () {
                 nticks: 10
             },
             yaxis: {
-                title: val.options.yAxisLabel ? val.options.yAxisLabel
+                title: val.options.yAxisLabel.length === 0 ? val.options.yAxisLabel
                     : 'y',
                 font: {
                     size: 12,
@@ -120,7 +120,7 @@ window.knimeSurface3DPlot = (function () {
                 nticks: 10
             },
             xaxis: {
-                title: val.options.xAxisLabel ? val.options.xAxisLabel
+                title: val.options.xAxisLabel.length === 0 ? val.options.xAxisLabel
                     : 'x',
                 font: {
                     size: 12,
@@ -165,6 +165,18 @@ window.knimeSurface3DPlot = (function () {
         return this;
     };
 
+    SurfacePlot.getSVG = function () {
+        return this.KPI.getSVG();
+    };
+
+    SurfacePlot.validate = function () {
+        return true;
+    };
+
+    SurfacePlot.getComponentValue = function () {
+        return this.KPI.getComponentValue();
+    };
+
     SurfacePlot.onFilterChange = function (data) {
         if (data) {
             this.KPI.updateFilter(data);
@@ -185,7 +197,7 @@ window.knimeSurface3DPlot = (function () {
             if (self.KPI.representation.options.enableFeatureSelection) {
                 var zAxisSelection = knimeService.createMenuSelect(
                     'z-axis-menu-item',
-                    self.columns.indexOf(self.zAxisCol),
+                    self.zAxisCol,
                     self.columns,
                     function () {
                         if (self.zAxisCol !== this.value) {
@@ -216,7 +228,7 @@ window.knimeSurface3DPlot = (function () {
                 );
 
                 // temporarily use controlContainer to solve th resizing problem with ySelect
-                var controlContainer = this.KPI.Plotly.d3.select('#knime-surface').insert('table', '#radarContainer ~ *')
+                var controlContainer = this.KPI.Plotly.d3.select('#' + this.KPI.divID).insert('table', '#radarContainer ~ *')
                     .attr('id', 'surfaceControls')
                     /* .style('width', '100%') */
                     .style('padding', '10px')
@@ -233,10 +245,13 @@ window.knimeSurface3DPlot = (function () {
                 columnSelect.setChoices(this.numericColumns);
                 columnSelect.setSelections(this.vectorColumns);
                 columnSelect.addValueChangedListener(function () {
-                    var newSelected = columnSelect.getSelections();
+                    self.vectorColumns = columnSelect.getSelections();
+                    var valueObj = {
+                        columns: self.vectorColumns
+                    };
 
-                    self.vectorColumns = newSelected;
                     self.KPI.traceDirectory[0].dataKeys = [self.zAxisCol, self.vectorColumns, 'rowKeys'];
+                    self.KPI.updateValue(valueObj);
                     self.KPI.update();
                 });
                 knimeService.addMenuItem('Vectors:', 'long-arrow-up', columnSelectComponent);
@@ -247,7 +262,7 @@ window.knimeSurface3DPlot = (function () {
             if (self.KPI.representation.options.showSurfaceColorOptions) {
                 var colorScaleSelection = knimeService.createMenuSelect(
                     'colorscale-menu-item',
-                    0,
+                    self.colorscale,
                     ['Hot', 'Greys', 'YlGnBu', 'Greens', 'YlOrRd', 'Bluered', 'RdBu', 'Reds', 'Blues',
                         'Picnic', 'Rainbow', 'Portland', 'Jet', 'Blackbody', 'Earth',
                         'Electric', 'Viridis', 'Cividis.'],
@@ -257,6 +272,10 @@ window.knimeSurface3DPlot = (function () {
                             var changeObj = {
                                 colorscale: [self.colorscale]
                             };
+                            var valueObj = {
+                                colorscale: self.colorscale
+                            };
+                            self.KPI.updateValue(valueObj);
                             self.KPI.update(changeObj);
                         }
                     }
@@ -282,8 +301,8 @@ window.knimeSurface3DPlot = (function () {
                         if (self.KPI.representation.options.tooltipToggle !== this.checked) {
                             self.KPI.representation.options.tooltipToggle = this.checked;
                             var layoutObj = {
-                                hovermode: self.representation.options.tooltipToggle
-                                    ? 'closest' : false
+                                hovermode: self.representation.options.tooltipToggle ?
+                                    'closest' : false
                             };
                             self.KPI.update(false, layoutObj, true);
                         }

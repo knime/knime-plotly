@@ -19,6 +19,7 @@ window.KnimePlotlyInterface = function () {
         this.traceDirectory = [];
         this.changeObjKeys = [];
         this.orderedIndicies = [];
+        this.totalRows = 0;
         this.totalSelected = 0;
         this.isOrdered = false;
         this.showOnlySelected = false;
@@ -45,6 +46,7 @@ window.KnimePlotlyInterface = function () {
 
             self.data.rowKeys.push(row.rowKey);
             self.filtered.add(row.rowKey);
+            self.totalRows++;
         });
 
         this.collectGarbage();
@@ -54,18 +56,45 @@ window.KnimePlotlyInterface = function () {
 
     KnimePlotlyInterface.drawChart = function (traceArr, layout, config) {
         this.indexTraces(traceArr);
-        this.Plotly.newPlot(this.divID, traceArr, layout, config);
+        if (this.representation.options.enableSelection) {
+            if (this.value.options.selectedrows && this.value.options.selectedrows.length > 0) {
+                this.totalSelected = this.value.options.selectedrows.length;
+                this.selected = new this.KSet(this.value.options.selectedrows);
+                this.update();
+            }
+        }
     };
 
     KnimePlotlyInterface.getSVG = function () {
-        this.Plotly.toImage(this.Plotly.d3.select('#knime-violin').node(),
-            { format: 'svg', width: 800, height: 600 }).then(function (dataUrl) {
-            // TODO: decode URI
-            return decodeURIComponent(dataUrl);
+        var self = this;
+        var removeElem = document.querySelector('.xy');
+        removeElem.childNodes.forEach(function (node) {
+            node.style.fill = self.representation.options.backgroundColor;
         });
+        var svgElem = document.querySelectorAll('#' + this.divID + '> div > div > svg');
+        var svgCol = '<svg class="main-svg" xmlns="http://www.w3.org/2000/svg"' +
+            ' xmlns:xlink="http://www.w3.org/1999/xlink" width="' + this.representation.options.svg.width +
+            '" height="' + this.representation.options.svg.height + '">' +
+            '"><g xmlns="http://www.w3.org/2000/svg"><rect width="1000" height="1000" style="fill: ' +
+            this.representation.options.backgroundColor + '"></rect></g>';
+        svgElem.forEach(function (svg, svgInd) {
+            if (svg.tagName === 'svg') {
+                svgCol += new XMLSerializer().serializeToString(svg);
+            }
+        });
+        svgCol += '</svg>';
+        return svgCol;
     };
 
     KnimePlotlyInterface.getComponentValue = function () {
+        var self = this;
+        var selectedObj = {};
+        Object.keys(this.rowDirectory).forEach(function (rowKey) {
+            selectedObj[rowKey] = self.selected.has(rowKey);
+        });
+        this.value.outColumns = {
+            selection: selectedObj
+        };
         return this.value;
     };
 
@@ -76,9 +105,9 @@ window.KnimePlotlyInterface = function () {
     KnimePlotlyInterface.createElement = function (stringDivName) {
         this.divID = stringDivName;
         // Create the plotly HTML element
-        let div = document.createElement('div');
-        div.setAttribute('id', stringDivName);
-        document.body.append(div);
+        var divElem = document.createElement('div');
+        divElem.setAttribute('id', stringDivName);
+        document.body.append(divElem);
     };
 
     KnimePlotlyInterface.getData = function (keys) {
@@ -227,7 +256,7 @@ window.KnimePlotlyInterface = function () {
             this.data.rowKeys.forEach(function (rowId, rowInd) {
                 var rowObj = self.rowDirectory[rowId];
                 rowObj.tInds.forEach(function (tInd) {
-                    if (self.showOnlySelected && !self.selected.has(rowId) || !self.filtered.has(rowId)) {
+                    if ((self.showOnlySelected && !self.selected.has(rowId)) || !self.filtered.has(rowId)) {
                         self.traceDirectory[tInd][rowId] = -1;
                         return;
                     }
@@ -316,10 +345,13 @@ window.KnimePlotlyInterface = function () {
 
         if (data.points) { // this is for Plotly events
 
-            if (data.range && (data.range.x2 || data.range.y2)) {
+            if (data.range && ((data.range.x2 || data.range.y2) || (data.points.length &&
+                data.points[0] && data.points[0].r))) {
+                // if ((data.range && (data.range.x2 || data.range.y2))) {
                 data.points.forEach(function (pt) {
                     var ptRowKeys = pt.fullData.ids;
-                    pt.pointIndices.forEach(function (ptInd) {
+                    var ptInds = pt.pointIndices || [pt.pointIndex];
+                    ptInds.forEach(function (ptInd) {
                         var rowKey = ptRowKeys[ptInd];
                         self.selected.add(rowKey);
                         self.totalSelected++;
@@ -356,13 +388,12 @@ window.KnimePlotlyInterface = function () {
             });
         }
 
-        this.value.selection = this.selected;
+        this.updateValue({ selectedrows: self.selected.getArray() });
     };
 
     KnimePlotlyInterface.updateFilter = function (data) {
 
-        if (!data) {
-            this.createAllInclusiveFilter();
+        if (!data || !data.elements) {
             return;
         }
 
@@ -436,7 +467,7 @@ window.KnimePlotlyInterface = function () {
             }
 
             return [sortedArr.concat(lArr[0].slice(lInd)).concat(rArr[0].slice(rInd)),
-                sortedInd.concat(lArr[1].slice(lInd)).concat(rArr[1].slice(rInd))];
+            sortedInd.concat(lArr[1].slice(lInd)).concat(rArr[1].slice(rInd))];
         };
 
         var mergeSort = function (subArr, indArr) {
@@ -475,15 +506,56 @@ window.KnimePlotlyInterface = function () {
 
 
     KnimePlotlyInterface.mountAndSubscribe = function (selectionChange, filterChange) {
+        var self = this;
+        var hasSecondAxis = this.removeSecondAxisElements();
+        document.getElementById(this.divID).on('plotly_relayout', function (eData) {
+            if (eData) {
+                if (hasSecondAxis) {
+                    self.removeSecondAxisElements();
+                }
+                var valueObj = {};
+                if (eData['xaxis.title.text']) {
+                    valueObj.xAxisLabel = eData['xaxis.title.text'];
+                }
+                if (eData['yaxis.title.text']) {
+                    valueObj.yAxisLabel = eData['yaxis.title.text'];
+                }
+                if (eData['title.text']) {
+                    valueObj.title = eData['title.text'];
+                }
+                self.updateValue(valueObj);
+            }
+        });
+        document.getElementById(this.divID).on('plotly_restyle', function (plotlyEvent) {
+            if (plotlyEvent && plotlyEvent.length) {
+                if (plotlyEvent[0] && plotlyEvent[0].colorscale && plotlyEvent[0].colorscale.length) {
+                    var valueObj = { colorscale: plotlyEvent[0].colorscale[0] };
+                    self.updateValue(valueObj);
+                }
+            }
+        });
         document.getElementById(this.divID).on('plotly_selected', function (plotlyEvent) {
             selectionChange(plotlyEvent);
         });
         document.getElementById(this.divID).on('plotly_deselect', function () {
-            filterChange({ points: [] });
+            selectionChange({ points: [] });
         });
+
         this.togglePublishSelection();
         this.toggleSubscribeToFilters(filterChange);
         this.toggleSubscribeToSelection(selectionChange);
+    };
+
+    KnimePlotlyInterface.removeSecondAxisElements = function () {
+        var x2Title = document.querySelector('.x2title');
+        var y2Title = document.querySelector('.y2title');
+        if (x2Title && y2Title) {
+            x2Title.remove();
+            y2Title.remove();
+            return true;
+        } else {
+            return false;
+        }
     };
 
     KnimePlotlyInterface.toggleSubscribeToFilters = function (onFilterChange) {

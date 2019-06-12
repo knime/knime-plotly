@@ -6,8 +6,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
 	jsNamespace="knimeErrorBarsPlot" nodeID="plotly_error_bars_plot"
-	categoryPath="/labs/js-views/plotly" icon="../js.png"
-	type="Visualizer">
+	categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
 	<name>Error Bars Plot (Plotly)</name>
 	<shortDescription>Error bars plot based on the Plotly.js library.</shortDescription>
 	<fullDescription>
@@ -26,7 +25,8 @@
 			</n:p>
 			<n:p>
 				The node supports custom CSS styling.
-				You can simply put CSS rules
+				You can simply put CSS
+				rules
 				into a single string and set it as a flow
 				variable 'customCSS'
 				in the
@@ -38,8 +38,6 @@
 				KNIME
 				classes in an upcoming
 				release.
-				<!-- You will find the list of available classes and their description 
-					on our <n:a href="https://knime.com/css-styling">documentation page</n:a>. -->
 			</n:p>
 			<n:p>
 				Please note: the Plotly.js KNIME extension is currently in Beta. It
@@ -62,9 +60,12 @@
 				within the view.
 			</description>
 			<options>
-				<!-- <svgOption name="Image" additionalWait="500" id="svg" portIndex="0" 
-					label="Image" enableDependency="generateImage"> Settings for image generation. 
-					</svgOption> -->
+				<svgOption name="Image" id="svg" portIndex="0"
+					label="Image" additionalWait="500" defaultWidth="800"
+					defaultHeight="600" defaultFullscreen="true">
+					Settings for SVG image
+					generation.
+				</svgOption>
 				<columnSelectorOption name="X-Axis column"
 					id="xAxisColumn" inPortIndex="0" label="X-Axis column"
 					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue"
@@ -76,45 +77,22 @@
 					id="columns" inPortIndex="0" label="Included columns"
 					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue"
 					saveInView="true">
-					Select the columns to be plotted as lines or line segments.
+					Select the columns to be plotted as lines or line
+					segments.
 				</columnFilterOption>
-				<!-- <columnSelectorOption name="Y-Axis Column" id="yAxisColumn" inPortIndex="0" 
-					label="Y-Axis Column" filterClasses="org.knime.core.data.DoubleValue" saveInView="true"> 
-					Select the column to be initially displayed along the Y-Axis. </columnSelectorOption> -->
-				<checkBoxOption name="Enable grouping"
-					id="enableGroups" label="Enable grouping" defaultValue="false"
-					loadDefaults="true">
-					When enabled this will use the nominal/categorical
-					column selected as the 'Group-by' column to create separate line
-					segments for each group.
-				</checkBoxOption>
-				<!-- <checkBoxOption name="Aggregate data"
-					id="enableAggregate" label="Aggregate data" defaultValue="false"
-					loadDefaults="true">
-					When enabled this will use the columns selected in the 'Included columns' option 
-				</checkBoxOption> -->
-				<columnSelectorOption name="'Group-By' column"
-					id="groupByColumn" inPortIndex="0" label="'Group-By' Column"
-					filterClasses="org.knime.core.data.StringValue"
-					enableDependency="enableGroups" enableValue="true">
-					If a previous
-					cluster/binning
-					operation has been
-					performed, selected the column
-					containing each
-					rows membership
-					for a
-					more dynamic interactive
-					experience. These
-					nominal groups will be
-					used to categorize the data
-					as it's displayed
-					and allow you to
-					hide/show various groups by
-					clicking/double-clicking on the group
-					in
-					the legend.
-				</columnSelectorOption>
+				<!-- <checkBoxOption name="Enable grouping" id="enableGroups" label="Enable 
+					grouping" defaultValue="false" loadDefaults="true"> When enabled this will 
+					use the nominal/categorical column selected as the 'Group-by' column to create 
+					separate line segments for each group. </checkBoxOption> <checkBoxOption 
+					name="Aggregate data" id="enableAggregate" label="Aggregate data" defaultValue="false" 
+					loadDefaults="true"> When enabled this will use the columns selected in the 
+					'Included columns' option </checkBoxOption> <columnSelectorOption name="'Group-By' 
+					column" id="groupByColumn" inPortIndex="0" label="'Group-By' Column" filterClasses="org.knime.core.data.StringValue" 
+					enableDependency="enableGroups" enableValue="true"> If a previous cluster/binning 
+					operation has been performed, selected the column containing each rows membership 
+					for a more dynamic interactive experience. These nominal groups will be used 
+					to categorize the data as it's displayed and allow you to hide/show various 
+					groups by clicking/double-clicking on the group in the legend. </columnSelectorOption> -->
 				<radioButtonOption name="Error Bar calculation"
 					id="calcMethod"
 					possibleValues="Variance Standard&#160;Deviation Percent Fixed&#160;Value"
@@ -201,8 +179,9 @@
 					used.
 				</stringOption>
 				<checkBoxOption name="Display legend" id="showLegend"
-					label="Display legend" defaultValue="true" saveInView="true">
-					When checked,
+					label="Display legend" defaultValue="false" saveInView="true">
+					When
+					checked,
 					the chart's legend is displayed.
 				</checkBoxOption>
 				<checkBoxOption name="Show grid" id="showGrid"
@@ -379,6 +358,11 @@
 			</options>
 		</tab>
 	</fullDescription>
+	<outputOptions>
+		<dataOutputOption outPortIndex="1" id="selection"
+			additionalColumnName="Error Bars Selection"
+			additionalColumnType="BOOLEAN" inPortIndex="0" />
+	</outputOptions>
 	<interactiveView name="Error Bars Plot">
 		The KNIME Error Bars Plot with
 		Plotly.
@@ -389,9 +373,19 @@
 			containing two or more numeric columns to display in an interactive
 			Error Bars Plot.
 		</inPort>
+		<outPort portType="Image" name="Error Bars image" index="0">
+			SVG
+			image of the Error Bars chart if that option has been enabled.
+		</outPort>
+		<outPort portType="Data" name="Input Data + View Selection"
+			index="1">
+			Data table containing the input data with an appended boolean
+			column representing which rows were selected in the view.
+		</outPort>
 	</ports>
 	<js:resources>
-		<js:resource type="js" path="../kpi/knimePlotlyInterface.js" />
+		<js:resource type="js"
+			path="../kpi/knimePlotlyInterface.js" />
 		<js:resource type="js" path="errorBars.js" />
 		<js:resource type="css" path="errorBars.css" />
 	</js:resources>
@@ -401,4 +395,7 @@
 		<js:dependency name="MultipleSelections"
 			path="MultipleSelections" type="local" exports="MultipleSelections" />
 	</js:dependencies>
+	<js:javaProcessor
+		className="org.knime.js.plotly.configcheck.ConfigCheck"
+		hidesLimitRowOption="false" />
 </js:knimeNode>

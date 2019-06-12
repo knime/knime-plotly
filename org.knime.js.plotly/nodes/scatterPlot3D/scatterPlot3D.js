@@ -114,7 +114,8 @@ window.knimePlotlyScatterPlot3D = (function () {
                 }
             },
             zaxis: {
-                title: val.options.zAxisLabel ? val.options.zAxisLabel : val.options.zAxisColumn,
+                title: val.options.zAxisLabel.length === 0 ? val.options.zAxisLabel :
+                    val.options.zAxisColumn,
                 font: {
                     size: 12,
                     family: 'sans-serif'
@@ -127,7 +128,8 @@ window.knimePlotlyScatterPlot3D = (function () {
                 nticks: 10
             },
             yaxis: {
-                title: val.options.yAxisLabel ? val.options.yAxisLabel : val.options.yAxisColumn,
+                title: val.options.yAxisLabel.length === 0 ? val.options.yAxisLabel :
+                    val.options.yAxisColumn,
                 font: {
                     size: 12,
                     family: 'sans-serif'
@@ -140,7 +142,8 @@ window.knimePlotlyScatterPlot3D = (function () {
                 nticks: 10
             },
             xaxis: {
-                title: val.options.xAxisLabel ? val.options.xAxisLabel : val.options.xAxisColumn,
+                title: val.options.xAxisLabel.length === 0 ? val.options.xAxisLabel :
+                    val.options.xAxisColumn,
                 font: {
                     size: 12,
                     family: 'sans-serif'
@@ -177,92 +180,52 @@ window.knimePlotlyScatterPlot3D = (function () {
         return this;
     };
 
+    ScatterPlot3D.getSVG = function () {
+        return this.KPI.getSVG();
+    };
+
+    ScatterPlot3D.validate = function () {
+        return true;
+    };
+
+    ScatterPlot3D.getComponentValue = function () {
+        return this.KPI.getComponentValue();
+    };
+
     ScatterPlot3D.onSelectionChange = function (data) {
-        this.updateSelected(data);
-        if (knimeService.getGlobalService()) { // prevents boxes going away in single view
-            var changeObj;
-            if (this.showOnlySelected) {
-                changeObj = this.getFilteredChangeObject(
-                    [this.xAxisCol, this.yAxisCol, 'rowColors', 'rowKeys', this.zAxisCol, 'rowKeys'],
-                    ['x', 'y', 'marker.color', 'text', 'z', 'ids']
-                );
-            } else {
-                changeObj = this.getSelectedChangeObject();
-            }
-            this.Plotly.restyle('knime-scatter3D', changeObj);
+        if (data) {
+            this.KPI.updateSelected(data);
+            var changeObj = this.getSelectedChangeObject();
+            this.KPI.update(changeObj);
         }
     };
 
     ScatterPlot3D.onFilterChange = function (data) {
-        this.updateFilter(data);
-        var changeObj = this.getFilteredChangeObject(
-            [this.xAxisCol, this.yAxisCol, 'rowColors', 'rowKeys', this.zAxisCol, 'rowKeys'],
-            ['x', 'y', 'marker.color', 'text', 'z', 'ids']
-        );
-        this.Plotly.restyle('knime-scatter3D', changeObj);
+        if (data) {
+            this.KPI.updateFilter(data);
+            var changeObj = this.getSelectedChangeObject();
+            this.KPI.update(changeObj);
+        }
     };
 
     ScatterPlot3D.getSelectedChangeObject = function (filteredObj) {
         var self = this;
-        var changeObj = filteredObj || this.getEmptyChangeObject(['selectedpoints', 'marker.color']);
+        var changeObj = filteredObj || this.KPI.getFilteredChangeObject();
         changeObj['marker.opacity'] = [];
-
-        this.knimelyObj.dataArray.forEach(function (dataObj, objInd) {
-            var selectedPoints = [];
-            dataObj.rowKeys.forEach(function (rowKey, rowInd) {
-                var rowObj = self.knimelyObj.rowDirectory[rowKey];
-                if (self.totalSelected > 0) {
-                    if (self.selectedDirectory[objInd].has(rowInd)) {
-                        changeObj['marker.color'][objInd][rowObj.fInd] = dataObj.rowColors[rowInd];
-                        selectedPoints.push(rowObj.fInd);
+        changeObj.ids.forEach(function (idArr, traceInd) {
+            idArr.forEach(function (rowKey, rowInd) {
+                if (self.KPI.totalSelected > 0) {
+                    if (!self.KPI.selected.has(rowKey)) {
+                        changeObj['marker.color'][traceInd][rowInd] = '#d3d3d3';
                     }
-                    changeObj['marker.color'][objInd][rowObj.fInd] = '#d3d3d3';
-                } else {
-                    changeObj['marker.color'][objInd][rowObj.fInd] = dataObj.rowColors[rowInd];
                 }
             });
-
-            changeObj.selectedpoints[objInd] = selectedPoints;
-
-            if (self.showOnlySelected) {
-                changeObj['marker.opacity'][objInd] = self.selected.length < 1 ? 0.00001 : 0.4;
+            if (self.KPI.showOnlySelected) {
+                changeObj['marker.opacity'][traceInd] = self.KPI.selected.length < 1 ? 0.00001 : 0.4;
             } else {
-                changeObj['marker.opacity'][objInd] = .4;
+                changeObj['marker.opacity'][traceInd] = .4;
             }
         });
-        return changeObj;
-    };
-
-    ScatterPlot3D.getFilteredChangeObject = function (keys, pKeys) {
-
-        var self = this;
-        var changeObj = this.getEmptyChangeObject(pKeys);
-        changeObj.selectedpoints = [];
-        changeObj['marker.color'] = [];
-
-        this.knimelyObj.dataArray.forEach(function (dataObj, objInd) {
-            keys.forEach(function (key, keyInd) {
-                var count = 0;
-                changeObj[pKeys[keyInd]][objInd] = dataObj[key].filter(function (val, valInd) {
-                    var included = self.includedDirectory[objInd].has(valInd);
-                    if (self.showOnlySelected && included && self.selected.length > 0) {
-                        included = self.selectedDirectory[objInd].has(valInd);
-                    }
-                    if (included) {
-                        self.knimelyObj.rowDirectory[dataObj.rowKeys[valInd]].fInd = count;
-                        count++;
-                    } else {
-                        self.knimelyObj.rowDirectory[dataObj.rowKeys[valInd]].fInd = -1;
-                    }
-                    return included;
-                });
-            });
-            changeObj.selectedpoints[objInd] = null;
-            changeObj['marker.color'][objInd] = [];
-        });
-
-        changeObj = this.getSelectedChangeObject(changeObj);
-
         return changeObj;
     };
 
@@ -291,7 +254,7 @@ window.knimePlotlyScatterPlot3D = (function () {
             if (self.KPI.representation.options.enableFeatureSelection) {
                 var xAxisSelection = knimeService.createMenuSelect(
                     'x-axis-menu-item',
-                    this.columns.indexOf(this.xAxisCol),
+                    this.xAxisCol,
                     this.columns,
                     function () {
                         if (self.xAxisCol !== this.value) {
@@ -308,7 +271,8 @@ window.knimePlotlyScatterPlot3D = (function () {
                             };
                             self.KPI.updateValue(valueObj);
                             self.KPI.updateKeys(keys);
-                            self.KPI.update(false, layoutObj);
+                            var changeObj = self.getSelectedChangeObject();
+                            self.KPI.update(changeObj, layoutObj);
                         }
                     }
                 );
@@ -323,7 +287,7 @@ window.knimePlotlyScatterPlot3D = (function () {
 
                 var yAxisSelection = knimeService.createMenuSelect(
                     'y-axis-menu-item',
-                    this.columns.indexOf(this.yAxisCol),
+                    this.yAxisCol,
                     this.columns,
                     function () {
                         if (self.yAxisCol !== this.value) {
@@ -340,7 +304,8 @@ window.knimePlotlyScatterPlot3D = (function () {
                             };
                             self.KPI.updateValue(valueObj);
                             self.KPI.updateKeys(keys);
-                            self.KPI.update(false, layoutObj);
+                            var changeObj = self.getSelectedChangeObject();
+                            self.KPI.update(changeObj, layoutObj);
                         }
                     }
                 );
@@ -355,7 +320,7 @@ window.knimePlotlyScatterPlot3D = (function () {
 
                 var zAxisSelection = knimeService.createMenuSelect(
                     'z-axis-menu-item',
-                    this.columns.indexOf(this.yAxisCol),
+                    this.zAxisCol,
                     this.columns,
                     function () {
                         if (self.zAxisCol !== this.value) {
@@ -372,7 +337,8 @@ window.knimePlotlyScatterPlot3D = (function () {
                             };
                             self.KPI.updateValue(valueObj);
                             self.KPI.updateKeys(keys);
-                            self.KPI.update(false, layoutObj);
+                            var changeObj = self.getSelectedChangeObject();
+                            self.KPI.update(changeObj, layoutObj);
                         }
                     }
                 );

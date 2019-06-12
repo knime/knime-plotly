@@ -7,3 +7,16 @@
     left: 2px !important;
     top: 12px !important
 }
+
+.js-plotly-plot .plotly [data-title]::before, .js-plotly-plot .plotly [data-title]::after {
+    z-index: 2001 !important;
+    margin-right: -300% !important;
+    margin-top: -10% !important;
+    padding: 8px 5px !important;
+}
+
+.notifier-note > * {
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+}
+

@@ -51,7 +51,6 @@ window.knimePlotlyStackedArea = (function () {
             var newTrace = new self.TraceObject(xData, yData[col][0]);
 
             newTrace.marker.color = data.rowColors[0];
-            // newTrace.line.color = data.rowColors[0];
             newTrace.text = data.rowKeys[0];
             newTrace.ids = data.rowKeys[0];
             newTrace.name = col;
@@ -132,7 +131,7 @@ window.knimePlotlyStackedArea = (function () {
             family: 'sans-serif'
         };
         this.xaxis = {
-            title: val.options.xAxisLabel ? val.options.xAxisLabel
+            title: val.options.xAxisLabel.length === 0 ? val.options.xAxisLabel
                 : val.options.xAxisColumn,
             font: {
                 size: 12,
@@ -147,7 +146,7 @@ window.knimePlotlyStackedArea = (function () {
 
         };
         this.yaxis = {
-            title: val.options.yAxisLabel ? val.options.yAxisLabel
+            title: val.options.yAxisLabel.length === 0 ? val.options.yAxisLabel
                 : val.options.yAxisColumn,
             font: {
                 size: 12,
@@ -190,6 +189,19 @@ window.knimePlotlyStackedArea = (function () {
         return this;
     };
 
+    StackedArea.getSVG = function () {
+        return this.KPI.getSVG();
+    };
+
+
+    StackedArea.validate = function () {
+        return true;
+    };
+
+    StackedArea.getComponentValue = function () {
+        return this.KPI.getComponentValue();
+    };
+
     StackedArea.onSelectionChange = function (data) {
         this.updateSelected(data);
         var changeObj = this.getFilteredChangeObject();
@@ -227,7 +239,7 @@ window.knimePlotlyStackedArea = (function () {
             if (self.KPI.representation.options.enableFeatureSelection) {
                 var xAxisSelection = knimeService.createMenuSelect(
                     'x-axis-menu-item',
-                    this.columns.indexOf(this.xAxisCol),
+                    this.xAxisCol,
                     this.numericColumns,
                     function () {
                         if (self.xAxisCol !== this.value) {
@@ -258,7 +270,7 @@ window.knimePlotlyStackedArea = (function () {
                 );
 
                 // temporarily use controlContainer to solve th resizing problem with ySelect
-                var controlContainer = this.KPI.Plotly.d3.select('#knime-line').insert('table', '#radarContainer ~ *')
+                var controlContainer = this.KPI.Plotly.d3.select('#' + this.KPI.divID).insert('table', '#radarContainer ~ *')
                     .attr('id', 'lineControls')
                     /* .style("width", "100%") */
                     .style('padding', '10px')
@@ -275,16 +287,16 @@ window.knimePlotlyStackedArea = (function () {
                 columnSelect.setChoices(this.numericColumns);
                 columnSelect.setSelections(this.lineColumns);
                 columnSelect.addValueChangedListener(function () {
-                    var newSelected = columnSelect.getSelections();
+                    self.lineColumns = columnSelect.getSelections();
                     var valObj = {
-                        columns: newSelected
+                        columns: self.lineColumns
                     };
                     var changeObj = {
                         visible: []
                     };
 
                     self.KPI.traceDirectory.forEach(function (trace) {
-                        if (newSelected.indexOf(trace.dataKeys[1]) > -1) {
+                        if (self.lineColumns.indexOf(trace.dataKeys[1]) > -1) {
                             changeObj.visible.push(true);
                         } else {
                             changeObj.visible.push(false);

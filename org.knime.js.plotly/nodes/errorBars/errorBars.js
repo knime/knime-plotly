@@ -21,7 +21,7 @@ window.knimeErrorBarsPlot = (function () {
         this.needsTypeChange = false;
 
         this.drawChart();
-        // this.drawKnimeMenu();
+        this.drawKnimeMenu();
         this.KPI.mountAndSubscribe(this.onSelectionChange, this.onFilterChange);
     };
 
@@ -51,27 +51,27 @@ window.knimeErrorBarsPlot = (function () {
         this.KPI.updateKeys(keys);
         var data = self.KPI.getData(keys);
 
-        self.lineColumns.forEach(function (col, colInd) {
-            var yData = self.KPI.getData({ dataKeys: [col] });
-            var xData = data[self.xAxisCol][0];
-            var eData = self.getErrorObject(yData);
-            var newTrace = new self.TraceObject(xData, yData[col][0], eData);
-            if (self.KPI.representation.options.enableGroups) {
-                newTrace.line.color = self.KPI.hexToRGBA(self.KPI.getMostFrequentColor(data.rowColors[0].slice()), 1);
-            }
+        data.names.forEach(function (name, traceInd) {
+            self.lineColumns.forEach(function (col, colInd) {
+                var yData = self.KPI.getData({ dataKeys: [col] });
+                var xData = data[self.xAxisCol][traceInd];
+                var eData = self.getErrorObject(yData[col]);
+                var newTrace = new self.TraceObject(xData, yData[col][0], eData);
+                if (self.KPI.representation.options.enableGroups) {
+                    newTrace.line.color = self.KPI.hexToRGBA(self.KPI.getMostFrequentColor(data.rowColors[traceInd].slice()), 1);
+                }
 
-            newTrace.marker.color = data.rowColors[0];
-            // newTrace.line.color = data.rowColors[0];
-            // trace.selected.marker.color = rowColors;
-            // trace.unselected.marker.color = rowColors;
-            newTrace.text = self.getHoverText(data.rowKeys[0], col, data.name[0]);
-            newTrace.ids = data.rowKeys[0];
-            newTrace.name = col + '<br>' + data.name[0];
-            newTrace.dataKeys = [self.xAxisCol, col, 'rowKeys', 'rowColors'];
-            if (xData.length < 2) {
-                self.needsTypeChange = true;
-            }
-            traces.push(newTrace);
+                newTrace.marker.color = data.rowColors[traceInd];
+                newTrace.line.color = data.rowColors[traceInd];
+                newTrace.text = self.getHoverText(data.rowKeys[traceInd], col, data.names[traceInd]);
+                newTrace.ids = data.rowKeys[traceInd];
+                newTrace.name = col + '<br>' + data.names[traceInd];
+                newTrace.dataKeys = [self.xAxisCol, col, 'rowKeys', 'rowColors'];
+                if (xData.length < 2) {
+                    self.needsTypeChange = true;
+                }
+                traces.push(newTrace);
+            });
         });
 
         keys = {
@@ -94,8 +94,6 @@ window.knimeErrorBarsPlot = (function () {
         };
         this.error_y = eData;
         this.line = {
-            // color: [],
-            // opacity: .1,
             width: 1
         };
         this.unselected = {
@@ -131,7 +129,7 @@ window.knimeErrorBarsPlot = (function () {
             family: 'sans-serif'
         };
         this.xaxis = {
-            title: val.options.xAxisLabel ? val.options.xAxisLabel
+            title: val.options.xAxisLabel.length === 0 ? val.options.xAxisLabel
                 : val.options.xAxisColumn,
             font: {
                 size: 12,
@@ -146,7 +144,7 @@ window.knimeErrorBarsPlot = (function () {
 
         };
         this.yaxis = {
-            title: val.options.yAxisLabel ? val.options.yAxisLabel
+            title: val.options.yAxisLabel.length === 0 ? val.options.yAxisLabel
                 : val.options.yAxisColumn,
             font: {
                 size: 12,
@@ -187,6 +185,18 @@ window.knimeErrorBarsPlot = (function () {
         this.modeBarButtonsToRemove = ['hoverClosestCartesian',
             'hoverCompareCartesian', 'toggleSpikelines'];
         return this;
+    };
+
+    ErrorBars.getSVG = function () {
+        return this.KPI.getSVG();
+    };
+
+    ErrorBars.validate = function () {
+        return true;
+    };
+
+    ErrorBars.getComponentValue = function () {
+        return this.KPI.getComponentValue();
     };
 
     ErrorBars.onSelectionChange = function (data) {
@@ -297,7 +307,7 @@ window.knimeErrorBarsPlot = (function () {
             if (self.KPI.representation.options.enableCalcMethodSelection) {
                 var calcMethodSelection = knimeService.createMenuSelect(
                     'calc-method-menu-item',
-                    this.calculationMethods.indexOf(self.KPI.value.options.calcMethod.replace(/\s/g, ' ')),
+                    self.KPI.value.options.calcMethod.replace(/\s/g, ' '),
                     this.calculationMethods,
                     function () {
                         if (self.KPI.value.options.calcMethod !== this.value) {
@@ -327,7 +337,7 @@ window.knimeErrorBarsPlot = (function () {
             if (self.KPI.representation.options.enableFeatureSelection) {
                 var xAxisSelection = knimeService.createMenuSelect(
                     'x-axis-menu-item',
-                    this.columns.indexOf(this.xAxisCol),
+                    this.xAxisCol,
                     this.numericColumns,
                     function () {
                         if (self.xAxisCol !== this.value) {
@@ -358,7 +368,7 @@ window.knimeErrorBarsPlot = (function () {
                 );
 
                 // temporarily use controlContainer to solve th resizing problem with ySelect
-                var controlContainer = this.KPI.Plotly.d3.select('#knime-line').insert('table', '#radarContainer ~ *')
+                var controlContainer = this.KPI.Plotly.d3.select('#' + this.KPI.divID).insert('table', '#radarContainer ~ *')
                     .attr('id', 'lineControls')
                     /* .style("width", "100%") */
                     .style('padding', '10px')
@@ -375,16 +385,15 @@ window.knimeErrorBarsPlot = (function () {
                 columnSelect.setChoices(this.numericColumns);
                 columnSelect.setSelections(this.lineColumns);
                 columnSelect.addValueChangedListener(function () {
-                    var newSelected = columnSelect.getSelections();
+                    self.lineColumns = columnSelect.getSelections();
                     var valObj = {
-                        columns: newSelected
+                        columns: self.lineColumns
                     };
                     var changeObj = {
                         visible: []
                     };
-
                     self.KPI.traceDirectory.forEach(function (trace) {
-                        if (newSelected.indexOf(trace.dataKeys[1]) > -1) {
+                        if (self.lineColumns.indexOf(trace.dataKeys[1]) > -1) {
                             changeObj.visible.push(true);
                         } else {
                             changeObj.visible.push(false);

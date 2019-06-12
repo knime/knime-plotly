@@ -17,7 +17,7 @@ window.knimeDensity = (function () {
         this.yAxisCol = this.KPI.value.options.yAxisColumn || this.columns[1];
         this.onSelectionChange = this.onSelectionChange.bind(this);
         this.onFilterChange = this.onFilterChange.bind(this);
-        this.colorscale = 'Hot';
+        this.colorscale = this.KPI.value.options.colorscale || 'Hot';
 
         this.drawChart();
         this.drawKnimeMenu();
@@ -30,6 +30,7 @@ window.knimeDensity = (function () {
         var c = new this.ConfigObject(this.KPI.representation, this.KPI.value);
         this.KPI.createElement('knime-density');
         this.KPI.drawChart(t, l, c);
+        this.KPI.update();
     };
 
     Density.createTraces = function () {
@@ -54,26 +55,29 @@ window.knimeDensity = (function () {
             traces.push(newTrace);
 
             var densityTrace = new self.DensityTraceObject(data[self.xAxisCol][groupInd],
-                data[self.yAxisCol][groupInd]);
+                data[self.yAxisCol][groupInd], self.colorscale);
             densityTrace.text = data.rowKeys[groupInd];
             densityTrace.ids = data.rowKeys[groupInd];
             densityTrace.dataKeys = keys.dataKeys;
             densityTrace.name = group;
             traces.push(densityTrace);
 
-            var xHistTrace = new self.XHistogramTraceObject(data[self.xAxisCol][groupInd]);
-            xHistTrace.text = data.rowKeys[groupInd];
-            xHistTrace.ids = data.rowKeys[groupInd];
-            xHistTrace.dataKeys = [self.xAxisCol, null, 'rowKeys', 'rowColors'];
-            xHistTrace.name = group;
-            traces.push(xHistTrace);
+            if (self.KPI.value.options.showHistogram) {
 
-            var yHistTrace = new self.YHistogramTraceObject(data[self.yAxisCol][groupInd]);
-            yHistTrace.text = data.rowKeys[groupInd];
-            yHistTrace.ids = data.rowKeys[groupInd];
-            yHistTrace.dataKeys = [null, self.yAxisCol, 'rowKeys', 'rowColors'];
-            yHistTrace.name = group;
-            traces.push(yHistTrace);
+                var xHistTrace = new self.XHistogramTraceObject(data[self.xAxisCol][groupInd]);
+                xHistTrace.text = data.rowKeys[groupInd];
+                xHistTrace.ids = data.rowKeys[groupInd];
+                xHistTrace.dataKeys = [self.xAxisCol, null, 'rowKeys', 'rowColors'];
+                xHistTrace.name = group;
+                traces.push(xHistTrace);
+
+                var yHistTrace = new self.YHistogramTraceObject(data[self.yAxisCol][groupInd]);
+                yHistTrace.text = data.rowKeys[groupInd];
+                yHistTrace.ids = data.rowKeys[groupInd];
+                yHistTrace.dataKeys = [null, self.yAxisCol, 'rowKeys', 'rowColors'];
+                yHistTrace.name = group;
+                traces.push(yHistTrace);
+            }
         });
 
         return traces;
@@ -102,12 +106,12 @@ window.knimeDensity = (function () {
         return this;
     };
 
-    Density.DensityTraceObject = function (xData, yData) {
+    Density.DensityTraceObject = function (xData, yData, colorscale) {
         this.x = xData;
         this.y = yData;
         this.name = 'density';
         this.ncontours = 20;
-        this.colorscale = 'Hot';
+        this.colorscale = colorscale;
         this.reversescale = true;
         this.showscale = false;
         this.type = 'histogram2dcontour';
@@ -117,7 +121,10 @@ window.knimeDensity = (function () {
     Density.XHistogramTraceObject = function (xData) {
         this.x = xData;
         this.name = 'x density';
-        this.marker = { color: 'rgb(102,0,0)' };
+        this.marker = {
+            color: 'rgb(102,0,0)',
+            opacity: 0.4
+        };
         this.yaxis = 'y2';
         this.type = 'histogram';
         return this;
@@ -126,7 +133,10 @@ window.knimeDensity = (function () {
     Density.YHistogramTraceObject = function (yData) {
         this.y = yData;
         this.name = 'y density';
-        this.marker = { color: 'rgb(102,0,0)' };
+        this.marker = {
+            color: 'rgb(102,0,0)',
+            opacity: 0.4
+        };
         this.xaxis = 'x2';
         this.type = 'histogram';
         return this;
@@ -151,12 +161,13 @@ window.knimeDensity = (function () {
         };
         this.bargap = 0;
         this.xaxis = {
-            title: val.options.xAxisLabel ? val.options.xAxisLabel : val.options.xAxisColumn,
+            title: val.options.xAxisLabel.length === 0 ? val.options.xAxisLabel :
+                val.options.xAxisColumn,
             font: {
                 size: 12,
                 family: 'sans-serif'
             },
-            domain: [0, 0.84],
+            domain: val.options.showHistogram ? [0, 0.84] : [0, 1],
             type: 'linear',
             showgrid: false,
             gridcolor: '#fffff', // potential option
@@ -166,12 +177,13 @@ window.knimeDensity = (function () {
 
         };
         this.yaxis = {
-            title: val.options.yAxisLabel ? val.options.yAxisLabel : val.options.yAxisColumn,
+            title: val.options.yAxisLabel.length === 0 ? val.options.yAxisLabel :
+                val.options.yAxisColumn,
             font: {
                 size: 12,
                 family: 'sans-serif'
             },
-            domain: [0, 0.84],
+            domain: val.options.showHistogram ? [0, 0.84] : [0, 1],
             type: 'linear',
             showgrid: false,
             gridcolor: '#fffff', // potential option
@@ -179,18 +191,20 @@ window.knimeDensity = (function () {
             linewidth: 1,
             nticks: 10
         };
-        this.xaxis2 = {
-            title: '',
-            domain: [0.85, 1],
-            showgrid: false,
-            zeroline: false
-        };
-        this.yaxis2 = {
-            title: '',
-            domain: [0.85, 1],
-            showgrid: false,
-            zeroline: false
-        };
+        if (val.options.showHistogram) {
+            this.xaxis2 = {
+                title: '',
+                domain: [0.85, 1],
+                showgrid: false,
+                zeroline: false
+            };
+            this.yaxis2 = {
+                title: '',
+                domain: [0.85, 1],
+                showgrid: false,
+                zeroline: false
+            };
+        }
         this.margin = {
             l: 55,
             r: 20,
@@ -219,6 +233,18 @@ window.knimeDensity = (function () {
         this.modeBarButtonsToRemove = ['hoverClosestCartesian',
             'hoverCompareCartesian'];
         return this;
+    };
+
+    Density.getSVG = function () {
+        return this.KPI.getSVG();
+    };
+
+    Density.validate = function () {
+        return true;
+    };
+
+    Density.getComponentValue = function () {
+        return this.KPI.getComponentValue();
     };
 
     Density.onSelectionChange = function (data) {
@@ -261,7 +287,7 @@ window.knimeDensity = (function () {
             if (self.KPI.representation.options.enableFeatureSelection) {
                 var xAxisSelection = knimeService.createMenuSelect(
                     'x-axis-menu-item',
-                    this.columns.indexOf(this.xAxisCol),
+                    this.xAxisCol,
                     this.columns,
                     function () {
                         if (self.xAxisCol !== this.value) {
@@ -292,13 +318,13 @@ window.knimeDensity = (function () {
 
                 var yAxisSelection = knimeService.createMenuSelect(
                     'y-axis-menu-item',
-                    this.columns.indexOf(this.yAxisCol),
+                    this.yAxisCol,
                     this.columns,
                     function () {
                         if (self.yAxisCol !== this.value) {
                             self.yAxisCol = this.value;
                             var layoutObj = {
-                                'xaxis.title': self.yAxisCol
+                                'yaxis.title': self.yAxisCol
                             };
                             var keys = {
                                 dataKeys: [null, self.yAxisCol, null, null]
@@ -327,7 +353,7 @@ window.knimeDensity = (function () {
             if (self.KPI.representation.options.showDensityColorOptions) {
                 var colorScaleSelection = knimeService.createMenuSelect(
                     'colorscale-menu-item',
-                    0,
+                    self.colorscale,
                     ['Hot', 'Greys', 'YlGnBu', 'Greens', 'YlOrRd', 'Bluered', 'RdBu', 'Reds', 'Blues',
                         'Picnic', 'Rainbow', 'Portland', 'Jet', 'Blackbody', 'Earth',
                         'Electric', 'Viridis', 'Cividis.'],
@@ -337,6 +363,10 @@ window.knimeDensity = (function () {
                             var changeObj = {
                                 colorscale: [self.colorscale]
                             };
+                            var valueObj = {
+                                colorscale: self.colorscale
+                            };
+                            self.KPI.updateValue(valueObj);
                             self.KPI.update(changeObj);
                         }
                     }

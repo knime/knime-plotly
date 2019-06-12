@@ -44,7 +44,7 @@ window.knimeViolin = (function () {
         var plotDirection = this.KPI.value.options.plotDirection;
 
         var data = this.KPI.getData(keys);
-        
+
         data.names.forEach(function (group, groupInd) {
             var transforms = self.getTransforms(data[self.groupByCol][groupInd], data.rowColors[groupInd]);
             var newTrace = new self.TraceObject(data[self.axisCol][groupInd],
@@ -80,8 +80,10 @@ window.knimeViolin = (function () {
     };
 
     ViolinPlot.LayoutObject = function (rep, val) {
-        var groupedColLabel = rep.options.groupedAxisLabel || rep.options.groupByColumn;
-        var numericColLabel = val.options.numAxisLabel || val.options.axisColumn;
+        var groupedColLabel = rep.options.groupedAxisLabel.length === 0 ||
+            rep.options.groupByColumn;
+        var numericColLabel = val.options.numAxisLabel.length === 0 ||
+            val.options.axisColumn;
         this.title = {
             text: val.options.title || 'Violin Plot',
             y: 1,
@@ -152,11 +154,22 @@ window.knimeViolin = (function () {
         return this;
     };
 
+    ViolinPlot.getSVG = function () {
+        return this.KPI.getSVG();
+    };
+
+    ViolinPlot.validate = function () {
+        return true;
+    };
+
+    ViolinPlot.getComponentValue = function () {
+        return this.KPI.getComponentValue();
+    };
+
     ViolinPlot.onSelectionChange = function (data) {
         if (data) {
             this.KPI.updateSelected(data);
-            var changeObj = {};
-            changeObj = this.KPI.getFilteredChangeObject();
+            var changeObj = this.getChangeObject();
             this.KPI.update(changeObj);
         }
     };
@@ -164,47 +177,40 @@ window.knimeViolin = (function () {
     ViolinPlot.onFilterChange = function (data) {
         if (data) {
             this.KPI.updateFilter(data);
-            var changeObj = this.KPI.getFilteredChangeObject();
-            var tGroups = changeObj[this.plotlyGroupColKey][0];
-            var tColors = changeObj['marker.color'][0];
-    
-            changeObj.transforms = [this.getTransforms(tGroups, tColors)];
-    
-            if (this.KPI.value.options.plotDirection === 'Horizontal') {
-                delete changeObj[this.plotlyGroupColKey];
-            }
+            var changeObj = this.getChangeObject();
             this.KPI.update(changeObj);
         }
+    };
+
+    ViolinPlot.getChangeObject = function () {
+        var changeObj = this.KPI.getFilteredChangeObject();
+        var tGroups = changeObj[this.plotlyGroupColKey][0];
+        var tColors = changeObj['marker.color'][0];
+        changeObj.transforms = [this.getTransforms(tGroups, tColors)];
+        delete changeObj.selectedpoints;
+        delete changeObj['marker.color'];
+        if (this.KPI.value.options.plotDirection === 'Horizontal') {
+            delete changeObj[this.plotlyGroupColKey];
+        }
+        return changeObj;
     };
 
     ViolinPlot.getTransforms = function (groupData, colors) {
         var style = [];
         var self = this;
         var groupSet = new self.KPI.KSet([]);
-        var groupColors = new self.KPI.KMap([]);
+        var colorObj = {};
         groupData.forEach(function (group, gInd) {
-            if (groupSet.has(group)) {
-                var gColorMap = groupColors.get(group);
-                var count = gColorMap.has(colors[gInd]) ? gColorMap.get(colors[gInd]) + 1 : 1;
-                gColorMap.set(colors[gInd], count);
-                groupColors.set(group, gColorMap);
-            } else {
-                groupSet.add(group);
-                var nonGroupColorMap = new self.KPI.KMap([]);
-                nonGroupColorMap.set(colors[gInd], 1);
-                groupColors.set(group, nonGroupColorMap);
+            if (typeof colorObj[group] === 'undefined') {
+                colorObj[group] = [];
             }
+            colorObj[group].push(colors[gInd]);
+            groupSet.add(group);
         });
 
         groupSet.getArray().forEach(function (group) {
-            var min = 0;
-            var color = '#8dd3c7';
-            groupColors.get(group).values().forEach(function (value, key) {
-                if (value > min) {
-                    min = value;
-                    color = key;
-                }
-            });
+            var colors = colorObj[group];
+            var color = self.KPI.getMostFrequentColor(colors);
             style.push({
                 target: group,
                 value: {
@@ -249,13 +255,13 @@ window.knimeViolin = (function () {
             if (self.KPI.representation.options.enableFeatureSelection) {
                 var axisColSelection = knimeService.createMenuSelect(
                     'axis-col-menu-item',
-                    this.columns.indexOf(this.axisCol),
+                    this.axisCol,
                     this.numericColumns,
                     function () {
                         if (self.axisCol !== this.value) {
                             self.axisCol = this.value;
                             var valueObj = {
-                                axisColumn: self.sizeCol
+                                axisColumn: self.axisCol
                             };
                             var keys = {
                                 dataKeys: [self.axisCol, self.groupByCol, 'rowKeys', 'rowColors'],
@@ -263,10 +269,11 @@ window.knimeViolin = (function () {
                             };
                             var layoutObjKey = self.plotlyNumColKey + 'axis.title';
                             var layoutObj = {};
+                            var changeObj = self.getChangeObject();
                             layoutObj[layoutObjKey] = self.axisCol;
                             self.KPI.updateValue(valueObj);
                             self.KPI.updateKeys(keys);
-                            self.KPI.update(false, layoutObj);
+                            self.KPI.update(changeObj, layoutObj);
                         }
                     }
                 );
@@ -320,7 +327,8 @@ window.knimeViolin = (function () {
                     function () {
                         if (self.KPI.showOnlySelected !== this.checked) {
                             self.KPI.updateShowOnlySelected(this.checked);
-                            self.KPI.update();
+                            var changeObj = self.getChangeObject();
+                            self.KPI.update(changeObj);
                         }
                     },
                     true
