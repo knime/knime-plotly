@@ -63,6 +63,7 @@ window.KnimePlotlyInterface = function () {
                 this.update();
             }
         }
+        this.Plotly.newPlot(this.divID, traceArr, layout, config);
     };
 
     KnimePlotlyInterface.getSVG = function () {
@@ -222,7 +223,7 @@ window.KnimePlotlyInterface = function () {
                     if (typeof trace[rowKey] === 'undefined') {
                         return;
                     }
-                    if (self.showOnlySelected && !self.selected.has(rowKey) || !self.filtered.has(rowKey)) {
+                    if ((self.showOnlySelected && !self.selected.has(rowKey)) || !self.filtered.has(rowKey)) {
                         self.traceDirectory[traceInd][rowKey] = -1;
                         return;
                     }
@@ -508,6 +509,7 @@ window.KnimePlotlyInterface = function () {
     KnimePlotlyInterface.mountAndSubscribe = function (selectionChange, filterChange) {
         var self = this;
         var hasSecondAxis = this.removeSecondAxisElements();
+
         document.getElementById(this.divID).on('plotly_relayout', function (eData) {
             if (eData) {
                 if (hasSecondAxis) {

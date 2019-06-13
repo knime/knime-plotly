@@ -65,7 +65,8 @@ window.knimeContinuousErrorPlot = (function () {
                 newTrace.marker.color = data.rowColors[traceInd];
                 newTrace.text = self.getHoverText(data.rowKeys[traceInd], col, data.names[traceInd]);
                 newTrace.ids = data.rowKeys[traceInd];
-                newTrace.name = col + '<br>' + data.names[traceInd];
+                newTrace.name = col;
+                // newTrace.name = col + '<br>' + data.names[traceInd];
                 newTrace.dataKeys = [self.xAxisCol, col, 'rowKeys', 'rowColors'];
                 newTrace.legendgroup = data.names[traceInd];
                 if (xData.length < 2) {
@@ -137,7 +138,7 @@ window.knimeContinuousErrorPlot = (function () {
             family: 'sans-serif'
         };
         this.xaxis = {
-            title: val.options.xAxisLabel.length === 0 ? val.options.xAxisLabel
+            title: val.options.xAxisLabel.length > 0 ? val.options.xAxisLabel
                 : val.options.xAxisColumn,
             font: {
                 size: 12,
@@ -152,7 +153,7 @@ window.knimeContinuousErrorPlot = (function () {
 
         };
         this.yaxis = {
-            title: val.options.yAxisLabel.length === 0 ? val.options.yAxisLabel
+            title: val.options.yAxisLabel.length > 0 ? val.options.yAxisLabel
                 : val.options.yAxisColumn,
             font: {
                 size: 12,
@@ -189,6 +190,7 @@ window.knimeContinuousErrorPlot = (function () {
         this.responsive = true;
         this.editable = rep.options.enableEditing;
         this.scrollZoom = true;
+        this.showTips = false;
         this.showLink = rep.options.enablePlotlyEditor;
         this.modeBarButtonsToRemove = ['hoverClosestCartesian',
             'hoverCompareCartesian', 'toggleSpikelines'];

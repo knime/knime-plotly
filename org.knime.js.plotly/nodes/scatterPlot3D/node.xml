@@ -100,7 +100,7 @@
 			</description>
 			<options>
 				<stringOption name="Title" id="title" label="Title"
-					defaultValue="Scatter Plot" optional="true" saveInView="true">
+					defaultValue="3D Scatter Plot" optional="true" saveInView="true">
 					The chart
 					title.
 				</stringOption>

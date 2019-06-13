@@ -84,7 +84,7 @@ window.knimeContourPlot = (function () {
             family: 'sans-serif'
         };
         this.xaxis = {
-            title: val.options.zAxisLabel.length === 0 ? val.options.zAxisLabel
+            title: val.options.xAxisLabel.length > 0 ? val.options.xAxisLabel
                 : val.options.zAxisColumn,
             font: {
                 size: 12,
@@ -99,8 +99,8 @@ window.knimeContourPlot = (function () {
 
         };
         this.yaxis = {
-            title: val.options.yAxisLabel.length === 0 ? val.options.yAxisLabel
-                : '',
+            title: val.options.yAxisLabel.length > 0 ? val.options.yAxisLabel
+                : 'y',
             font: {
                 size: 12,
                 family: 'sans-serif'
@@ -136,9 +136,10 @@ window.knimeContourPlot = (function () {
         this.responsive = true;
         this.editable = rep.options.enableEditing;
         this.scrollZoom = true;
+        this.showTips = false;
         this.showLink = rep.options.enablePlotlyEditor;
         this.modeBarButtonsToRemove = ['hoverClosestCartesian',
-            'hoverCompareCartesian', 'hoverClosest3d'];
+            'hoverCompareCartesian', 'hoverClosest3d', 'toggleSpikelines'];
         return this;
     };
 

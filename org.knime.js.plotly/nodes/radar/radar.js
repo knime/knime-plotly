@@ -159,6 +159,7 @@ window.knimeRadarPlot = (function () {
         this.responsive = true;
         this.editable = rep.options.enableEditing;
         this.scrollZoom = true;
+        this.showTips = false;
         this.showLink = rep.options.enablePlotlyEditor;
         this.modeBarButtonsToRemove = ['hoverClosestCartesian',
             'hoverCompareCartesian', 'toggleHover'

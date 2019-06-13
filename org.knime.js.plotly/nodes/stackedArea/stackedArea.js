@@ -131,7 +131,7 @@ window.knimePlotlyStackedArea = (function () {
             family: 'sans-serif'
         };
         this.xaxis = {
-            title: val.options.xAxisLabel.length === 0 ? val.options.xAxisLabel
+            title: val.options.xAxisLabel.length > 0 ? val.options.xAxisLabel
                 : val.options.xAxisColumn,
             font: {
                 size: 12,
@@ -146,7 +146,7 @@ window.knimePlotlyStackedArea = (function () {
 
         };
         this.yaxis = {
-            title: val.options.yAxisLabel.length === 0 ? val.options.yAxisLabel
+            title: val.options.yAxisLabel.length > 0 ? val.options.yAxisLabel
                 : val.options.yAxisColumn,
             font: {
                 size: 12,
@@ -183,6 +183,7 @@ window.knimePlotlyStackedArea = (function () {
         this.responsive = true;
         this.editable = rep.options.enableEditing;
         this.scrollZoom = true;
+        this.showTips = false;
         this.showLink = rep.options.enablePlotlyEditor;
         this.modeBarButtonsToRemove = ['hoverClosestCartesian',
             'hoverCompareCartesian', 'toggleSpikelines'];

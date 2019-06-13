@@ -88,7 +88,7 @@ window.knimePlotlyScatterPlot3D = (function () {
             yref: 'paper',
             yanchor: 'bottom'
         };
-        this.showlegend = rep.options.showLegend;
+        this.showlegend = val.options.showLegend;
         this.autoSize = true;
         this.legend = {
             x: 1,
@@ -114,7 +114,7 @@ window.knimePlotlyScatterPlot3D = (function () {
                 }
             },
             zaxis: {
-                title: val.options.zAxisLabel.length === 0 ? val.options.zAxisLabel :
+                title: val.options.zAxisLabel.length > 0 ? val.options.zAxisLabel :
                     val.options.zAxisColumn,
                 font: {
                     size: 12,
@@ -128,7 +128,7 @@ window.knimePlotlyScatterPlot3D = (function () {
                 nticks: 10
             },
             yaxis: {
-                title: val.options.yAxisLabel.length === 0 ? val.options.yAxisLabel :
+                title: val.options.yAxisLabel.length > 0 ? val.options.yAxisLabel :
                     val.options.yAxisColumn,
                 font: {
                     size: 12,
@@ -142,7 +142,7 @@ window.knimePlotlyScatterPlot3D = (function () {
                 nticks: 10
             },
             xaxis: {
-                title: val.options.xAxisLabel.length === 0 ? val.options.xAxisLabel :
+                title: val.options.xAxisLabel.length > 0 ? val.options.xAxisLabel :
                     val.options.xAxisColumn,
                 font: {
                     size: 12,
@@ -174,9 +174,10 @@ window.knimePlotlyScatterPlot3D = (function () {
         this.responsive = true;
         this.editable = rep.options.enableEditing;
         this.scrollZoom = true;
+        this.showTips = false;
         this.showLink = rep.options.enablePlotlyEditor;
         this.modeBarButtonsToRemove = ['hoverClosestCartesian',
-            'hoverCompareCartesian', 'hovermode'];
+            'hoverCompareCartesian', 'hovermode', 'hoverClosest3d'];
         return this;
     };
 

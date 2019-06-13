@@ -80,10 +80,10 @@ window.knimeViolin = (function () {
     };
 
     ViolinPlot.LayoutObject = function (rep, val) {
-        var groupedColLabel = rep.options.groupedAxisLabel.length === 0 ||
-            rep.options.groupByColumn;
-        var numericColLabel = val.options.numAxisLabel.length === 0 ||
-            val.options.axisColumn;
+        var groupedColLabel = val.options.groupedAxisLabel.length === 0 ?
+            rep.options.groupByColumn : val.options.groupedAxisLabel;
+        var numericColLabel = val.options.numAxisLabel.length === 0 ?
+            val.options.axisColumn : val.options.numAxisLabel.length;
         this.title = {
             text: val.options.title || 'Violin Plot',
             y: 1,
@@ -149,8 +149,10 @@ window.knimeViolin = (function () {
         this.responsive = true;
         this.editable = rep.options.enableEditing;
         this.scrollZoom = true;
+        this.showTips = false;
         this.showLink = rep.options.enablePlotlyEditor;
-        this.modeBarButtonsToRemove = ['hoverClosestCartesian', 'hoverCompareCartesian'];
+        this.modeBarButtonsToRemove = ['hoverClosestCartesian',
+            'hoverCompareCartesian', 'toggleSpikelines'];
         return this;
     };
 

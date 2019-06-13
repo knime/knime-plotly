@@ -149,7 +149,7 @@ window.knimeDensity = (function () {
             yref: 'paper',
             yanchor: 'bottom'
         };
-        this.showlegend = rep.options.showLegend;
+        this.showlegend = val.options.showLegend;
         this.autoSize = true;
         this.legend = {
             x: 1,
@@ -161,7 +161,7 @@ window.knimeDensity = (function () {
         };
         this.bargap = 0;
         this.xaxis = {
-            title: val.options.xAxisLabel.length === 0 ? val.options.xAxisLabel :
+            title: val.options.xAxisLabel.length > 0 ? val.options.xAxisLabel :
                 val.options.xAxisColumn,
             font: {
                 size: 12,
@@ -177,7 +177,7 @@ window.knimeDensity = (function () {
 
         };
         this.yaxis = {
-            title: val.options.yAxisLabel.length === 0 ? val.options.yAxisLabel :
+            title: val.options.yAxisLabel.length > 0 ? val.options.yAxisLabel :
                 val.options.yAxisColumn,
             font: {
                 size: 12,
@@ -229,9 +229,10 @@ window.knimeDensity = (function () {
         this.responsive = true;
         this.editable = rep.options.enableEditing;
         this.scrollZoom = true;
+        this.showTips = false;
         this.showLink = rep.options.enablePlotlyEditor;
         this.modeBarButtonsToRemove = ['hoverClosestCartesian',
-            'hoverCompareCartesian'];
+            'hoverCompareCartesian', 'toggleSpikelines'];
         return this;
     };
 
@@ -250,7 +251,8 @@ window.knimeDensity = (function () {
     Density.onSelectionChange = function (data) {
         if (data) {
             this.KPI.updateSelected(data);
-            this.KPI.update();
+            var changeObj = this.KPI.getFilteredChangeObject();
+            this.KPI.update(changeObj);
         }
     };
 

@@ -92,7 +92,7 @@ window.knimeSurface3DPlot = (function () {
                 }
             },
             zaxis: {
-                title: val.options.zAxisLabel.length === 0 ? val.options.zAxisLabel
+                title: val.options.zAxisLabel.length > 0 ? val.options.zAxisLabel
                     : 'z',
                 font: {
                     size: 12,
@@ -106,7 +106,7 @@ window.knimeSurface3DPlot = (function () {
                 nticks: 10
             },
             yaxis: {
-                title: val.options.yAxisLabel.length === 0 ? val.options.yAxisLabel
+                title: val.options.yAxisLabel.length > 0 ? val.options.yAxisLabel
                     : 'y',
                 font: {
                     size: 12,
@@ -120,7 +120,7 @@ window.knimeSurface3DPlot = (function () {
                 nticks: 10
             },
             xaxis: {
-                title: val.options.xAxisLabel.length === 0 ? val.options.xAxisLabel
+                title: val.options.xAxisLabel.length > 0 ? val.options.xAxisLabel
                     : 'x',
                 font: {
                     size: 12,
@@ -159,6 +159,7 @@ window.knimeSurface3DPlot = (function () {
         this.responsive = true;
         this.editable = rep.options.enableEditing;
         this.scrollZoom = true;
+        this.showTips = false;
         this.showLink = rep.options.enablePlotlyEditor;
         this.modeBarButtonsToRemove = ['hoverClosestCartesian',
             'hoverCompareCartesian', 'hoverClosest3d'];
