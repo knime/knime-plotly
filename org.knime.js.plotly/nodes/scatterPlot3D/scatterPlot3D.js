@@ -98,13 +98,6 @@ window.knimePlotlyScatterPlot3D = (function () {
             size: 12,
             family: 'sans-serif'
         };
-        this.margin = {
-            l: 55,
-            r: 20,
-            b: 55,
-            t: 60,
-            pad: 0
-        };
         this.scene = {
             camera: {
                 eye: {
@@ -157,6 +150,13 @@ window.knimePlotlyScatterPlot3D = (function () {
 
             }
         };
+        this.margin = {
+            l: 50,
+            r: 15,
+            b: 35,
+            t: 50,
+            pad: 0
+        };
         this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none';
         this.paper_bgcolor = rep.options.daColor || '#ffffff';
         this.plot_bgcolor = rep.options.backgroundColor || '#ffffff';
@@ -166,12 +166,12 @@ window.knimePlotlyScatterPlot3D = (function () {
         this.toImageButtonOptions = {
             format: 'svg', // one of png, svg, jpeg, webp
             filename: 'custom_image',
-            height: 600,
-            width: 800,
+            height: rep.options.svg ? rep.options.svg.height : 600,
+            width: rep.options.svg ? rep.options.svg.width : 800,
             scale: 1 // Multiply title/legend/axis/canvas sizes by this factor
         };
         this.displaylogo = false;
-        this.responsive = true;
+        this.responsive = rep.options.svg ? rep.options.svg.fullscreen : true;
         this.editable = rep.options.enableEditing;
         this.scrollZoom = true;
         this.showTips = false;
@@ -236,7 +236,7 @@ window.knimePlotlyScatterPlot3D = (function () {
 
         if (self.KPI.representation.options.enableViewControls) {
 
-            if (self.KPI.representation.options.showFullscreen) {
+            if (self.KPI.value.options.showFullscreen) {
                 knimeService.allowFullscreen();
             }
 

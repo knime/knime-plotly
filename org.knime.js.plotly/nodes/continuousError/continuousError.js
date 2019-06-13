@@ -154,7 +154,7 @@ window.knimeContinuousErrorPlot = (function () {
         };
         this.yaxis = {
             title: val.options.yAxisLabel.length > 0 ? val.options.yAxisLabel
-                : val.options.yAxisColumn,
+                : 'y',
             font: {
                 size: 12,
                 family: 'sans-serif'
@@ -167,10 +167,10 @@ window.knimeContinuousErrorPlot = (function () {
             nticks: 10
         };
         this.margin = {
-            l: 55,
-            r: 20,
-            b: 55,
-            t: 60,
+            l: 50,
+            r: 15,
+            b: 35,
+            t: 50,
             pad: 0
         };
         this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none';
@@ -182,12 +182,12 @@ window.knimeContinuousErrorPlot = (function () {
         this.toImageButtonOptions = {
             format: 'svg', // one of png, svg, jpeg, webp
             filename: 'custom_image',
-            height: 600,
-            width: 800,
+            height: rep.options.svg ? rep.options.svg.height : 600,
+            width: rep.options.svg ? rep.options.svg.width : 800,
             scale: 1 // Multiply title/legend/axis/canvas sizes by this factor
         };
         this.displaylogo = false;
-        this.responsive = true;
+        this.responsive = rep.options.svg ? rep.options.svg.fullscreen : true;
         this.editable = rep.options.enableEditing;
         this.scrollZoom = true;
         this.showTips = false;
@@ -254,71 +254,71 @@ window.knimeContinuousErrorPlot = (function () {
         var ids = [];
 
         switch (String(this.KPI.value.options.calcMethod.replace(/\s/g, ' '))) {
-        case 'Variance':
-        case 'Standard Deviation':
-            var sum = 0;
-            var count = 0;
-            var mean = 0;
-            yValues.forEach(function (val) {
-                if (val === 0 || val) {
-                    sum += val;
-                    count++;
+            case 'Variance':
+            case 'Standard Deviation':
+                var sum = 0;
+                var count = 0;
+                var mean = 0;
+                yValues.forEach(function (val) {
+                    if (val === 0 || val) {
+                        sum += val;
+                        count++;
+                    }
+                });
+                mean = sum / count;
+                var variance = 0;
+                yValues.forEach(function (val) {
+                    if (val === 0 || val) {
+                        variance += Math.pow(val - mean, 2);
+                    }
+                });
+                variance /= count - 1;
+                if (!variance) {
+                    variance = 0;
                 }
-            });
-            mean = sum / count;
-            var variance = 0;
-            yValues.forEach(function (val) {
-                if (val === 0 || val) {
-                    variance += Math.pow(val - mean, 2);
+                if (this.KPI.value.options.calcMethod.replace(/\s/g, ' ') === 'Standard Deviation') {
+                    variance = Math.sqrt(variance);
+                    // variance = Math.pow(Math.E, Math.log(variance) / 2);
                 }
-            });
-            variance /= count - 1;
-            if (!variance) {
-                variance = 0;
-            }
-            if (this.KPI.value.options.calcMethod.replace(/\s/g, ' ') === 'Standard Deviation') {
-                variance = Math.sqrt(variance);
-                // variance = Math.pow(Math.E, Math.log(variance) / 2);
-            }
 
-            for (var i = 0; i < yValues.length; i++) {
-                yData.push(yValues[i] + variance * this.KPI.representation.options.calcMultiplier);
-                xData.push(xValues[i]);
-                ids.push(rowKeys[i]);
-            }
-            for (var j = yValues.length - 1; j >= 0; j--) {
-                yData.push(yValues[j] + -1 * variance * this.KPI.representation.options.calcMultiplier);
-                xData.push(xValues[j]);
-                ids.push(rowKeys[j]);
-            }
+                for (var i = 0; i < yValues.length; i++) {
+                    yData.push(yValues[i] + variance * this.KPI.representation.options.calcMultiplier);
+                    xData.push(xValues[i]);
+                    ids.push(rowKeys[i]);
+                }
+                for (var j = yValues.length - 1; j >= 0; j--) {
+                    yData.push(yValues[j] + -1 * variance * this.KPI.representation.options.calcMultiplier);
+                    xData.push(xValues[j]);
+                    ids.push(rowKeys[j]);
+                }
 
-            break;
-        case 'Percent':
-            for (var k = 0; k < yValues.length; k++) {
-                yData.push(yValues[k] + yValues[k] * (this.KPI.representation.options.calcPercent / 100));
-                xData.push(xValues[k]);
-                ids.push(rowKeys[k]);
-            }
-            for (var x = yValues.length - 1; x >= 0; x--) {
-                yData.push(yValues[x] + -1 * yValues[x] * (this.KPI.representation.options.calcPercent / 100));
-                xData.push(xValues[x]);
-                ids.push(rowKeys[x]);
-            }
-            break;
-        case 'Fixed Value':
-            for (var y = 0; y < yValues.length; y++) {
-                yData.push(yValues[y] + this.KPI.representation.options.fixedValue);
-                xData.push(xValues[y]);
-                ids.push(rowKeys[y]);
-            }
-            for (var z = yValues.length - 1; z >= 0; z--) {
-                yData.push(yValues[z] + -1 * this.KPI.representation.options.fixedValue);
-                xData.push(xValues[z]);
-                ids.push(rowKeys[z]);
-            }
-            break;
-        default:
-            break;
+                break;
+            case 'Percent':
+                for (var k = 0; k < yValues.length; k++) {
+                    yData.push(yValues[k] + yValues[k] * (this.KPI.representation.options.calcPercent / 100));
+                    xData.push(xValues[k]);
+                    ids.push(rowKeys[k]);
+                }
+                for (var x = yValues.length - 1; x >= 0; x--) {
+                    yData.push(yValues[x] + -1 * yValues[x] * (this.KPI.representation.options.calcPercent / 100));
+                    xData.push(xValues[x]);
+                    ids.push(rowKeys[x]);
+                }
+                break;
+            case 'Fixed Value':
+                for (var y = 0; y < yValues.length; y++) {
+                    yData.push(yValues[y] + this.KPI.representation.options.fixedValue);
+                    xData.push(xValues[y]);
+                    ids.push(rowKeys[y]);
+                }
+                for (var z = yValues.length - 1; z >= 0; z--) {
+                    yData.push(yValues[z] + -1 * this.KPI.representation.options.fixedValue);
+                    xData.push(xValues[z]);
+                    ids.push(rowKeys[z]);
+                }
+                break;
+            default:
+                break;
         }
 
         var errorTrace = {
@@ -367,7 +367,7 @@ window.knimeContinuousErrorPlot = (function () {
 
         if (self.KPI.representation.options.enableViewControls) {
 
-            if (self.KPI.representation.options.showFullscreen) {
+            if (self.KPI.value.options.showFullscreen) {
                 knimeService.allowFullscreen();
             }
 

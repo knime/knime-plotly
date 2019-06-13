@@ -68,16 +68,20 @@ window.KnimePlotlyInterface = function () {
 
     KnimePlotlyInterface.getSVG = function () {
         var self = this;
+        var h = this.representation.options.svg.height;
+        var w = this.representation.options.svg.width;
         var removeElem = document.querySelector('.xy');
         removeElem.childNodes.forEach(function (node) {
             node.style.fill = self.representation.options.backgroundColor;
         });
         var svgElem = document.querySelectorAll('#' + this.divID + '> div > div > svg');
         var svgCol = '<svg class="main-svg" xmlns="http://www.w3.org/2000/svg"' +
-            ' xmlns:xlink="http://www.w3.org/1999/xlink" width="' + this.representation.options.svg.width +
-            '" height="' + this.representation.options.svg.height + '">' +
-            '"><g xmlns="http://www.w3.org/2000/svg"><rect width="1000" height="1000" style="fill: ' +
-            this.representation.options.backgroundColor + '"></rect></g>';
+            ' xmlns:xlink="http://www.w3.org/1999/xlink" width="' + w +
+            '" height="' + h + '">' +
+            '"><g xmlns="http://www.w3.org/2000/svg"><rect width="' + w + '" height="' +
+            h + '" style="fill: ' +
+            this.representation.options.backgroundColor + ';width:' + w + 'px;height:' +
+            h + 'px"></rect></g>';
         svgElem.forEach(function (svg, svgInd) {
             if (svg.tagName === 'svg') {
                 svgCol += new XMLSerializer().serializeToString(svg);
@@ -107,6 +111,12 @@ window.KnimePlotlyInterface = function () {
         this.divID = stringDivName;
         // Create the plotly HTML element
         var divElem = document.createElement('div');
+        if (this.representation.options.svg &&
+            (!this.representation.options.svg.fullscreen || !this.representation.runningInView)) {
+            var dimString = 'width:' + this.representation.options.svg.width + 'px;height:' +
+                this.representation.options.svg.height + 'px';
+            divElem.setAttribute('style', dimString);
+        }
         divElem.setAttribute('id', stringDivName);
         document.body.append(divElem);
     };
@@ -509,6 +519,7 @@ window.KnimePlotlyInterface = function () {
     KnimePlotlyInterface.mountAndSubscribe = function (selectionChange, filterChange) {
         var self = this;
         var hasSecondAxis = this.removeSecondAxisElements();
+        this.adjustTitleSpacing();
 
         document.getElementById(this.divID).on('plotly_relayout', function (eData) {
             if (eData) {
@@ -527,6 +538,7 @@ window.KnimePlotlyInterface = function () {
                 }
                 self.updateValue(valueObj);
             }
+            self.adjustTitleSpacing();
         });
         document.getElementById(this.divID).on('plotly_restyle', function (plotlyEvent) {
             if (plotlyEvent && plotlyEvent.length) {
@@ -535,17 +547,26 @@ window.KnimePlotlyInterface = function () {
                     self.updateValue(valueObj);
                 }
             }
+            self.adjustTitleSpacing();
         });
         document.getElementById(this.divID).on('plotly_selected', function (plotlyEvent) {
             selectionChange(plotlyEvent);
+            self.adjustTitleSpacing();
         });
         document.getElementById(this.divID).on('plotly_deselect', function () {
             selectionChange({ points: [] });
+            self.adjustTitleSpacing();
         });
 
         this.togglePublishSelection();
         this.toggleSubscribeToFilters(filterChange);
         this.toggleSubscribeToSelection(selectionChange);
+    };
+
+    KnimePlotlyInterface.adjustTitleSpacing = function () {
+        if (document.querySelector('.gtitle')) {
+            document.querySelector('.gtitle').setAttribute('dy', '-.5em');
+        }
     };
 
     KnimePlotlyInterface.removeSecondAxisElements = function () {

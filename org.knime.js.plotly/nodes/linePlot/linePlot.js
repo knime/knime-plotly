@@ -135,7 +135,7 @@ window.knimePlotlyLinePlot = (function () {
         };
         this.yaxis = {
             title: val.options.yAxisLabel.length > 0 ? val.options.yAxisLabel
-                : val.options.yAxisColumn,
+            : 'y',
             font: {
                 size: 12,
                 family: 'sans-serif'
@@ -148,10 +148,10 @@ window.knimePlotlyLinePlot = (function () {
             nticks: 10
         };
         this.margin = {
-            l: 55,
-            r: 20,
-            b: 55,
-            t: 60,
+            l: 50,
+            r: 15,
+            b: 35,
+            t: 50,
             pad: 0
         };
         this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none';
@@ -163,12 +163,12 @@ window.knimePlotlyLinePlot = (function () {
         this.toImageButtonOptions = {
             format: 'svg', // one of png, svg, jpeg, webp
             filename: 'custom_image',
-            height: 600,
-            width: 800,
+            height: rep.options.svg ? rep.options.svg.height : 600,
+            width: rep.options.svg ? rep.options.svg.width : 800,
             scale: 1 // Multiply title/legend/axis/canvas sizes by this factor
         };
         this.displaylogo = false;
-        this.responsive = true;
+        this.responsive = rep.options.svg ? rep.options.svg.fullscreen : true;
         this.editable = rep.options.enableEditing;
         this.scrollZoom = true;
         this.showTips = false;
@@ -213,7 +213,7 @@ window.knimePlotlyLinePlot = (function () {
 
         if (self.KPI.representation.options.enableViewControls) {
 
-            if (self.KPI.representation.options.showFullscreen) {
+            if (self.KPI.value.options.showFullscreen) {
                 knimeService.allowFullscreen();
             }
 

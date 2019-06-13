@@ -83,7 +83,7 @@ window.knimeViolin = (function () {
         var groupedColLabel = val.options.groupedAxisLabel.length === 0 ?
             rep.options.groupByColumn : val.options.groupedAxisLabel;
         var numericColLabel = val.options.numAxisLabel.length === 0 ?
-            val.options.axisColumn : val.options.numAxisLabel.length;
+            val.options.axisColumn : val.options.numAxisLabel;
         this.title = {
             text: val.options.title || 'Violin Plot',
             y: 1,
@@ -118,6 +118,7 @@ window.knimeViolin = (function () {
                 size: 12,
                 family: 'sans-serif'
             },
+            tickangle: val.options.plotDirection === 'Vertical' ? 'auto' : -90,
             showgrid: val.options.plotDirection === 'Vertical' ? val.options.showGrid : false,
             gridcolor: '#fffff', // potential option
             linecolor: '#fffff', // potential option
@@ -125,28 +126,27 @@ window.knimeViolin = (function () {
             zeroline: val.options.plotDirection === 'Vertical' ? false : val.options.showGrid
         };
         this.margin = {
-            l: val.options.plotDirection === 'Vertical' ? 55 : 90,
-            r: 20,
-            b: 55,
-            t: 60,
+            l: 50,
+            r: 15,
+            b: 35,
+            t: 50,
             pad: 0
         };
         this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none';
         this.paper_bgcolor = rep.options.daColor || '#ffffff';
         this.plot_bgcolor = rep.options.backgroundColor || '#ffffff';
-        return this;
     };
 
     ViolinPlot.ConfigObject = function (rep, val) {
         this.toImageButtonOptions = {
             format: 'svg', // one of png, svg, jpeg, webp
             filename: 'custom_image',
-            height: 600,
-            width: 800,
+            height: rep.options.svg ? rep.options.svg.height : 600,
+            width: rep.options.svg ? rep.options.svg.width : 800,
             scale: 1 // Multiply title/legend/axis/canvas sizes by this factor
         };
         this.displaylogo = false;
-        this.responsive = true;
+        this.responsive = rep.options.svg ? rep.options.svg.fullscreen : true;
         this.editable = rep.options.enableEditing;
         this.scrollZoom = true;
         this.showTips = false;
@@ -238,7 +238,7 @@ window.knimeViolin = (function () {
 
         if (self.KPI.representation.options.enableViewControls) {
 
-            if (self.KPI.representation.options.showFullscreen) {
+            if (self.KPI.value.options.showFullscreen) {
                 knimeService.allowFullscreen();
             }
 
