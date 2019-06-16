@@ -5,16 +5,11 @@ window.knimePlotlyStackedArea = (function () {
 
     StackedArea.init = function (representation, value) {
 
-        var self = this;
         this.KPI = new KnimePlotlyInterface();
-        this.KPI.initialize(representation, value, new kt(), arguments[2][0]);
-        this.columns = this.KPI.table.getColumnNames();
-        this.columnTypes = this.KPI.table.getColumnTypes();
-        this.numericColumns = this.columns.filter(function (c, i) {
-            return self.columnTypes[i] === 'number';
-        });
-
-        this.xAxisCol = this.KPI.value.options.xAxisColumn || this.columns[0];
+        this.KPI.initialize(representation, value, new kt(), arguments[2]);
+        this.columns = this.KPI.getXYCartesianColsWDate(true);
+        this.numericColumns = this.KPI.getNumericColumns();
+        this.xAxisCol = this.KPI.value.options.xAxisColumn || 'rowKeys';
         this.lineColumns = this.KPI.value.options.columns || [];
         this.onSelectionChange = this.onSelectionChange.bind(this);
         this.onFilterChange = this.onFilterChange.bind(this);
@@ -120,7 +115,7 @@ window.knimePlotlyStackedArea = (function () {
             yref: 'paper',
             yanchor: 'bottom'
         };
-        this.showlegend = rep.options.showLegend;
+        this.showlegend = val.options.showLegend;
         this.autoSize = true;
         this.legend = {
             x: 1,
@@ -137,7 +132,6 @@ window.knimePlotlyStackedArea = (function () {
                 size: 12,
                 family: 'sans-serif'
             },
-            type: 'linear',
             showgrid: val.options.showGrid,
             gridcolor: '#fffff', // potential option
             linecolor: '#fffff', // potential option
@@ -147,12 +141,11 @@ window.knimePlotlyStackedArea = (function () {
         };
         this.yaxis = {
             title: val.options.yAxisLabel.length > 0 ? val.options.yAxisLabel
-            : 'y',
+                : 'y',
             font: {
                 size: 12,
                 family: 'sans-serif'
             },
-            type: 'linear',
             showgrid: val.options.showGrid,
             gridcolor: '#fffff', // potential option
             linecolor: '#fffff', // potential option
@@ -204,15 +197,19 @@ window.knimePlotlyStackedArea = (function () {
     };
 
     StackedArea.onSelectionChange = function (data) {
-        this.updateSelected(data);
-        var changeObj = this.getFilteredChangeObject();
-        this.Plotly.restyle('knime-stacked-area', changeObj);
+        if (data) {
+            this.KPI.updateSelected(data);
+            var changeObj = this.KPI.getFilteredChangeObject();
+            this.KPI.update(changeObj);
+        }
     };
 
     StackedArea.onFilterChange = function (data) {
-        this.updateFilter(data);
-        var changeObj = this.getFilteredChangeObject();
-        this.Plotly.restyle('knime-stacked-area', changeObj);
+        if (data) {
+            this.KPI.updateFilter(data);
+            var changeObj = this.KPI.getFilteredChangeObject();
+            this.KPI.update(changeObj);
+        }
     };
 
     StackedArea.drawKnimeMenu = function () {
@@ -241,7 +238,7 @@ window.knimePlotlyStackedArea = (function () {
                 var xAxisSelection = knimeService.createMenuSelect(
                     'x-axis-menu-item',
                     this.xAxisCol,
-                    this.numericColumns,
+                    this.columns,
                     function () {
                         if (self.xAxisCol !== this.value) {
                             self.xAxisCol = this.value;
@@ -264,7 +261,7 @@ window.knimePlotlyStackedArea = (function () {
 
                 knimeService.addMenuItem(
                     'X-Axis',
-                    'x',
+                    'long-arrow-right',
                     xAxisSelection,
                     null,
                     knimeService.SMALL_ICON

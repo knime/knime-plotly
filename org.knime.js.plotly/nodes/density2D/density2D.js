@@ -1,18 +1,13 @@
 /* global kt:false, KnimePlotlyInterface:false  */
-window.knimeDensity = (function () {
+window.knimeDensity2D = (function () {
 
-    var Density = {};
+    var Density2D = {};
 
-    Density.init = function (representation, value) {
+    Density2D.init = function (representation, value) {
 
-        var self = this;
         this.KPI = new KnimePlotlyInterface();
-        this.KPI.initialize(representation, value, new kt(), arguments[2][0]);
-        this.columns = this.KPI.table.getColumnNames();
-        this.columnTypes = this.KPI.table.getColumnTypes();
-        this.numericColumns = this.columns.filter(function (c, i) {
-            return self.columnTypes[i] === 'number';
-        });
+        this.KPI.initialize(representation, value, new kt(), arguments[2]);
+        this.columns = this.KPI.getXYCartesianColsWODate(false);
         this.xAxisCol = this.KPI.value.options.xAxisColumn || this.columns[0];
         this.yAxisCol = this.KPI.value.options.yAxisColumn || this.columns[1];
         this.onSelectionChange = this.onSelectionChange.bind(this);
@@ -24,16 +19,16 @@ window.knimeDensity = (function () {
         this.KPI.mountAndSubscribe(this.onSelectionChange, this.onFilterChange);
     };
 
-    Density.drawChart = function () {
+    Density2D.drawChart = function () {
         var t = this.createTraces();
         var l = new this.LayoutObject(this.KPI.representation, this.KPI.value);
         var c = new this.ConfigObject(this.KPI.representation, this.KPI.value);
-        this.KPI.createElement('knime-density');
+        this.KPI.createElement('knime-density2D');
         this.KPI.drawChart(t, l, c);
         this.KPI.update();
     };
 
-    Density.createTraces = function () {
+    Density2D.createTraces = function () {
         var self = this;
         var traces = [];
         var keys = {
@@ -54,28 +49,30 @@ window.knimeDensity = (function () {
             newTrace.name = group;
             traces.push(newTrace);
 
-            var densityTrace = new self.DensityTraceObject(data[self.xAxisCol][groupInd],
+            var density2DTrace = new self.Density2DTraceObject(data[self.xAxisCol][groupInd],
                 data[self.yAxisCol][groupInd], self.colorscale);
-            densityTrace.text = data.rowKeys[groupInd];
-            densityTrace.ids = data.rowKeys[groupInd];
-            densityTrace.dataKeys = keys.dataKeys;
-            densityTrace.name = group;
-            traces.push(densityTrace);
+            density2DTrace.text = data.rowKeys[groupInd];
+            density2DTrace.ids = data.rowKeys[groupInd];
+            density2DTrace.dataKeys = keys.dataKeys;
+            density2DTrace.name = group;
+            traces.push(density2DTrace);
 
             if (self.KPI.value.options.showHistogram) {
 
                 var xHistTrace = new self.XHistogramTraceObject(data[self.xAxisCol][groupInd]);
-                xHistTrace.text = data.rowKeys[groupInd];
+                // xHistTrace.text = data.rowKeys[groupInd];
                 xHistTrace.ids = data.rowKeys[groupInd];
                 xHistTrace.dataKeys = [self.xAxisCol, null, 'rowKeys', 'rowColors'];
-                xHistTrace.name = group;
+                // xHistTrace.name = group;
+                xHistTrace.hoverinfo = 'x+y';
                 traces.push(xHistTrace);
 
                 var yHistTrace = new self.YHistogramTraceObject(data[self.yAxisCol][groupInd]);
-                yHistTrace.text = data.rowKeys[groupInd];
+                // yHistTrace.text = data.rowKeys[groupInd];
                 yHistTrace.ids = data.rowKeys[groupInd];
                 yHistTrace.dataKeys = [null, self.yAxisCol, 'rowKeys', 'rowColors'];
-                yHistTrace.name = group;
+                // yHistTrace.name = group;
+                yHistTrace.hoverinfo = 'x+y';
                 traces.push(yHistTrace);
             }
         });
@@ -83,11 +80,12 @@ window.knimeDensity = (function () {
         return traces;
     };
 
-    Density.ScatterTraceObject = function (xData, yData) {
+    Density2D.ScatterTraceObject = function (xData, yData) {
         this.x = xData;
         this.y = yData;
         this.mode = 'markers';
         this.name = 'points';
+        this.hoverinfo = 'x+y';
         this.marker = {
             size: 4,
             opacity: 0.4
@@ -106,10 +104,11 @@ window.knimeDensity = (function () {
         return this;
     };
 
-    Density.DensityTraceObject = function (xData, yData, colorscale) {
+    Density2D.Density2DTraceObject = function (xData, yData, colorscale) {
         this.x = xData;
         this.y = yData;
-        this.name = 'density';
+        this.name = 'density2D';
+        this.hoverinfo = 'x+y';
         this.ncontours = 20;
         this.colorscale = colorscale;
         this.reversescale = true;
@@ -118,9 +117,9 @@ window.knimeDensity = (function () {
         return this;
     };
 
-    Density.XHistogramTraceObject = function (xData) {
+    Density2D.XHistogramTraceObject = function (xData) {
         this.x = xData;
-        this.name = 'x density';
+        this.name = 'x density2D';
         this.marker = {
             color: 'rgb(102,0,0)',
             opacity: 0.4
@@ -130,9 +129,9 @@ window.knimeDensity = (function () {
         return this;
     };
 
-    Density.YHistogramTraceObject = function (yData) {
+    Density2D.YHistogramTraceObject = function (yData) {
         this.y = yData;
-        this.name = 'y density';
+        this.name = 'y density2D';
         this.marker = {
             color: 'rgb(102,0,0)',
             opacity: 0.4
@@ -142,9 +141,10 @@ window.knimeDensity = (function () {
         return this;
     };
 
-    Density.LayoutObject = function (rep, val) {
+    Density2D.LayoutObject = function (rep, val) {
+
         this.title = {
-            text: val.options.title || 'Density Plot',
+            text: val.options.title || 'Density2D Plot',
             y: 1,
             yref: 'paper',
             yanchor: 'bottom'
@@ -168,7 +168,6 @@ window.knimeDensity = (function () {
                 family: 'sans-serif'
             },
             domain: val.options.showHistogram ? [0, 0.84] : [0, 1],
-            type: 'linear',
             showgrid: false,
             gridcolor: '#fffff', // potential option
             linecolor: '#fffff', // potential option
@@ -184,7 +183,6 @@ window.knimeDensity = (function () {
                 family: 'sans-serif'
             },
             domain: val.options.showHistogram ? [0, 0.84] : [0, 1],
-            type: 'linear',
             showgrid: false,
             gridcolor: '#fffff', // potential option
             linecolor: '#fffff', // potential option
@@ -217,7 +215,7 @@ window.knimeDensity = (function () {
         this.plot_bgcolor = rep.options.backgroundColor || '#ffffff';
     };
 
-    Density.ConfigObject = function (rep, val) {
+    Density2D.ConfigObject = function (rep, val) {
         this.toImageButtonOptions = {
             format: 'svg', // one of png, svg, jpeg, webp
             filename: 'custom_image',
@@ -236,19 +234,19 @@ window.knimeDensity = (function () {
         return this;
     };
 
-    Density.getSVG = function () {
+    Density2D.getSVG = function () {
         return this.KPI.getSVG();
     };
 
-    Density.validate = function () {
+    Density2D.validate = function () {
         return true;
     };
 
-    Density.getComponentValue = function () {
+    Density2D.getComponentValue = function () {
         return this.KPI.getComponentValue();
     };
 
-    Density.onSelectionChange = function (data) {
+    Density2D.onSelectionChange = function (data) {
         if (data) {
             this.KPI.updateSelected(data);
             var changeObj = this.KPI.getFilteredChangeObject();
@@ -256,7 +254,7 @@ window.knimeDensity = (function () {
         }
     };
 
-    Density.onFilterChange = function (data) {
+    Density2D.onFilterChange = function (data) {
         if (data) {
             this.KPI.updateFilter(data);
             var changeObj = this.KPI.getFilteredChangeObject();
@@ -264,7 +262,7 @@ window.knimeDensity = (function () {
         }
     };
 
-    Density.drawKnimeMenu = function () {
+    Density2D.drawKnimeMenu = function () {
 
         var self = this;
 
@@ -312,7 +310,7 @@ window.knimeDensity = (function () {
 
                 knimeService.addMenuItem(
                     'X-Axis',
-                    'x',
+                    'long-arrow-right',
                     xAxisSelection,
                     null,
                     knimeService.SMALL_ICON
@@ -343,7 +341,7 @@ window.knimeDensity = (function () {
 
                 knimeService.addMenuItem(
                     'Y-Axis',
-                    'y',
+                    'long-arrow-up',
                     yAxisSelection,
                     null,
                     knimeService.SMALL_ICON
@@ -352,7 +350,7 @@ window.knimeDensity = (function () {
                 knimeService.addMenuDivider();
             }
 
-            if (self.KPI.representation.options.showDensityColorOptions) {
+            if (self.KPI.representation.options.showDensity2DColorOptions) {
                 var colorScaleSelection = knimeService.createMenuSelect(
                     'colorscale-menu-item',
                     self.colorscale,
@@ -375,7 +373,7 @@ window.knimeDensity = (function () {
                 );
 
                 knimeService.addMenuItem(
-                    'Density color',
+                    'Density2D color',
                     'palette',
                     colorScaleSelection,
                     null,
@@ -520,6 +518,6 @@ window.knimeDensity = (function () {
         }
     };
 
-    return Density;
+    return Density2D;
 
 })();

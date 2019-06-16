@@ -5,18 +5,11 @@ window.knimePlotlyScatterPlot = (function () {
 
     ScatterPlot.init = function (representation, value) {
 
-        var self = this;
-        this.Plotly = arguments[2][0];
         this.KPI = new KnimePlotlyInterface();
-        this.KPI.initialize(representation, value, new kt(), arguments[2][0]);
-        this.columns = this.KPI.table.getColumnNames();
-        this.columnTypes = this.KPI.table.getColumnTypes();
-        this.numericColumns = this.columns.filter(function (c, i) {
-            return self.columnTypes[i] === 'number';
-        });
-
-        this.xAxisCol = this.KPI.value.options.xAxisColumn || this.columns[0];
-        this.yAxisCol = this.KPI.value.options.yAxisColumn || this.columns[1];
+        this.KPI.initialize(representation, value, new kt(), arguments[2]);
+        this.columns = this.KPI.getXYCartesianColsWDate(true);
+        this.xAxisCol = this.KPI.value.options.xAxisColumn || 'rowKeys';
+        this.yAxisCol = this.KPI.value.options.yAxisColumn || 'rowKeys';
         this.onSelectionChange = this.onSelectionChange.bind(this);
         this.onFilterChange = this.onFilterChange.bind(this);
 
@@ -87,7 +80,7 @@ window.knimePlotlyScatterPlot = (function () {
             yref: 'paper',
             yanchor: 'bottom'
         };
-        this.showlegend = rep.options.showLegend;
+        this.showlegend = val.options.showLegend;
         this.autoSize = true;
         this.legend = {
             x: 1,
@@ -104,7 +97,6 @@ window.knimePlotlyScatterPlot = (function () {
                 size: 12,
                 family: 'sans-serif'
             },
-            type: 'linear',
             showgrid: val.options.showGrid,
             gridcolor: '#fffff', // potential option
             linecolor: '#fffff', // potential option
@@ -119,7 +111,6 @@ window.knimePlotlyScatterPlot = (function () {
                 size: 12,
                 family: 'sans-serif'
             },
-            type: 'linear',
             showgrid: val.options.showGrid,
             gridcolor: '#fffff', // potential option
             linecolor: '#fffff', // potential option
@@ -235,7 +226,7 @@ window.knimePlotlyScatterPlot = (function () {
 
                 knimeService.addMenuItem(
                     'X-Axis',
-                    'x',
+                    'long-arrow-right',
                     xAxisSelection,
                     null,
                     knimeService.SMALL_ICON
@@ -267,7 +258,7 @@ window.knimePlotlyScatterPlot = (function () {
 
                 knimeService.addMenuItem(
                     'Y-Axis',
-                    'y',
+                    'long-arrow-up',
                     yAxisSelection,
                     null,
                     knimeService.SMALL_ICON

@@ -4,12 +4,18 @@ window.KnimePlotlyInterface = function () {
         version: '1.0.0'
     };
 
-    KnimePlotlyInterface.initialize = function (rep, val, knimeDataTable, Plotly) {
+    KnimePlotlyInterface.initialize = function (rep, val, knimeDataTable, args) {
+
         var self = this;
         this.representation = rep;
         this.value = val;
         this.table = knimeDataTable;
-        this.Plotly = Plotly;
+        if (typeof args[2] === 'undefined') {
+            this.Plotly = args[0];
+        } else {
+            this.moment = args[0];
+            this.Plotly = args[2];
+        }
         this.table.setDataTable(this.representation.inObjects[0]);
         this.columns = knimeDataTable.getColumnNames();
         this.rowColors = knimeDataTable.getRowColors();
@@ -24,6 +30,9 @@ window.KnimePlotlyInterface = function () {
         this.isOrdered = false;
         this.showOnlySelected = false;
         this.isSurface = false;
+        this.rotatedTicks = false;
+        this.mValues = val.options.mValues.replace(/\s/g, ' ') === 'Skip rows with missing values' ? 0 : 1;
+        this.mRows = new this.KSet([]);
         this.data = {
             rowKeys: [],
             rowColors: []
@@ -33,11 +42,40 @@ window.KnimePlotlyInterface = function () {
             self.data[column] = [];
         });
 
-        knimeDataTable.getRows().forEach(function (row, rowInd) {
+        if (this.representation.options.overrideColors) {
+            this.rowColors = [];
+        }
+
+        var rows = knimeDataTable.getRows();
+
+        rows.forEach(function (row, rowInd) {
+
+            var skipRow = false;
 
             row.data.forEach(function (data, dataInd) {
+                if (skipRow) {
+                    return;
+                }
+                if (data === null) {
+                    if (rep.options.reportMissing) {
+                        self.mRows.add(row.rowKey);
+                    }
+                    if (self.mValues === 0) {
+                        skipRow = true;
+                        return;
+                    }
+                }
                 self.data[self.columns[dataInd]].push(data);
             });
+
+            if (skipRow) {
+                return;
+            }
+
+            if (self.rowColors.length < rows.length ||
+                self.representation.options.overrideColors) {
+                self.rowColors.push(self.representation.options.dataColor);
+            }
 
             self.rowDirectory[row.rowKey] = {
                 tInds: [],
@@ -49,6 +87,11 @@ window.KnimePlotlyInterface = function () {
             self.totalRows++;
         });
 
+        if (rep.options.reportMissing && this.mRows.size() > 0) {
+            knimeService.setWarningMessage('There are missing values in this dataset! Total rows with missing values: ' +
+                this.mRows.size() + '. Please use caution when interpreting results.');
+        }
+
         this.collectGarbage();
 
         return this;
@@ -56,6 +99,11 @@ window.KnimePlotlyInterface = function () {
 
     KnimePlotlyInterface.drawChart = function (traceArr, layout, config) {
         this.indexTraces(traceArr);
+        var layoutObj = layout;
+        if (traceArr[0] && traceArr[0].y) {
+            layoutObj = this.updateTicks(traceArr[0], layout);
+        }
+        this.Plotly.newPlot(this.divID, traceArr, layoutObj, config);
         if (this.representation.options.enableSelection) {
             if (this.value.options.selectedrows && this.value.options.selectedrows.length > 0) {
                 this.totalSelected = this.value.options.selectedrows.length;
@@ -63,7 +111,6 @@ window.KnimePlotlyInterface = function () {
                 this.update();
             }
         }
-        this.Plotly.newPlot(this.divID, traceArr, layout, config);
     };
 
     KnimePlotlyInterface.getSVG = function () {
@@ -139,7 +186,7 @@ window.KnimePlotlyInterface = function () {
         });
 
         var count = 0;
-        if (this.representation.options.enableGroups && this.representation.options.groupByColumn) {
+        if (this.representation.options.groupByColumn && this.representation.options.groupByColumn !== 'none') {
             self.data[this.representation.options.groupByColumn].forEach(function (group, groupInd) {
                 if (typeof groupLocations[group] === 'undefined') {
                     groupLocations[group] = count;
@@ -157,13 +204,18 @@ window.KnimePlotlyInterface = function () {
             groupIndicies = this.data.rowKeys.map(function (val, valInd) { return 0; });
             keySet.forEach(function (key) {
                 obj[key].push([]);
+                if (!self.data[key]) {
+                    self.data[key] = groupIndicies.map(function () { return 'Data Set'; });
+                }
             });
             obj.names.push(['Data']);
         }
 
         groupIndicies.forEach(function (indArr, gInd) {
             keySet.forEach(function (key) {
-                obj[key][indArr].push(self.data[key][gInd]);
+                if (self.data[key]) {
+                    obj[key][indArr].push(self.data[key][gInd]);
+                }
             });
         });
 
@@ -299,13 +351,15 @@ window.KnimePlotlyInterface = function () {
 
     KnimePlotlyInterface.update = function (inChangeObj, layout, onlyLayout) {
 
-        if (onlyLayout && layout) {
+        var layoutObj = layout;
+
+        if (onlyLayout && layoutObj) {
             this.Plotly.relayout(this.divID, layout);
         } else {
             var changeObj = inChangeObj || this.getFilteredChangeObject();
-
-            if (layout) {
-                this.Plotly.update(this.divID, changeObj, layout);
+            layoutObj = this.updateTicks(changeObj, layoutObj);
+            if (layoutObj) {
+                this.Plotly.update(this.divID, changeObj, layoutObj);
             } else {
                 this.Plotly.restyle(this.divID, changeObj);
             }
@@ -453,6 +507,32 @@ window.KnimePlotlyInterface = function () {
         var self = this;
         this.isOrdered = true;
         var array = self.data[newOrderedColumnName];
+        if (typeof array[0] === 'string') {
+            if (array[0].includes('Row')) {
+                var failedParse = false;
+                array = array.map(function (rowId) {
+                    var rowNum = parseFloat(rowId.split('Row')[1]);
+                    if (isNaN(rowNum)) {
+                        failedParse = true;
+                    }
+                    return rowNum;
+                });
+                if (failedParse) {
+                    self.orderedIndicies = array.map(function (e, i) { return i; });
+                    return;
+                }
+            } else if (this.table.getColumnTypes()[this.columns.indexOf(newOrderedColumnName)] ===
+                'dateTime' && this.representation.options.hasDateTime) {
+                if (this.moment(array[0].isValid())) {
+                    array = array.map(function (date) {
+                        return self.moment(date).valueOf();
+                    });
+                }
+            } else {
+                self.orderedIndicies = array.map(function (e, i) { return i; });
+                return;
+            }
+        }
         var indicies = [];
 
         for (var i = 0; i < array.length; i++) {
@@ -561,6 +641,31 @@ window.KnimePlotlyInterface = function () {
         this.togglePublishSelection();
         this.toggleSubscribeToFilters(filterChange);
         this.toggleSubscribeToSelection(selectionChange);
+    };
+
+    KnimePlotlyInterface.updateTicks = function (changeObj, layout) {
+        var layoutObj = layout;
+        if (changeObj.y && changeObj.y.length > 0 &&
+            changeObj.y[0] && changeObj.y[0].length) {
+            if (typeof changeObj.y[0][0] === 'string') {
+                layoutObj = layoutObj || {};
+                if (layoutObj.yaxis) {
+                    layoutObj.yaxis.tickangle = -90;
+                } else {
+                    layoutObj['yaxis.tickangle'] = -90;
+                }
+                this.rotatedTicks = true;
+            } else if (this.rotatedTicks && typeof changeObj.y[0][0] === 'number') {
+                layoutObj = layoutObj || {};
+                if (layoutObj.yaxis) {
+                    layoutObj.yaxis.tickangle = -0;
+                } else {
+                    layoutObj['yaxis.tickangle'] = -0;
+                }
+                this.rotatedTicks = true;
+            }
+        }
+        return layoutObj;
     };
 
     KnimePlotlyInterface.adjustTitleSpacing = function () {
@@ -698,6 +803,7 @@ window.KnimePlotlyInterface = function () {
     KnimePlotlyInterface.KSet = function (iterable) {
 
         var data = {};
+        var size = 0;
 
         if (iterable && iterable.length) {
             for (var i = 0; i < iterable.length; i++) {
@@ -706,14 +812,22 @@ window.KnimePlotlyInterface = function () {
         }
 
         this.add = function (member) {
-            data[member] = true;
+            if (typeof member !== 'undefined') {
+                if (!this.has(member)) {
+                    size++;
+                }
+                data[member] = true;
+            }
             return this;
         };
 
         this.addAll = function (members) {
             if (members && members.length) {
                 for (var i = 0; i < members.length; i++) {
-                    data[members[i]] = true;
+                    if (typeof members[i] !== 'undefined') {
+                        data[members[i]] = true;
+                        size++;
+                    }
                 }
             }
             return this;
@@ -728,14 +842,22 @@ window.KnimePlotlyInterface = function () {
         };
 
         this.delete = function (member) {
-            data[member] = false;
-            delete data[member];
+            if (this.has(member)) {
+                data[member] = false;
+                delete data[member];
+                size--;
+            }
             return this;
         };
 
         this.clear = function () {
             data = {};
+            size = 0;
             return this;
+        };
+
+        this.size = function () {
+            return size;
         };
 
         this.getArray = function () {
@@ -753,6 +875,44 @@ window.KnimePlotlyInterface = function () {
         return 'rgba(' + parseInt(hColor.slice(1, 3), 16) + ', ' +
             parseInt(hColor.slice(3, 5), 16) + ', ' +
             parseInt(hColor.slice(5, 7), 16) + ', ' + alph + ')';
+    };
+
+    KnimePlotlyInterface.getNumericColumns = function () {
+        var columns = this.table.getColumnNames();
+        var columnTypes = this.table.getColumnTypes();
+        var numColumns = columns.filter(function (c, i) {
+            return columnTypes[i] === 'number';
+        });
+        return numColumns;
+    };
+
+    KnimePlotlyInterface.getXYCartesianColsWDate = function (inclRowKey) {
+        var columns = this.table.getColumnNames();
+        var columnTypes = this.table.getKnimeColumnTypes();
+        var xyCartColTypes = ['Number (integer)', 'Number (long)', 'Number (double)',
+            'Date and Time', 'String', 'Local Date', 'Local Time',
+            'Local Date Time', 'Zoned Date Time', 'Period', 'Duration'];
+        var inclCols = columns.filter(function (c, i) {
+            return xyCartColTypes.indexOf(columnTypes[i]) > -1;
+        });
+        if (inclRowKey) {
+            inclCols.push('rowKeys');
+        }
+        return inclCols;
+    };
+
+    KnimePlotlyInterface.getXYCartesianColsWODate = function (inclRowKey) {
+        var columns = this.table.getColumnNames();
+        var columnTypes = this.table.getKnimeColumnTypes();
+        var xyCartColTypes = ['Number (integer)', 'Number (long)', 'Number (double)',
+            'String'];
+        var inclCols = columns.filter(function (c, i) {
+            return xyCartColTypes.indexOf(columnTypes[i]) > -1;
+        });
+        if (inclRowKey) {
+            inclCols.push('rowKeys');
+        }
+        return inclCols;
     };
 
     KnimePlotlyInterface.getMostFrequentColor = function (rowColors) {

@@ -4,16 +4,12 @@ window.knimeContinuousErrorPlot = (function () {
     var ContinuousError = {};
 
     ContinuousError.init = function (representation, value) {
-        var self = this;
-        this.KPI = new KnimePlotlyInterface();
-        this.KPI.initialize(representation, value, new kt(), arguments[2][0]);
-        this.columns = this.KPI.table.getColumnNames();
-        this.columnTypes = this.KPI.table.getColumnTypes();
-        this.numericColumns = this.columns.filter(function (c, i) {
-            return self.columnTypes[i] === 'number';
-        });
 
-        this.xAxisCol = this.KPI.value.options.xAxisColumn || this.columns[0];
+        this.KPI = new KnimePlotlyInterface();
+        this.KPI.initialize(representation, value, new kt(), arguments[2]);
+        this.columns = this.KPI.getXYCartesianColsWDate(true);
+        this.numericColumns = this.KPI.getNumericColumns();
+        this.xAxisCol = this.KPI.value.options.xAxisColumn || 'rowKeys';
         this.lineColumns = this.KPI.value.options.columns || [];
         this.onSelectionChange = this.onSelectionChange.bind(this);
         this.onFilterChange = this.onFilterChange.bind(this);
@@ -127,7 +123,7 @@ window.knimeContinuousErrorPlot = (function () {
             yref: 'paper',
             yanchor: 'bottom'
         };
-        this.showlegend = rep.options.showLegend;
+        this.showlegend = val.options.showLegend;
         this.autoSize = true;
         this.legend = {
             x: 1,
@@ -144,7 +140,6 @@ window.knimeContinuousErrorPlot = (function () {
                 size: 12,
                 family: 'sans-serif'
             },
-            type: 'linear',
             showgrid: val.options.showGrid,
             gridcolor: '#fffff', // potential option
             linecolor: '#fffff', // potential option
@@ -159,7 +154,6 @@ window.knimeContinuousErrorPlot = (function () {
                 size: 12,
                 family: 'sans-serif'
             },
-            type: 'linear',
             showgrid: val.options.showGrid,
             gridcolor: '#fffff', // potential option
             linecolor: '#fffff', // potential option
@@ -248,77 +242,76 @@ window.knimeContinuousErrorPlot = (function () {
     };
 
     ContinuousError.getErrorLineData = function (yValues, xValues, rowKeys) {
-        var self = this;
         var xData = [];
         var yData = [];
         var ids = [];
 
         switch (String(this.KPI.value.options.calcMethod.replace(/\s/g, ' '))) {
-            case 'Variance':
-            case 'Standard Deviation':
-                var sum = 0;
-                var count = 0;
-                var mean = 0;
-                yValues.forEach(function (val) {
-                    if (val === 0 || val) {
-                        sum += val;
-                        count++;
-                    }
-                });
-                mean = sum / count;
-                var variance = 0;
-                yValues.forEach(function (val) {
-                    if (val === 0 || val) {
-                        variance += Math.pow(val - mean, 2);
-                    }
-                });
-                variance /= count - 1;
-                if (!variance) {
-                    variance = 0;
+        case 'Variance':
+        case 'Standard Deviation':
+            var sum = 0;
+            var count = 0;
+            var mean = 0;
+            yValues.forEach(function (val) {
+                if (val === 0 || val) {
+                    sum += val;
+                    count++;
                 }
-                if (this.KPI.value.options.calcMethod.replace(/\s/g, ' ') === 'Standard Deviation') {
-                    variance = Math.sqrt(variance);
-                    // variance = Math.pow(Math.E, Math.log(variance) / 2);
+            });
+            mean = sum / count;
+            var variance = 0;
+            yValues.forEach(function (val) {
+                if (val === 0 || val) {
+                    variance += Math.pow(val - mean, 2);
                 }
+            });
+            variance /= count - 1;
+            if (!variance) {
+                variance = 0;
+            }
+            if (this.KPI.value.options.calcMethod.replace(/\s/g, ' ') === 'Standard Deviation') {
+                variance = Math.sqrt(variance);
+                // variance = Math.pow(Math.E, Math.log(variance) / 2);
+            }
 
-                for (var i = 0; i < yValues.length; i++) {
-                    yData.push(yValues[i] + variance * this.KPI.representation.options.calcMultiplier);
-                    xData.push(xValues[i]);
-                    ids.push(rowKeys[i]);
-                }
-                for (var j = yValues.length - 1; j >= 0; j--) {
-                    yData.push(yValues[j] + -1 * variance * this.KPI.representation.options.calcMultiplier);
-                    xData.push(xValues[j]);
-                    ids.push(rowKeys[j]);
-                }
+            for (var i = 0; i < yValues.length; i++) {
+                yData.push(yValues[i] + variance * this.KPI.representation.options.calcMultiplier);
+                xData.push(xValues[i]);
+                ids.push(rowKeys[i]);
+            }
+            for (var j = yValues.length - 1; j >= 0; j--) {
+                yData.push(yValues[j] + -1 * variance * this.KPI.representation.options.calcMultiplier);
+                xData.push(xValues[j]);
+                ids.push(rowKeys[j]);
+            }
 
-                break;
-            case 'Percent':
-                for (var k = 0; k < yValues.length; k++) {
-                    yData.push(yValues[k] + yValues[k] * (this.KPI.representation.options.calcPercent / 100));
-                    xData.push(xValues[k]);
-                    ids.push(rowKeys[k]);
-                }
-                for (var x = yValues.length - 1; x >= 0; x--) {
-                    yData.push(yValues[x] + -1 * yValues[x] * (this.KPI.representation.options.calcPercent / 100));
-                    xData.push(xValues[x]);
-                    ids.push(rowKeys[x]);
-                }
-                break;
-            case 'Fixed Value':
-                for (var y = 0; y < yValues.length; y++) {
-                    yData.push(yValues[y] + this.KPI.representation.options.fixedValue);
-                    xData.push(xValues[y]);
-                    ids.push(rowKeys[y]);
-                }
-                for (var z = yValues.length - 1; z >= 0; z--) {
-                    yData.push(yValues[z] + -1 * this.KPI.representation.options.fixedValue);
-                    xData.push(xValues[z]);
-                    ids.push(rowKeys[z]);
-                }
-                break;
-            default:
-                break;
+            break;
+        case 'Percent':
+            for (var k = 0; k < yValues.length; k++) {
+                yData.push(yValues[k] + yValues[k] * (this.KPI.representation.options.calcPercent / 100));
+                xData.push(xValues[k]);
+                ids.push(rowKeys[k]);
+            }
+            for (var x = yValues.length - 1; x >= 0; x--) {
+                yData.push(yValues[x] + -1 * yValues[x] * (this.KPI.representation.options.calcPercent / 100));
+                xData.push(xValues[x]);
+                ids.push(rowKeys[x]);
+            }
+            break;
+        case 'Fixed Value':
+            for (var y = 0; y < yValues.length; y++) {
+                yData.push(yValues[y] + this.KPI.representation.options.fixedValue);
+                xData.push(xValues[y]);
+                ids.push(rowKeys[y]);
+            }
+            for (var z = yValues.length - 1; z >= 0; z--) {
+                yData.push(yValues[z] + -1 * this.KPI.representation.options.fixedValue);
+                xData.push(xValues[z]);
+                ids.push(rowKeys[z]);
+            }
+            break;
+        default:
+            break;
         }
 
         var errorTrace = {
@@ -410,7 +403,7 @@ window.knimeContinuousErrorPlot = (function () {
                 var xAxisSelection = knimeService.createMenuSelect(
                     'x-axis-menu-item',
                     this.xAxisCol,
-                    this.numericColumns,
+                    this.columns,
                     function () {
                         if (self.xAxisCol !== this.value) {
                             self.xAxisCol = this.value;
@@ -434,7 +427,7 @@ window.knimeContinuousErrorPlot = (function () {
 
                 knimeService.addMenuItem(
                     'X-Axis',
-                    'x',
+                    'long-arrow-right',
                     xAxisSelection,
                     null,
                     knimeService.SMALL_ICON

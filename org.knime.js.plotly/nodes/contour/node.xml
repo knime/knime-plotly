@@ -49,8 +49,9 @@
 					generation.
 				</svgOption>
 				<columnSelectorOption name="X-Axis Column"
-					id="zAxisColumn" inPortIndex="0" label="X-Axis Column"
-					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue"
+					id="zAxisColumn" inPortIndex="0" label="X-Axis Column" allowRowID="true"
+					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue
+					org.knime.core.data.StringValue org.knime.core.data.NominalValue"
 					saveInView="true">
 					Select the column by which the data is ordered.
 				</columnSelectorOption>
@@ -61,14 +62,21 @@
 					saveInView="true">
 					Select the columns to be plotted.
 				</columnFilterOption>
-				<!-- <checkBoxOption name="Report on missing values" id="reportMissing" 
+				<checkBoxOption name="Report on missing values" id="reportMissing" 
 					label="Report on missing values" defaultValue="true" loadDefaults="true"> 
 					When enabled this will display a warning whenever there is a missing value 
-					present in the data. </checkBoxOption> <radioButtonOption name="Missing values 
+					present in the data and give a count on how many missing values 
+					exist in the data.
+				</checkBoxOption>
+				<radioButtonOption name="Missing values 
 					handling" id="mValues" possibleValues="Skip&#160;rows&#160;with&#160;missing&#160;values 
-					Skip&#160;missing&#160;values Show&#160;missing&#160;values" label="Missing 
-					values" defaultValue="Skip&#160;rows&#160;with&#160;missing&#160;values" 
-					saveInView="true"> The way missing values are handled. </radioButtonOption> -->
+					Leave&#160;missing&#160;values" label="Missing 
+					values" defaultValue="Leave&#160;missing&#160;values" 
+					saveInView="true">The way in which this view tries to compensate for missing or invalid values.
+					"Skip rows with missing values" will omit the entire row if a single cell is missing. This can 
+					affect multiple traces on the chart in some circumstances. "Leave missing" will leave a gap where 
+					the missing value exists and draw the chart anyways.
+				</radioButtonOption>
 			</options>
 		</tab>
 		<tab name="General Plot Options">

@@ -53,8 +53,9 @@
 					generation.
 				</svgOption>
 				<columnSelectorOption name="X-Axis Column"
-					id="xAxisColumn" inPortIndex="0" label="X-Axis Column"
-					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue"
+					id="xAxisColumn" inPortIndex="0" label="X-Axis Column" allowRowID="true"
+					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue
+					org.knime.core.data.NominalValue org.knime.core.data.date.DateAndTimeValue org.knime.core.data.StringValue"
 					saveInView="true">
 					Select the column to be initially displayed along the
 					X-Axis.
@@ -75,14 +76,21 @@
 					and allow you to hide/show various groups by clicking/double-clicking on 
 					the group in the legend. </columnSelectorOption> -->
 
-				<!-- <checkBoxOption name="Report on missing values" id="reportMissing" 
+				<checkBoxOption name="Report on missing values" id="reportMissing" 
 					label="Report on missing values" defaultValue="true" loadDefaults="true"> 
 					When enabled this will display a warning whenever there is a missing value 
-					present in the data. </checkBoxOption> <radioButtonOption name="Missing values 
+					present in the data and give a count on how many missing values 
+					exist in the data.
+				</checkBoxOption>
+				<radioButtonOption name="Missing values 
 					handling" id="mValues" possibleValues="Skip&#160;rows&#160;with&#160;missing&#160;values 
-					Skip&#160;missing&#160;values Show&#160;missing&#160;values" label="Missing 
-					values" defaultValue="Skip&#160;rows&#160;with&#160;missing&#160;values" 
-					saveInView="true"> The way missing values are handled. </radioButtonOption> -->
+					Leave&#160;missing&#160;values" label="Missing 
+					values" defaultValue="Leave&#160;missing&#160;values" 
+					saveInView="true">The way in which this view tries to compensate for missing or invalid values.
+					"Skip rows with missing values" will omit the entire row if a single cell is missing. This can 
+					affect multiple traces on the chart in some circumstances. "Leave missing" will leave a gap where 
+					the missing value exists and draw the chart anyways.
+				</radioButtonOption>
 			</options>
 		</tab>
 		<tab name="General Plot Options">
@@ -108,7 +116,7 @@
 					used.
 				</stringOption>
 				<checkBoxOption name="Display legend" id="showLegend"
-					label="Display legend" defaultValue="true" saveInView="true">
+					label="Display legend" defaultValue="false" saveInView="true">
 					When checked,
 					the chart's legend is displayed.
 				</checkBoxOption>
@@ -127,6 +135,23 @@
 					checked, the filled areas will overlap with each other shaded area
 					below.
 				</checkBoxOption>
+				<checkBoxOption name="Override colors" id="overrideColors"
+					label="Override colors" defaultValue="false">
+					When checked, the colors provided by the data table will be
+					ignored and the color chosen below for "Data color" will be 
+					applied to the plot. If there are no colors provided with the
+					data, the node will use the "Data color" by default, even if
+					this option has not been selected.
+				</checkBoxOption>
+				<colorOption name="Data color"
+					id="dataColor" label="Data color" format="HexString"
+					defaultR="0" defaultG="0" defaultB="255" defaultAlpha="255">
+					The color of the data on the plot if there are no colors provided with the table
+					(i.e. from the "Color Manager" node) or if "Override colors" has been chosen. This
+					color will not be automatically applied if the data has "Default" colors, it will only
+					be automatically applied if in the absence of ANY colors. You can always apply this
+					color to the data by selecting the "Override colors" option.
+				</colorOption>
 				<colorOption name="Background color"
 					id="backgroundColor" label="Background color" format="HexString"
 					defaultR="255" defaultG="255" defaultB="255" defaultAlpha="255">
@@ -300,6 +325,8 @@
 		<js:resource type="css" path="stackedArea.css" />
 	</js:resources>
 	<js:dependencies>
+		<js:dependency name="Moment" path="moment_timezone_locales_2_17"
+			type="local" exports="moment" />
 		<js:dependency name="Plotly" path="plotly.js-1.47.4"
 			type="local" exports="Plotly" />
 		<js:dependency name="MultipleSelections"

@@ -4,14 +4,10 @@ window.knimeRadarPlot = (function () {
     var RadarPlot = {};
 
     RadarPlot.init = function (representation, value) {
-        var self = this;
+
         this.KPI = new KnimePlotlyInterface();
-        this.KPI.initialize(representation, value, new kt(), arguments[2][0]);
-        this.columns = this.KPI.table.getColumnNames();
-        this.columnTypes = this.KPI.table.getColumnTypes();
-        this.numericColumns = this.columns.filter(function (c, i) {
-            return self.columnTypes[i] === 'number';
-        });
+        this.KPI.initialize(representation, value, new kt(), arguments[2]);
+        this.numericColumns = this.KPI.getNumericColumns();
         this.inclColumns = this.KPI.value.options.columns;
         this.onSelectionChange = this.onSelectionChange.bind(this);
         this.onFilterChange = this.onFilterChange.bind(this);

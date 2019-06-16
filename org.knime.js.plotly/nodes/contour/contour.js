@@ -4,16 +4,12 @@ window.knimeContourPlot = (function () {
     var Contour = {};
 
     Contour.init = function (representation, value) {
-        var self = this;
-        this.Plotly = arguments[2][0];
+        
         this.KPI = new KnimePlotlyInterface();
-        this.KPI.initialize(representation, value, new kt(), arguments[2][0]);
-        this.columns = this.KPI.table.getColumnNames();
-        this.columnTypes = this.KPI.table.getColumnTypes();
-        this.numericColumns = this.columns.filter(function (c, i) {
-            return self.columnTypes[i] === 'number';
-        });
-        this.zAxisCol = this.KPI.value.options.zAxisColumn || this.columns[0];
+        this.KPI.initialize(representation, value, new kt(), arguments[2]);
+        this.columns = this.KPI.getXYCartesianColsWODate(true);
+        this.numericColumns = this.KPI.getNumericColumns();
+        this.zAxisCol = this.KPI.value.options.zAxisColumn || 'rowKeys';
         this.vectorColumns = this.KPI.value.options.columns || [];
         this.onFilterChange = this.onFilterChange.bind(this);
         this.colorscale = this.KPI.value.options.colorscale || 'Hot';
@@ -73,7 +69,7 @@ window.knimeContourPlot = (function () {
             yref: 'paper',
             yanchor: 'bottom'
         };
-        this.showlegend = rep.options.showLegend;
+        this.showlegend = val.options.showLegend;
         this.autoSize = true;
         this.legend = {
             x: 1,
@@ -90,7 +86,6 @@ window.knimeContourPlot = (function () {
                 size: 12,
                 family: 'sans-serif'
             },
-            type: 'linear',
             showgrid: val.options.showGrid,
             gridcolor: '#fffff', // potential option
             linecolor: '#fffff', // potential option
@@ -105,7 +100,6 @@ window.knimeContourPlot = (function () {
                 size: 12,
                 family: 'sans-serif'
             },
-            type: 'linear',
             showgrid: val.options.showGrid,
             gridcolor: '#fffff', // potential option
             linecolor: '#fffff', // potential option
@@ -176,7 +170,7 @@ window.knimeContourPlot = (function () {
                 var zAxisSelection = knimeService.createMenuSelect(
                     'z-axis-menu-item',
                     self.zAxisCol,
-                    self.columns,
+                    this.columns,
                     function () {
                         if (self.zAxisCol !== this.value) {
                             self.zAxisCol = this.value;
@@ -198,8 +192,8 @@ window.knimeContourPlot = (function () {
                 );
 
                 knimeService.addMenuItem(
-                    'Z-Axis',
-                    'z',
+                    'X-Axis',
+                    'long-arrow-right',
                     zAxisSelection,
                     null,
                     knimeService.SMALL_ICON

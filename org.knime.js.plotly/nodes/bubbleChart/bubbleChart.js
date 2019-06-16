@@ -5,18 +5,12 @@ window.knimeBubbleChart = (function () {
 
     BubbleChart.init = function (representation, value) {
 
-        var self = this;
-        this.Plotly = arguments[2][0];
         this.KPI = new KnimePlotlyInterface();
-        this.KPI.initialize(representation, value, new kt(), arguments[2][0]);
-        this.columns = this.KPI.table.getColumnNames();
-        this.columnTypes = this.KPI.table.getColumnTypes();
-        this.numericColumns = this.columns.filter(function (c, i) {
-            return self.columnTypes[i] === 'number';
-        });
-
-        this.xAxisCol = this.KPI.value.options.xAxisColumn || this.columns[0];
-        this.yAxisCol = this.KPI.value.options.yAxisColumn || this.columns[1];
+        this.KPI.initialize(representation, value, new kt(), arguments[2]);
+        this.columns = this.KPI.getXYCartesianColsWDate(true);
+        this.numericColumns = this.KPI.getNumericColumns();
+        this.xAxisCol = this.KPI.value.options.xAxisColumn || 'rowKeys';
+        this.yAxisCol = this.KPI.value.options.yAxisColumn || 'rowKeys';
         this.sizeCol = this.KPI.value.options.sizeColumn || this.columns[2];
         this.onSelectionChange = this.onSelectionChange.bind(this);
         this.onFilterChange = this.onFilterChange.bind(this);
@@ -94,7 +88,7 @@ window.knimeBubbleChart = (function () {
             yref: 'paper',
             yanchor: 'bottom'
         };
-        this.showlegend = rep.options.showLegend;
+        this.showlegend = val.options.showLegend;
         this.autoSize = true;
         this.legend = {
             x: 1,
@@ -111,7 +105,6 @@ window.knimeBubbleChart = (function () {
                 size: 12,
                 family: 'sans-serif'
             },
-            type: 'linear',
             showgrid: val.options.showGrid,
             gridcolor: '#fffff', // potential option
             linecolor: '#fffff', // potential option
@@ -126,7 +119,6 @@ window.knimeBubbleChart = (function () {
                 size: 12,
                 family: 'sans-serif'
             },
-            type: 'linear',
             showgrid: val.options.showGrid,
             gridcolor: '#fffff', // potential option
             linecolor: '#fffff', // potential option
@@ -155,7 +147,7 @@ window.knimeBubbleChart = (function () {
             scale: 1 // Multiply title/legend/axis/canvas sizes by this factor
         };
         this.displaylogo = false;
-        this.responsive = rep.options.svg.fullscreen; 
+        this.responsive = rep.options.svg.fullscreen;
         this.editable = rep.options.enableEditing;
         this.scrollZoom = true;
         this.showTips = false;
@@ -247,7 +239,7 @@ window.knimeBubbleChart = (function () {
 
                 knimeService.addMenuItem(
                     'X-Axis',
-                    'x',
+                    'long-arrow-right',
                     xAxisSelection,
                     null,
                     knimeService.SMALL_ICON
@@ -279,7 +271,7 @@ window.knimeBubbleChart = (function () {
 
                 knimeService.addMenuItem(
                     'Y-Axis',
-                    'y',
+                    'long-arrow-up',
                     yAxisSelection,
                     null,
                     knimeService.SMALL_ICON
@@ -308,7 +300,7 @@ window.knimeBubbleChart = (function () {
 
                 knimeService.addMenuItem(
                     'Size Column',
-                    'size',
+                    'search',
                     sizeSelection,
                     null,
                     knimeService.SMALL_ICON

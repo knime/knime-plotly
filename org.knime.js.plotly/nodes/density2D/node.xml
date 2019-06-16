@@ -5,14 +5,14 @@
 	xmlns:n="http://knime.org/node/v2.12"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
-	jsNamespace="knimeDensity" nodeID="plotly_density"
+	jsNamespace="knimeDensity2D" nodeID="plotly_density2D"
 	categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
-	<name>Density Plot (Plotly)</name>
-	<shortDescription>A Density plot with optional axis-based histograms built with the Plotly.js library.</shortDescription>
+	<name>2D Density Plot (Plotly)</name>
+	<shortDescription>A 2D Density plot with optional axis-based histograms built with the Plotly.js library.</shortDescription>
 	<fullDescription>
 		<intro>
 			<n:p>
-				A Density plot with optional axis-based histograms built with the
+				A 2D Density plot with optional axis-based histograms built with the
 				Plotly.js library. This plot is useful for exploring the
 				distribution and density in a
 				dataset. You can compare two features at a time and optionally display
@@ -46,7 +46,7 @@
 		</intro>
 		<tab name="Options">
 			<description>
-				General options for the KNIME Density plot with Plotly.
+				General options for the KNIME 2D Density plot with Plotly.
 			</description>
 			<options>
 				<svgOption name="Image" id="svg" portIndex="0"
@@ -57,14 +57,16 @@
 				</svgOption>
 				<columnSelectorOption name="X-Axis Column"
 					id="xAxisColumn" inPortIndex="0" label="X-Axis Column"
-					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue"
+					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue
+					org.knime.core.data.StringValue org.knime.core.data.NominalValue"
 					saveInView="true">
 					Select the column to be initially displayed along the
 					X-Axis.
 				</columnSelectorOption>
 				<columnSelectorOption name="Y-Axis Column"
 					id="yAxisColumn" inPortIndex="0" label="Y-Axis Column"
-					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue"
+					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue
+					org.knime.core.data.StringValue org.knime.core.data.NominalValue"
 					saveInView="true">
 					Select the column to be initially displayed along the
 					Y-Axis.
@@ -73,16 +75,28 @@
 					id="showHistogram" label="Show histograms" defaultValue="true"
 					saveInView="true">
 					When checked, a histogram for the x and y features will
-					be displayed along the corresponding axis.
+					be displayed along the corresponding axis. The color of these histograms
+					is determined by the colors of the data points that belong to each bin. The most
+					frequent color will be chosen for the color of the overall bin. Additionally, the 
+					text when hovering over these bins will display in the format (min-max, number of members).
+					So a horizontal bin spanning the x-axis from 0 to 1 with 10 data points "belonging" to that bin
+					will display (0-1,10).
 				</checkBoxOption>
-				<!-- <checkBoxOption name="Report on missing values" id="reportMissing" 
+				<checkBoxOption name="Report on missing values" id="reportMissing" 
 					label="Report on missing values" defaultValue="true" loadDefaults="true"> 
 					When enabled this will display a warning whenever there is a missing value 
-					present in the data. </checkBoxOption> <radioButtonOption name="Missing values 
+					present in the data and give a count on how many missing values 
+					exist in the data.
+				</checkBoxOption>
+				<radioButtonOption name="Missing values 
 					handling" id="mValues" possibleValues="Skip&#160;rows&#160;with&#160;missing&#160;values 
-					Skip&#160;missing&#160;values Show&#160;missing&#160;values" label="Missing 
-					values" defaultValue="Skip&#160;rows&#160;with&#160;missing&#160;values" 
-					saveInView="true"> The way missing values are handled. </radioButtonOption> -->
+					Leave&#160;missing&#160;values" label="Missing 
+					values" defaultValue="Leave&#160;missing&#160;values" 
+					saveInView="true">The way in which this view tries to compensate for missing or invalid values.
+					"Skip rows with missing values" will omit the entire row if a single cell is missing. This can 
+					affect multiple traces on the chart in some circumstances. "Leave missing" will leave a gap where 
+					the missing value exists and draw the chart anyways.
+				</radioButtonOption>
 			</options>
 		</tab>
 		<tab name="General Plot Options">
@@ -91,7 +105,7 @@
 			</description>
 			<options>
 				<stringOption name="Title" id="title" label="Title"
-					defaultValue="Density Plot" optional="true" saveInView="true">
+					defaultValue="2D Density Plot" optional="true" saveInView="true">
 					The chart
 					title.
 				</stringOption>
@@ -128,6 +142,23 @@
 					"Enable contour color controls", then you will be able to change this
 					option in the view menu.
 				</stringListOption>
+				<checkBoxOption name="Override colors" id="overrideColors"
+					label="Override colors" defaultValue="false">
+					When checked, the colors provided by the data table will be
+					ignored and the color chosen below for "Data color" will be 
+					applied to the plot. If there are no colors provided with the
+					data, the node will use the "Data color" by default, even if
+					this option has not been selected.
+				</checkBoxOption>
+				<colorOption name="Data color"
+					id="dataColor" label="Data color" format="HexString"
+					defaultR="0" defaultG="0" defaultB="255" defaultAlpha="255">
+					The color of the data on the plot if there are no colors provided with the table
+					(i.e. from the "Color Manager" node) or if "Override colors" has been chosen. This
+					color will not be automatically applied if the data has "Default" colors, it will only
+					be automatically applied if in the absence of ANY colors. You can always apply this
+					color to the data by selecting the "Override colors" option.
+				</colorOption>
 				<colorOption name="Background color"
 					id="backgroundColor" label="Background color" format="HexString"
 					defaultR="255" defaultG="255" defaultB="255" defaultAlpha="255">
@@ -279,21 +310,21 @@
 	</fullDescription>
 	<outputOptions>
 		<dataOutputOption outPortIndex="1" id="selection"
-			additionalColumnName="Density Selection"
+			additionalColumnName="2D Density Selection"
 			additionalColumnType="BOOLEAN" inPortIndex="0" />
 	</outputOptions>
-	<interactiveView name="Density Plot">
-		The KNIME Density Plot with
+	<interactiveView name="2D Density Plot">
+		The KNIME 2D Density Plot with
 		Plotly.
 	</interactiveView>
 	<ports>
 		<inPort portType="Data" name="Display data" index="0">
 			Data table
 			containing two or more numeric columns to display in an interactive
-			Density Plot.
+			2D Density Plot.
 		</inPort>
-		<outPort portType="Image" name="Density chart image" index="0">
-			SVG image of the Density chart if that option has been enabled.
+		<outPort portType="Image" name="2D Density chart image" index="0">
+			SVG image of the 2D Density chart if that option has been enabled.
 		</outPort>
 		<outPort portType="Data" name="Input Data + View Selection"
 			index="1">
@@ -304,8 +335,8 @@
 	<js:resources>
 		<js:resource type="js"
 			path="../kpi/knimePlotlyInterface.js" />
-		<js:resource type="js" path="density.js" />
-		<js:resource type="css" path="density.css" />
+		<js:resource type="js" path="density2D.js" />
+		<js:resource type="css" path="density2D.css" />
 	</js:resources>
 	<js:dependencies>
 		<js:dependency name="Plotly" path="plotly.js-1.47.4"

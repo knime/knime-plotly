@@ -5,17 +5,11 @@ window.knimeViolin = (function () {
 
     ViolinPlot.init = function (representation, value) {
 
-        var self = this;
-        this.Plotly = arguments[2][0];
         this.KPI = new KnimePlotlyInterface();
-        this.KPI.initialize(representation, value, new kt(), arguments[2][0]);
-        this.columns = this.KPI.table.getColumnNames();
-        this.columnTypes = this.KPI.table.getColumnTypes();
-        this.numericColumns = this.columns.filter(function (c, i) {
-            return self.columnTypes[i] === 'number';
-        });
+        this.KPI.initialize(representation, value, new kt(), arguments[2]);
+        this.columns = this.KPI.getXYCartesianColsWDate(false);
         this.axisCol = this.KPI.value.options.axisColumn || this.columns[0];
-        this.groupByCol = this.KPI.representation.options.groupByColumn || 'Data Set';
+        this.groupByCol = this.KPI.representation.options.groupByColumn || 'Data';
         this.plotlyNumColKey = this.KPI.value.options.plotDirection === 'Vertical' ? 'y' : 'x';
         this.plotlyGroupColKey = this.KPI.value.options.plotDirection === 'Vertical' ? 'x' : 'y';
         this.onSelectionChange = this.onSelectionChange.bind(this);
@@ -63,7 +57,7 @@ window.knimeViolin = (function () {
 
     ViolinPlot.TraceObject = function (numData, groupData, plotDirection) {
         this.x = plotDirection === 'Vertical' ? groupData : numData;
-        this.y = plotDirection === 'Vertical' ? numData : '0';
+        this.y = plotDirection === 'Vertical' ? numData : '';
         this.type = 'violin';
         this.points = 'none';
         this.box = {
@@ -80,17 +74,17 @@ window.knimeViolin = (function () {
     };
 
     ViolinPlot.LayoutObject = function (rep, val) {
-        var groupedColLabel = val.options.groupedAxisLabel.length === 0 ?
-            rep.options.groupByColumn : val.options.groupedAxisLabel;
-        var numericColLabel = val.options.numAxisLabel.length === 0 ?
-            val.options.axisColumn : val.options.numAxisLabel;
+        var groupedColLabel = val.options.groupedAxisLabel.length === 0
+            ? rep.options.groupByColumn : val.options.groupedAxisLabel;
+        var numericColLabel = val.options.numAxisLabel.length === 0
+            ? val.options.axisColumn : val.options.numAxisLabel;
         this.title = {
             text: val.options.title || 'Violin Plot',
             y: 1,
             yref: 'paper',
             yanchor: 'bottom'
         };
-        this.showlegend = rep.options.showLegend;
+        this.showlegend = val.options.showLegend;
         this.autoSize = true;
         this.legend = {
             x: 1,
@@ -185,10 +179,14 @@ window.knimeViolin = (function () {
     };
 
     ViolinPlot.getChangeObject = function () {
+        var self = this;
         var changeObj = this.KPI.getFilteredChangeObject();
-        var tGroups = changeObj[this.plotlyGroupColKey][0];
-        var tColors = changeObj['marker.color'][0];
-        changeObj.transforms = [this.getTransforms(tGroups, tColors)];
+        changeObj.transforms = [];
+        changeObj.ids.forEach(function (idArr, traceInd) {
+            var tGroups = changeObj[self.plotlyGroupColKey][traceInd];
+            var tColors = changeObj['marker.color'][traceInd];
+            changeObj.transforms[traceInd] = self.getTransforms(tGroups, tColors);
+        });
         delete changeObj.selectedpoints;
         delete changeObj['marker.color'];
         if (this.KPI.value.options.plotDirection === 'Horizontal') {
@@ -258,7 +256,7 @@ window.knimeViolin = (function () {
                 var axisColSelection = knimeService.createMenuSelect(
                     'axis-col-menu-item',
                     this.axisCol,
-                    this.numericColumns,
+                    this.columns,
                     function () {
                         if (self.axisCol !== this.value) {
                             self.axisCol = this.value;
@@ -269,12 +267,12 @@ window.knimeViolin = (function () {
                                 dataKeys: [self.axisCol, self.groupByCol, 'rowKeys', 'rowColors'],
                                 plotlyKeys: [[self.plotlyNumColKey], [self.plotlyGroupColKey], ['text', 'ids'], ['marker.color']]
                             };
-                            var layoutObjKey = self.plotlyNumColKey + 'axis.title';
-                            var layoutObj = {};
-                            var changeObj = self.getChangeObject();
-                            layoutObj[layoutObjKey] = self.axisCol;
+                            var layoutObj = {
+                                [self.plotlyNumColKey + 'axis.title']: self.axisCol
+                            };
                             self.KPI.updateValue(valueObj);
                             self.KPI.updateKeys(keys);
+                            var changeObj = self.getChangeObject();
                             self.KPI.update(changeObj, layoutObj);
                         }
                     }

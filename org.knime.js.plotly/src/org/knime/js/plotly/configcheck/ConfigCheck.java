@@ -6,6 +6,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
@@ -28,21 +29,31 @@ public class ConfigCheck extends DynamicStatefulJSProcessor {
 		HashSet<String> colNames = new HashSet<String>();
 		int colCount = 0;
 
+		// Violin plot manually disable max rows option because it seems to be
+		// inconsistent
+		if (config.getModel("isViolin") != null
+				&& ((SettingsModelBoolean) config.getModel("isViolin")).getBooleanValue()) {
+			config.setMaxRows(Integer.MAX_VALUE);
+		}
+
 		for (String colName : potentialColumns) {
 
 			if (config.getModel(colName) != null) {
 
 				// Check category column settings
 				String chosenColName = ((SettingsModelString) config.getModel(colName)).getStringValue();
-				if (chosenColName == null) {
-					throw new IllegalArgumentException("No column selected for category values.");
-				}
 
-				int columnIndex = table.getDataTableSpec().findColumnIndex(chosenColName);
+//				if (chosenColName == null) { //note that 'rowId' and 'none' options currently default to null
+//					throw new IllegalArgumentException("No column selected for category values.");
+//				}
+				if (chosenColName != null) {
 
-				if (columnIndex < 0) {
-					throw new IllegalArgumentException(
-							"Index for category column with name " + chosenColName + " not found.");
+					int columnIndex = table.getDataTableSpec().findColumnIndex(chosenColName);
+
+					if (columnIndex < 0) {
+						throw new IllegalArgumentException(
+								"Index for category column with name " + chosenColName + " not found.");
+					}
 				}
 				colCount++;
 				colNames.add(chosenColName);
