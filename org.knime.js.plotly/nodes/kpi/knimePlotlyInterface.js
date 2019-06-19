@@ -98,6 +98,13 @@ window.KnimePlotlyInterface = function () {
     };
 
     KnimePlotlyInterface.drawChart = function (traceArr, layout, config) {
+        if (this.representation.options.enableGL) {
+            traceArr.forEach(function (trace) {
+                if (trace.type) {
+                    trace.type += 'gl';
+                }
+            });
+        }
         this.indexTraces(traceArr);
         var layoutObj = layout;
         if (traceArr[0] && traceArr[0].y) {
@@ -117,10 +124,28 @@ window.KnimePlotlyInterface = function () {
         var self = this;
         var h = this.representation.options.svg.height;
         var w = this.representation.options.svg.width;
-        var removeElem = document.querySelector('.xy');
-        removeElem.childNodes.forEach(function (node) {
-            node.style.fill = self.representation.options.backgroundColor;
+        var mainAxisClips = document.querySelectorAll('.xy');
+        mainAxisClips.forEach(function (clipObj) {
+            clipObj.childNodes.forEach(function (node) {
+                node.style.fill = self.representation.options.backgroundColor;
+            });
         });
+        var secondAxisClips = document.querySelectorAll('.xy2');
+        if (secondAxisClips && secondAxisClips.length && secondAxisClips.length > 0) {
+            secondAxisClips.forEach(function (clipObj) {
+                clipObj.childNodes.forEach(function (node) {
+                    node.style.fill = self.representation.options.backgroundColor;
+                });
+            });
+        }
+        var thirdAxisClips = document.querySelectorAll('.x2y');
+        if (thirdAxisClips && thirdAxisClips.length && thirdAxisClips.length > 0) {
+            thirdAxisClips.forEach(function (clipObj) {
+                clipObj.childNodes.forEach(function (node) {
+                    node.style.fill = self.representation.options.backgroundColor;
+                });
+            });
+        }
         var svgElem = document.querySelectorAll('#' + this.divID + '> div > div > svg');
         var svgCol = '<svg class="main-svg" xmlns="http://www.w3.org/2000/svg"' +
             ' xmlns:xlink="http://www.w3.org/1999/xlink" width="' + w +
@@ -558,7 +583,7 @@ window.KnimePlotlyInterface = function () {
             }
 
             return [sortedArr.concat(lArr[0].slice(lInd)).concat(rArr[0].slice(rInd)),
-            sortedInd.concat(lArr[1].slice(lInd)).concat(rArr[1].slice(rInd))];
+                sortedInd.concat(lArr[1].slice(lInd)).concat(rArr[1].slice(rInd))];
         };
 
         var mergeSort = function (subArr, indArr) {
@@ -687,6 +712,7 @@ window.KnimePlotlyInterface = function () {
     };
 
     KnimePlotlyInterface.toggleSubscribeToFilters = function (onFilterChange) {
+
         if (this.value.options.subscribeToFilters) {
             knimeService.subscribeToFilter(
                 this.table.getTableId(),

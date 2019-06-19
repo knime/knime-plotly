@@ -24,9 +24,9 @@ window.knimeContinuousErrorPlot = (function () {
     };
 
     ContinuousError.drawChart = function () {
-
+        var gridColor = this.KPI.hexToRGBA(this.KPI.representation.options.gridColor, .15);
         var t = this.createTraces();
-        var l = new this.LayoutObject(this.KPI.representation, this.KPI.value);
+        var l = new this.LayoutObject(this.KPI.representation, this.KPI.value, gridColor);
         var c = new this.ConfigObject(this.KPI.representation, this.KPI.value);
         if (this.needsTypeChange) {
             t.forEach(function (trace) {
@@ -116,7 +116,7 @@ window.knimeContinuousErrorPlot = (function () {
         return this;
     };
 
-    ContinuousError.LayoutObject = function (rep, val) {
+    ContinuousError.LayoutObject = function (rep, val, gridColor) {
         this.title = {
             text: val.options.title || 'Continuous Error Plot',
             y: 1,
@@ -141,8 +141,8 @@ window.knimeContinuousErrorPlot = (function () {
                 family: 'sans-serif'
             },
             showgrid: val.options.showGrid,
-            gridcolor: '#fffff', // potential option
-            linecolor: '#fffff', // potential option
+            gridcolor: gridColor,
+            linecolor: rep.options.gridColor,
             linewidth: 1,
             nticks: 10
 
@@ -155,8 +155,8 @@ window.knimeContinuousErrorPlot = (function () {
                 family: 'sans-serif'
             },
             showgrid: val.options.showGrid,
-            gridcolor: '#fffff', // potential option
-            linecolor: '#fffff', // potential option
+            gridcolor: gridColor,
+            linecolor: rep.options.gridColor,
             linewidth: 1,
             nticks: 10
         };
@@ -168,8 +168,8 @@ window.knimeContinuousErrorPlot = (function () {
             pad: 0
         };
         this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none';
-        this.paper_bgcolor = rep.options.daColor || '#ffffff';
-        this.plot_bgcolor = rep.options.backgroundColor || '#ffffff';
+        this.paper_bgcolor = rep.options.backgroundColor || '#ffffff';
+        this.plot_bgcolor = rep.options.daColor || '#ffffff';
     };
 
     ContinuousError.ConfigObject = function (rep, val) {
@@ -541,7 +541,7 @@ window.knimeContinuousErrorPlot = (function () {
                         function () {
                             if (self.KPI.value.options.subscribeToSelection !== this.checked) {
                                 self.KPI.value.options.subscribeToSelection = this.checked;
-                                self.KPI.toggleSubscribeToSelection();
+                                self.KPI.toggleSubscribeToSelection(self.onSelectionChange);
                             }
                         },
                         true
@@ -565,7 +565,7 @@ window.knimeContinuousErrorPlot = (function () {
                         function () {
                             if (self.KPI.value.options.subscribeToFilters !== this.checked) {
                                 self.KPI.value.options.subscribeToFilters = this.checked;
-                                self.KPI.toggleSubscribeToFilters();
+                                self.KPI.toggleSubscribeToFilters(self.onFilterChange);
                             }
                         },
                         true

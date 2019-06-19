@@ -77,7 +77,7 @@
 					by interacting with the legend when "Show legend" is enabled.
 				</columnSelectorOption>
 				<checkBoxOption name="Report on missing values" id="reportMissing" 
-					label="Report on missing values" defaultValue="true" loadDefaults="true"> 
+					label="Report on missing values" defaultValue="true" > 
 					When enabled this will display a warning whenever there is a missing value 
 					present in the data and give a count on how many missing values 
 					exist in the data.
@@ -146,6 +146,19 @@
 					defaultG="255" defaultB="255" defaultAlpha="255">
 					The background color of the data area, within the axes.
 				</colorOption>
+				<colorOption name="Grid color" id="gridColor"
+					label="Grid color" format="HexString" defaultR="0"
+					defaultG="0" defaultB="0" defaultAlpha="255">
+					The background color of the grid and axis base lines.
+				</colorOption>
+				<checkBoxOption name="Use WebGL graphic library"
+					id="enableGL" label="Use WebGL graphic library"
+					defaultValue="false">
+					This option enables the use of an additional WebGL library when rendering the plot.
+					This can improve performance with larger dataset. It can also lead to unexpected behavior 
+					with some plots, data, operating systems and browsers. This behavior can range from styles not
+					being applied properly to the view not showing up at all. Enable this option with CAUTION.
+				</checkBoxOption>
 			</options>
 		</tab>
 		<tab name="Control Options">
@@ -237,19 +250,19 @@
 			<options>
 				<checkBoxOption name="Enable selection"
 					id="enableSelection" label="Enable selection" defaultValue="true"
-					loadDefaults="true">
+					>
 					If checked a separate column containing checkboxes is rendered in the
 					view.
 				</checkBoxOption>
 				<checkBoxOption name="Display clear selection button"
 					id="showClearSelectionButton"
 					label="Display clear selection button" defaultValue="true"
-					enableDependency="enableSelection" loadDefaults="true">
+					enableDependency="enableSelection" >
 					Displays a button to clear current selection.
 				</checkBoxOption>
 				<checkBoxOption name="Subscribe to selection events"
 					id="subscribeToSelection" label="Subscribe to selection events"
-					defaultValue="true" loadDefaults="true"
+					defaultValue="true" 
 					enableDependency="enableSelection" enableValue="true"
 					saveInView="true">
 					If checked, the view reacts on notifications from other interactive
@@ -258,7 +271,7 @@
 				</checkBoxOption>
 				<checkBoxOption name="Publish selection events"
 					id="publishSelection" label="Publish selection events"
-					defaultValue="true" loadDefaults="true"
+					defaultValue="true" 
 					enableDependency="enableSelection" enableValue="true"
 					saveInView="true">
 					If checked, notifies other interactive views when user changes the
@@ -267,7 +280,7 @@
 				</checkBoxOption>
 				<checkBoxOption name="Subscribe to filter events"
 					id="subscribeToFilters" label="Subscribe to filter events"
-					defaultValue="true" loadDefaults="true" saveInView="true">
+					defaultValue="true"  saveInView="true">
 					If checked, the view reacts on notifications from other interactive
 					views that a filter has
 					been created or modified.

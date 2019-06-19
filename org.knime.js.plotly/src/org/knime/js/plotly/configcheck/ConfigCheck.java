@@ -6,7 +6,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
@@ -29,13 +28,6 @@ public class ConfigCheck extends DynamicStatefulJSProcessor {
 		HashSet<String> colNames = new HashSet<String>();
 		int colCount = 0;
 
-		// Violin plot manually disable max rows option because it seems to be
-		// inconsistent
-		if (config.getModel("isViolin") != null
-				&& ((SettingsModelBoolean) config.getModel("isViolin")).getBooleanValue()) {
-			config.setMaxRows(Integer.MAX_VALUE);
-		}
-
 		for (String colName : potentialColumns) {
 
 			if (config.getModel(colName) != null) {
@@ -50,13 +42,13 @@ public class ConfigCheck extends DynamicStatefulJSProcessor {
 
 					int columnIndex = table.getDataTableSpec().findColumnIndex(chosenColName);
 
-					if (columnIndex < 0) {
+					if (columnIndex < 0 && !chosenColName.equals("none")) {
 						throw new IllegalArgumentException(
 								"Index for category column with name " + chosenColName + " not found.");
 					}
+					colCount++;
+					colNames.add(chosenColName);
 				}
-				colCount++;
-				colNames.add(chosenColName);
 			}
 		}
 
@@ -75,11 +67,18 @@ public class ConfigCheck extends DynamicStatefulJSProcessor {
 			selectedColumns = filterResult.getIncludes();
 
 			if (selectedColumns.length < 1) {
-
-				throw new IllegalArgumentException(
-						"Frequency column filter include list empty. Select at least one frequency column.");
+				throw new IllegalArgumentException("Included column list empty. Select at least one column.");
 			}
 
+		}
+
+		long tableSize = table.size();
+		int maxRows = config.getMaxRows();
+
+		if (tableSize >= 250000 && maxRows >= 250000) {
+			setWarningMessage("The number of rows you are trying to visualize may cause performance issues\n"
+					+ "in some circumstances. If available, enabling \"Use WebGL graphic library\" may help.\n"
+					+ "If the view does not load please try again or reduce the size of your data.");
 		}
 
 		Object[] outObjects = new Object[inObjects.length];

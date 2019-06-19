@@ -20,9 +20,9 @@ window.knimePlotlyStackedArea = (function () {
     };
 
     StackedArea.drawChart = function () {
-
+        var gridColor = this.KPI.hexToRGBA(this.KPI.representation.options.gridColor, .15);
         var t = this.createTraces();
-        var l = new this.LayoutObject(this.KPI.representation, this.KPI.value);
+        var l = new this.LayoutObject(this.KPI.representation, this.KPI.value, gridColor);
         var c = new this.ConfigObject(this.KPI.representation, this.KPI.value);
         this.KPI.createElement('knime-stacked-area');
         this.KPI.drawChart(t, l, c);
@@ -75,7 +75,7 @@ window.knimePlotlyStackedArea = (function () {
         this.x = xData;
         this.y = yData;
         // this.mode = 'lines+markers';
-        // this.type = 'scattergl';
+        this.type = 'scatter';
         this.name = '';
         this.marker = {
             color: [],
@@ -108,7 +108,7 @@ window.knimePlotlyStackedArea = (function () {
         return this;
     };
 
-    StackedArea.LayoutObject = function (rep, val) {
+    StackedArea.LayoutObject = function (rep, val, gridColor) {
         this.title = {
             text: val.options.title || 'Stacked Area Chart',
             y: 1,
@@ -133,8 +133,8 @@ window.knimePlotlyStackedArea = (function () {
                 family: 'sans-serif'
             },
             showgrid: val.options.showGrid,
-            gridcolor: '#fffff', // potential option
-            linecolor: '#fffff', // potential option
+            gridcolor: gridColor,
+            linecolor: rep.options.gridColor,
             linewidth: 1,
             nticks: 10
 
@@ -147,8 +147,8 @@ window.knimePlotlyStackedArea = (function () {
                 family: 'sans-serif'
             },
             showgrid: val.options.showGrid,
-            gridcolor: '#fffff', // potential option
-            linecolor: '#fffff', // potential option
+            gridcolor: gridColor,
+            linecolor: rep.options.gridColor,
             linewidth: 1,
             nticks: 10
         };
@@ -160,8 +160,8 @@ window.knimePlotlyStackedArea = (function () {
             pad: 0
         };
         this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none';
-        this.paper_bgcolor = rep.options.daColor || '#ffffff';
-        this.plot_bgcolor = rep.options.backgroundColor || '#ffffff';
+        this.paper_bgcolor = rep.options.backgroundColor || '#ffffff';
+        this.plot_bgcolor = rep.options.daColor || '#ffffff';
     };
 
     StackedArea.ConfigObject = function (rep, val) {
@@ -376,7 +376,7 @@ window.knimePlotlyStackedArea = (function () {
                         function () {
                             if (self.KPI.value.options.publishSelection !== this.checked) {
                                 self.KPI.value.options.publishSelection = this.checked;
-                                self.KPI.togglePublishSelection();
+                                self.KPI.togglePublishSelection(self.onSelectionChange);
                             }
                         },
                         true
@@ -401,7 +401,7 @@ window.knimePlotlyStackedArea = (function () {
                         function () {
                             if (self.KPI.value.options.subscribeToSelection !== this.checked) {
                                 self.KPI.value.options.subscribeToSelection = this.checked;
-                                self.KPI.toggleSubscribeToSelection();
+                                self.KPI.toggleSubscribeToSelection(self.onSelectionChange);
                             }
                         },
                         true
@@ -425,7 +425,7 @@ window.knimePlotlyStackedArea = (function () {
                         function () {
                             if (self.KPI.value.options.subscribeToFilters !== this.checked) {
                                 self.KPI.value.options.subscribeToFilters = this.checked;
-                                self.KPI.toggleSubscribeToFilters();
+                                self.KPI.toggleSubscribeToFilters(self.onFilterChange);
                             }
                         },
                         true

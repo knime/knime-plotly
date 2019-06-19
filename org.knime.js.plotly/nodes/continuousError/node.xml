@@ -86,7 +86,7 @@
 				</columnFilterOption>
 				<!--<checkBoxOption name="Has Date/Time columns" id="hasDateTime" 
 					label="Has Date/Time columns"
-					defaultValue="false" loadDefaults="true"> 
+					defaultValue="false" > 
 					Select this option if the table provided has Date/Time columns.
 					This will allow you to specify the format of your Date/Time data to
 					allow the node to properly display the Date/Time in chronological order
@@ -97,11 +97,11 @@
 				<!--<stringOption name='Date/Time format' id='dateTimeFormat'
 					label='Date/Time format' defaultValue=''>-->
 				<!-- <checkBoxOption name="Enable grouping" id="enableGroups" label="Enable 
-					grouping" defaultValue="false" loadDefaults="true"> When enabled this will 
+					grouping" defaultValue="false" > When enabled this will 
 					use the nominal/categorical column selected as the 'Group-by' column to create 
 					separate line segments for each group. </checkBoxOption> <checkBoxOption 
 					name="Aggregate data" id="enableAggregate" label="Aggregate data" defaultValue="false" 
-					loadDefaults="true"> When enabled this will use the columns selected in the 
+					> When enabled this will use the columns selected in the 
 					'Included columns' option </checkBoxOption> <columnSelectorOption name="'Group-By' 
 					column" id="groupByColumn" inPortIndex="0" label="'Group-By' Column" filterClasses="org.knime.core.data.StringValue" 
 					enableDependency="enableGroups" enableValue="true"> If a previous cluster/binning 
@@ -169,7 +169,7 @@
 					(0,.5) and (0,1.5).
 				</doubleOption>
 				<checkBoxOption name="Report on missing values" id="reportMissing" 
-					label="Report on missing values" defaultValue="true" loadDefaults="true"> 
+					label="Report on missing values" defaultValue="true" > 
 					When enabled this will display a warning whenever there is a missing value 
 					present in the data and give a count on how many missing values 
 					exist in the data.
@@ -253,6 +253,19 @@
 					The background color of
 					the data area, within the axes.
 				</colorOption>
+				<colorOption name="Grid color" id="gridColor"
+					label="Grid color" format="HexString" defaultR="0"
+					defaultG="0" defaultB="0" defaultAlpha="255">
+					The background color of the grid and axis base lines.
+				</colorOption>
+				<checkBoxOption name="Use WebGL graphic library"
+					id="enableGL" label="Use WebGL graphic library"
+					defaultValue="false">
+					This option enables the use of an additional WebGL library when rendering the plot.
+					This can improve performance with larger dataset. It can also lead to unexpected behavior 
+					with some plots, data, operating systems and browsers. This behavior can range from styles not
+					being applied properly to the view not showing up at all. Enable this option with CAUTION.
+				</checkBoxOption>
 			</options>
 		</tab>
 		<tab name="Control Options">
@@ -359,7 +372,7 @@
 			<options>
 				<checkBoxOption name="Enable selection"
 					id="enableSelection" label="Enable selection" defaultValue="true"
-					loadDefaults="true">
+					>
 					If checked a separate column containing checkboxes is
 					rendered in the
 					view.
@@ -367,13 +380,13 @@
 				<checkBoxOption name="Display clear selection button"
 					id="showClearSelectionButton"
 					label="Display clear selection button" defaultValue="true"
-					enableDependency="enableSelection" loadDefaults="true">
+					enableDependency="enableSelection" >
 					Displays a button
 					to clear current selection.
 				</checkBoxOption>
 				<checkBoxOption name="Subscribe to selection events"
 					id="subscribeToSelection" label="Subscribe to selection events"
-					defaultValue="true" loadDefaults="true"
+					defaultValue="true" 
 					enableDependency="enableSelection" enableValue="true"
 					saveInView="true">
 					If checked, the view reacts on notifications from other
@@ -384,7 +397,7 @@
 				</checkBoxOption>
 				<checkBoxOption name="Publish selection events"
 					id="publishSelection" label="Publish selection events"
-					defaultValue="true" loadDefaults="true"
+					defaultValue="true" 
 					enableDependency="enableSelection" enableValue="true"
 					saveInView="true">
 					If checked, notifies other interactive views when user
@@ -395,7 +408,7 @@
 				</checkBoxOption>
 				<checkBoxOption name="Subscribe to filter events"
 					id="subscribeToFilters" label="Subscribe to filter events"
-					defaultValue="true" loadDefaults="true" saveInView="true">
+					defaultValue="true"  saveInView="true">
 					If checked, the
 					view reacts on notifications from other interactive
 					views that a

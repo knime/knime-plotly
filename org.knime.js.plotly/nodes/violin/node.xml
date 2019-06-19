@@ -86,7 +86,7 @@
 					numeric column along the y-axis.
 				</radioButtonOption>
 				<checkBoxOption name="Report on missing values" id="reportMissing" 
-					label="Report on missing values" defaultValue="true" loadDefaults="true"> 
+					label="Report on missing values" defaultValue="true" > 
 					When enabled this will display a warning whenever there is a missing value 
 					present in the data and give a count on how many missing values 
 					exist in the data.
@@ -161,10 +161,6 @@
 					defaultG="255" defaultB="255" defaultAlpha="255">
 					The background color of the data area, within the axes.
 				</colorOption>
-				<checkBoxOption name="Is violin plot" id="isViolin"
-                	label="Is violin plot" defaultValue="true" loadDefaults="true" configOnly="true">
-                	Boolean check to manually disable the row limiting option.
-                </checkBoxOption>
 			</options>
 		</tab>
 		<tab name="Control Options">
@@ -250,19 +246,19 @@
 			<options>
 				<checkBoxOption name="Enable selection"
 					id="enableSelection" label="Enable selection" defaultValue="true"
-					loadDefaults="true">
+					>
 					If checked a separate column containing checkboxes is rendered in the
 					view.
 				</checkBoxOption>
 				<checkBoxOption name="Display clear selection button"
 					id="showClearSelectionButton"
 					label="Display clear selection button" defaultValue="true"
-					loadDefaults="true">
+					>
 					Displays a button to clear current selection.
 				</checkBoxOption>
 				<checkBoxOption name="Subscribe to selection events"
 					id="subscribeToSelection" label="Subscribe to selection events"
-					defaultValue="true" loadDefaults="true" enableValue="true"
+					defaultValue="true"  enableValue="true"
 					saveInView="true">
 					If checked, the view reacts on notifications from other interactive
 					views that the selection has
@@ -270,7 +266,7 @@
 				</checkBoxOption>
 				<checkBoxOption name="Subscribe to filter events"
 					id="subscribeToFilters" label="Subscribe to filter events"
-					defaultValue="true" loadDefaults="true" saveInView="true">
+					defaultValue="true" saveInView="true">
 					If checked, the view reacts on notifications from other interactive
 					views that a filter has
 					been created or modified.
@@ -314,6 +310,6 @@
 			type="local" exports="Plotly" />
 	</js:dependencies>
 	<js:javaProcessor
-		className="org.knime.js.plotly.configcheck.ConfigCheck"
+		className="org.knime.js.plotly.violin.ViolinPre"
 		hidesLimitRowOption="true" />
 </js:knimeNode>

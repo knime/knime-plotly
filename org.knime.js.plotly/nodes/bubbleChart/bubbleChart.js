@@ -21,8 +21,9 @@ window.knimeBubbleChart = (function () {
     };
 
     BubbleChart.drawChart = function () {
+        var gridColor = this.KPI.hexToRGBA(this.KPI.representation.options.gridColor, .15);
         var t = this.createTraces();
-        var l = new this.LayoutObject(this.KPI.representation, this.KPI.value);
+        var l = new this.LayoutObject(this.KPI.representation, this.KPI.value, gridColor);
         var c = new this.ConfigObject(this.KPI.representation, this.KPI.value);
         this.KPI.createElement('knime-bubble');
         this.KPI.drawChart(t, l, c);
@@ -37,10 +38,11 @@ window.knimeBubbleChart = (function () {
         };
 
         var data = this.KPI.getData(keys);
+        var sizeMult = this.KPI.value.options.sizeMultiplier;
 
         data.names.forEach(function (group, groupInd) {
             var newTrace = new self.TraceObject(data[self.xAxisCol][groupInd],
-                data[self.yAxisCol][groupInd], data[self.sizeCol][groupInd]);
+                data[self.yAxisCol][groupInd], data[self.sizeCol][groupInd], sizeMult);
             newTrace.marker.color = data.rowColors[groupInd];
             newTrace.text = data.rowKeys[groupInd];
             newTrace.ids = data.rowKeys[groupInd];
@@ -52,7 +54,7 @@ window.knimeBubbleChart = (function () {
         return traces;
     };
 
-    BubbleChart.TraceObject = function (xData, yData, sizeData) {
+    BubbleChart.TraceObject = function (xData, yData, sizeData, sizeMult) {
         var max = -Number.MAX_SAFE_INTEGER;
         sizeData.forEach(function (size) {
             max = Math.max(max, size);
@@ -60,12 +62,13 @@ window.knimeBubbleChart = (function () {
         this.x = xData;
         this.y = yData;
         this.mode = 'markers';
+        this.type = 'scatter';
         this.name = '';
         this.marker = {
             color: [],
             opacity: .5,
             size: sizeData,
-            sizeref: 2.0 * max / 40 ** 2, // arb 40
+            sizeref: 2.0 * max / sizeMult ** 2, // arb 40
             sizemode: 'area'
         };
         this.unselected = {
@@ -81,7 +84,7 @@ window.knimeBubbleChart = (function () {
         return this;
     };
 
-    BubbleChart.LayoutObject = function (rep, val) {
+    BubbleChart.LayoutObject = function (rep, val, gridColor) {
         this.title = {
             text: val.options.title || 'Bubble Chart',
             y: 1,
@@ -106,8 +109,8 @@ window.knimeBubbleChart = (function () {
                 family: 'sans-serif'
             },
             showgrid: val.options.showGrid,
-            gridcolor: '#fffff', // potential option
-            linecolor: '#fffff', // potential option
+            gridcolor: gridColor,
+            linecolor: rep.options.gridColor,
             linewidth: 1,
             nticks: 10
 
@@ -120,8 +123,8 @@ window.knimeBubbleChart = (function () {
                 family: 'sans-serif'
             },
             showgrid: val.options.showGrid,
-            gridcolor: '#fffff', // potential option
-            linecolor: '#fffff', // potential option
+            gridcolor: gridColor,
+            linecolor: rep.options.gridColor,
             linewidth: 1,
             nticks: 10,
             minorgridcount: 1
@@ -134,8 +137,8 @@ window.knimeBubbleChart = (function () {
             pad: 0
         };
         this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none';
-        this.paper_bgcolor = rep.options.daColor || '#ffffff';
-        this.plot_bgcolor = rep.options.backgroundColor || '#ffffff';
+        this.paper_bgcolor = rep.options.backgroundColor || '#ffffff';
+        this.plot_bgcolor = rep.options.daColor || '#ffffff';
     };
 
     BubbleChart.ConfigObject = function (rep, val) {
@@ -184,10 +187,6 @@ window.knimeBubbleChart = (function () {
             var changeObj = this.KPI.getFilteredChangeObject();
             this.KPI.update(changeObj);
         }
-    };
-
-    BubbleChart.getComponentValue = function () {
-        return this.KPI.getComponentValue();
     };
 
     BubbleChart.drawKnimeMenu = function () {
@@ -309,6 +308,45 @@ window.knimeBubbleChart = (function () {
                 knimeService.addMenuDivider();
             }
 
+            if (self.KPI.representation.options.enableSizeMultOption) {
+                var sizeMenuItem = knimeService.createMenuNumberField(
+                    'size-menu-item-item',
+                    self.KPI.value.options.sizeMultiplier,
+                    0,
+                    Number.MAX_SAFE_INTEGER,
+                    1,
+                    function () {
+                        if (self.KPI.value.options.sizeMultiplier !== this.value) {
+                            var newSizeMult = this.value;
+                            var changeObj = self.KPI.getFilteredChangeObject();
+                            changeObj['marker.sizeref'] = [];
+                            changeObj['marker.size'].forEach(function (sizeData) {
+                                var max = -Number.MAX_SAFE_INTEGER;
+                                sizeData.forEach(function (size) {
+                                    max = Math.max(max, size);
+                                });
+                                changeObj['marker.sizeref'].push(2.0 * max / newSizeMult ** 2); // arb 40
+                            });
+                            var valueObj = {
+                                sizeMultiplier: newSizeMult
+                            };
+                            self.KPI.updateValue(valueObj);
+                            self.KPI.update(changeObj);
+                        }
+                    },
+                    true
+                );
+
+                knimeService.addMenuItem(
+                    'Bubble size parameter:',
+                    'arrows-h',
+                    sizeMenuItem,
+                    null,
+                    knimeService.SMALL_ICON
+                );
+                knimeService.addMenuDivider();
+            }
+
             if (self.KPI.representation.options.tooltipToggle) {
 
                 var tooltipToggleCheckBox = knimeService.createMenuCheckbox(
@@ -376,7 +414,7 @@ window.knimeBubbleChart = (function () {
                         function () {
                             if (self.KPI.value.options.publishSelection !== this.checked) {
                                 self.KPI.value.options.publishSelection = this.checked;
-                                self.KPI.togglePublishSelection();
+                                self.KPI.togglePublishSelection(self.onSelectionChange);
                             }
                         },
                         true
@@ -401,7 +439,7 @@ window.knimeBubbleChart = (function () {
                         function () {
                             if (self.KPI.value.options.subscribeToSelection !== this.checked) {
                                 self.KPI.value.options.subscribeToSelection = this.checked;
-                                self.KPI.toggleSubscribeToSelection();
+                                self.KPI.togglePublishSelection(self.onSelectionChange);
                             }
                         },
                         true
@@ -425,7 +463,7 @@ window.knimeBubbleChart = (function () {
                         function () {
                             if (self.KPI.value.options.subscribeToFilters !== this.checked) {
                                 self.KPI.value.options.subscribeToFilters = this.checked;
-                                self.KPI.toggleSubscribeToFilters();
+                                self.KPI.toggleSubscribeToFilters(self.onFilterChange);
                             }
                         },
                         true

@@ -20,8 +20,9 @@ window.knimeSurface3DPlot = (function () {
     };
 
     SurfacePlot.drawChart = function () {
+        var gridColor = this.KPI.hexToRGBA(this.KPI.representation.options.gridColor, .15);
         var t = this.createTraces();
-        var l = new this.LayoutObject(this.KPI.representation, this.KPI.value);
+        var l = new this.LayoutObject(this.KPI.representation, this.KPI.value, gridColor);
         var c = new this.ConfigObject(this.KPI.representation, this.KPI.value);
         this.KPI.createElement('knime-surface');
         this.KPI.drawChart(t, l, c);
@@ -62,7 +63,7 @@ window.knimeSurface3DPlot = (function () {
         return this;
     };
 
-    SurfacePlot.LayoutObject = function (rep, val) {
+    SurfacePlot.LayoutObject = function (rep, val, gridColor) {
         this.title = {
             text: val.options.title || 'Surface Plot',
             y: 1,
@@ -95,8 +96,8 @@ window.knimeSurface3DPlot = (function () {
                     family: 'sans-serif'
                 },
                 showgrid: val.options.showGrid,
-                gridcolor: '#fffff', // potential option
-                linecolor: '#fffff', // potential option
+                gridcolor: gridColor,
+                linecolor: rep.options.gridColor,
                 linewidth: 1,
                 nticks: 10
             },
@@ -108,8 +109,8 @@ window.knimeSurface3DPlot = (function () {
                     family: 'sans-serif'
                 },
                 showgrid: val.options.showGrid,
-                gridcolor: '#fffff', // potential option
-                linecolor: '#fffff', // potential option
+                gridcolor: gridColor,
+                linecolor: rep.options.gridColor,
                 linewidth: 1,
                 nticks: 10
             },
@@ -121,8 +122,8 @@ window.knimeSurface3DPlot = (function () {
                     family: 'sans-serif'
                 },
                 showgrid: val.options.showGrid,
-                gridcolor: '#fffff', // potential option
-                linecolor: '#fffff', // potential option
+                gridcolor: gridColor,
+                linecolor: rep.options.gridColor,
                 linewidth: 1,
                 nticks: 10
 
@@ -136,8 +137,8 @@ window.knimeSurface3DPlot = (function () {
             pad: 0
         };
         this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none';
-        this.paper_bgcolor = rep.options.daColor || '#ffffff';
-        this.plot_bgcolor = rep.options.backgroundColor || '#ffffff';
+        this.paper_bgcolor = rep.options.backgroundColor || '#ffffff';
+        this.plot_bgcolor = rep.options.daColor || '#ffffff';
     };
 
     SurfacePlot.ConfigObject = function (rep, val) {
@@ -326,7 +327,7 @@ window.knimeSurface3DPlot = (function () {
                         function () {
                             if (self.KPI.value.options.subscribeToFilters !== this.checked) {
                                 self.KPI.value.options.subscribeToFilters = this.checked;
-                                self.KPI.toggleSubscribeToFilters();
+                                self.KPI.toggleSubscribeToFilters(self.onFilterChange);
                             }
                         },
                         true

@@ -169,8 +169,8 @@ window.knimeDensity2D = (function () {
             },
             domain: val.options.showHistogram ? [0, 0.84] : [0, 1],
             showgrid: false,
-            gridcolor: '#fffff', // potential option
-            linecolor: '#fffff', // potential option
+            gridcolor: '#000000',
+            linecolor: '#000000',
             linewidth: 1,
             nticks: 10
 
@@ -184,8 +184,8 @@ window.knimeDensity2D = (function () {
             },
             domain: val.options.showHistogram ? [0, 0.84] : [0, 1],
             showgrid: false,
-            gridcolor: '#fffff', // potential option
-            linecolor: '#fffff', // potential option
+            gridcolor: '#000000',
+            linecolor: '#000000',
             linewidth: 1,
             nticks: 10
         };
@@ -211,8 +211,8 @@ window.knimeDensity2D = (function () {
             pad: 0
         };
         this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none';
-        this.paper_bgcolor = rep.options.daColor || '#ffffff';
-        this.plot_bgcolor = rep.options.backgroundColor || '#ffffff';
+        this.paper_bgcolor = rep.options.backgroundColor || '#ffffff';
+        this.plot_bgcolor = rep.options.daColor || '#ffffff';
     };
 
     Density2D.ConfigObject = function (rep, val) {
@@ -450,7 +450,7 @@ window.knimeDensity2D = (function () {
                         function () {
                             if (self.KPI.value.options.publishSelection !== this.checked) {
                                 self.KPI.value.options.publishSelection = this.checked;
-                                self.KPI.togglePublishSelection();
+                                self.KPI.togglePublishSelection(self.onSelectionChange);
                             }
                         },
                         true
@@ -475,7 +475,7 @@ window.knimeDensity2D = (function () {
                         function () {
                             if (self.KPI.value.options.subscribeToSelection !== this.checked) {
                                 self.KPI.value.options.subscribeToSelection = this.checked;
-                                self.KPI.toggleSubscribeToSelection();
+                                self.KPI.toggleSubscribeToSelection(self.onSelectionChange);
                             }
                         },
                         true
@@ -499,7 +499,7 @@ window.knimeDensity2D = (function () {
                         function () {
                             if (self.KPI.value.options.subscribeToFilters !== this.checked) {
                                 self.KPI.value.options.subscribeToFilters = this.checked;
-                                self.KPI.toggleSubscribeToFilters();
+                                self.KPI.toggleSubscribeToFilters(self.onFilterChange);
                             }
                         },
                         true

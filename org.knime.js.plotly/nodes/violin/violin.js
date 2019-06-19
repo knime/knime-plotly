@@ -18,6 +18,7 @@ window.knimeViolin = (function () {
         this.drawChart();
         this.drawKnimeMenu();
         this.KPI.mountAndSubscribe(this.onSelectionChange, this.onFilterChange);
+        this.listenForLabelChanges();
     };
 
     ViolinPlot.drawChart = function () {
@@ -26,6 +27,30 @@ window.knimeViolin = (function () {
         var c = new this.ConfigObject(this.KPI.representation, this.KPI.value);
         this.KPI.createElement('knime-violin');
         this.KPI.drawChart(t, l, c);
+    };
+
+    ViolinPlot.listenForLabelChanges = function () {
+        var self = this;
+        document.getElementById('knime-violin').on('plotly_relayout', function (eData) {
+            if (eData) {
+                var valueObj = {};
+                if (eData['xaxis.title.text']) {
+                    if (self.plotlyNumColKey === 'y') {
+                        valueObj.groupedAxisLabel = eData['xaxis.title.text'];
+                    } else {
+                        valueObj.numAxisLabel = eData['xaxis.title.text'];
+                    }
+                }
+                if (eData['yaxis.title.text']) {
+                    if(self.plotlyNumColKey === 'y') {
+                        valueObj.numAxisLabel = eData['yaxis.title.text'];
+                    } else {
+                        valueObj.groupedAxisLabel = eData['yaxis.title.text'];
+                    }
+                }
+                self.KPI.updateValue(valueObj);
+            }
+        });
     };
 
     ViolinPlot.createTraces = function () {
@@ -100,9 +125,7 @@ window.knimeViolin = (function () {
                 size: 12,
                 family: 'sans-serif'
             },
-            showgrid: val.options.plotDirection === 'Vertical' ? false : val.options.showGrid,
-            gridcolor: '#fffff', // potential option
-            linecolor: '#fffff', // potential option
+            tickangle: 0,
             linewidth: 1,
             zeroline: val.options.plotDirection === 'Vertical' ? val.options.showGrid : false
         };
@@ -113,9 +136,6 @@ window.knimeViolin = (function () {
                 family: 'sans-serif'
             },
             tickangle: val.options.plotDirection === 'Vertical' ? 'auto' : -90,
-            showgrid: val.options.plotDirection === 'Vertical' ? val.options.showGrid : false,
-            gridcolor: '#fffff', // potential option
-            linecolor: '#fffff', // potential option
             linewidth: 1,
             zeroline: val.options.plotDirection === 'Vertical' ? false : val.options.showGrid
         };
@@ -127,8 +147,8 @@ window.knimeViolin = (function () {
             pad: 0
         };
         this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none';
-        this.paper_bgcolor = rep.options.daColor || '#ffffff';
-        this.plot_bgcolor = rep.options.backgroundColor || '#ffffff';
+        this.paper_bgcolor = rep.options.backgroundColor || '#ffffff';
+        this.plot_bgcolor = rep.options.daColor || '#ffffff';
     };
 
     ViolinPlot.ConfigObject = function (rep, val) {
@@ -348,32 +368,6 @@ window.knimeViolin = (function () {
 
             if (knimeService.isInteractivityAvailable()) {
 
-                if (self.KPI.representation.options.enableSelection &&
-                    self.KPI.representation.options.publishSelectionToggle) {
-
-                    var publishSelectionCheckbox = knimeService.createMenuCheckbox(
-                        'publish-selection-checkbox',
-                        self.KPI.value.options.publishSelection,
-                        function () {
-                            if (self.KPI.value.options.publishSelection !== this.checked) {
-                                self.KPI.value.options.publishSelection = this.checked;
-                                self.KPI.togglePublishSelection();
-                            }
-                        },
-                        true
-                    );
-
-                    knimeService.addMenuItem(
-                        'Publish Selection',
-                        knimeService.createStackedIcon('check-square-o',
-                            'angle-right', 'faded left sm', 'right bold'),
-                        publishSelectionCheckbox,
-                        null,
-                        knimeService.SMALL_ICON
-                    );
-
-                }
-
                 if (self.KPI.representation.options.subscribeSelectionToggle) {
 
                     var subscribeToSelectionCheckbox = knimeService.createMenuCheckbox(
@@ -382,7 +376,7 @@ window.knimeViolin = (function () {
                         function () {
                             if (self.KPI.value.options.subscribeToSelection !== this.checked) {
                                 self.KPI.value.options.subscribeToSelection = this.checked;
-                                self.KPI.toggleSubscribeToSelection();
+                                self.KPI.toggleSubscribeToSelection(self.onSelectionChange);
                             }
                         },
                         true
@@ -406,7 +400,7 @@ window.knimeViolin = (function () {
                         function () {
                             if (self.KPI.value.options.subscribeToFilters !== this.checked) {
                                 self.KPI.value.options.subscribeToFilters = this.checked;
-                                self.KPI.toggleSubscribeToFilters();
+                                self.KPI.toggleSubscribeToFilters(self.onFilterChange);
                             }
                         },
                         true

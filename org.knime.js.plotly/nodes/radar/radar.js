@@ -4,7 +4,7 @@ window.knimeRadarPlot = (function () {
     var RadarPlot = {};
 
     RadarPlot.init = function (representation, value) {
-
+        var self = this;
         this.KPI = new KnimePlotlyInterface();
         this.KPI.initialize(representation, value, new kt(), arguments[2]);
         this.numericColumns = this.KPI.getNumericColumns();
@@ -13,24 +13,75 @@ window.knimeRadarPlot = (function () {
         this.onFilterChange = this.onFilterChange.bind(this);
         this.opacity = this.KPI.totalRows > 2500 ? .5 / Math.log10(this.KPI.totalRows)
             : .5 / Math.log10(this.KPI.totalRows);
+        this.legendTraces = [];
+        this.groupSet = new this.KPI.KSet([]);
+        this.hiddenSet = new this.KPI.KSet([]);
+        this.groupColors = {};
 
         this.drawChart();
+        this.KPI.Plotly.addTraces('knime-radar', this.legendTraces);
+        this.colorDataArea();
         this.drawKnimeMenu();
         this.KPI.mountAndSubscribe(this.onSelectionChange, this.onFilterChange);
+        document.getElementById('knime-radar').on('plotly_relayout', function (eData) {
+            self.colorDataArea();
+            self.updateLegend();
+        });
+        document.getElementById('knime-radar').on('plotly_restyle', function (eData) {
+            self.colorDataArea();
+            self.updateLegend();
+        });
+        document.getElementById('knime-radar').on('plotly_legendclick', function (eData) {
+            if (eData.curveNumber && eData.data) {
+                var lg = eData.data[eData.curveNumber].legendgroup;
+                if (self.hiddenSet.has(lg)) {
+                    self.hiddenSet.delete(lg);
+                } else {
+                    self.hiddenSet.add(lg);
+                }
+                var changeObj = self.getChangeObj();
+                self.KPI.update(changeObj);
+            }
+            self.colorDataArea();
+            return false;
+        });
     };
 
     RadarPlot.drawChart = function () {
+        var gridColor = this.KPI.hexToRGBA(this.KPI.representation.options.gridColor, .15);
         var t = this.createTraces();
-        var l = new this.LayoutObject(this.KPI.representation, this.KPI.value);
+        var l = new this.LayoutObject(this.KPI.representation, this.KPI.value, gridColor);
         var c = new this.ConfigObject(this.KPI.representation, this.KPI.value);
         this.KPI.createElement('knime-radar');
         this.KPI.drawChart(t, l, c);
     };
 
+    RadarPlot.colorDataArea = function () {
+        var dataArea = document.querySelector('.plotbg');
+        if (dataArea) {
+            dataArea.children[0].setAttribute('style', 'fill: ' + this.KPI.representation.options.daColor +
+                ';fill-opacity: 1');
+        }
+    };
+
+    RadarPlot.updateLegend = function () {
+        var self = this;
+        var legend = document.querySelector('.scrollbox');
+        if (legend) {
+            for (var i = 0; i < legend.children.length; i++) {
+                if (self.hiddenSet.has(legend.children[i].children[0].textContent)) {
+                    legend.children[i].children[0].style.opacity = .5;
+                } else {
+                    legend.children[i].children[0].style.opacity = 1;
+                }
+            }
+        }
+    };
+
     RadarPlot.createTraces = function () {
         var self = this;
         var traces = [];
-        var groupSet = new this.KPI.KSet([]);
+        var dummyData = [];
 
         this.KPI.data.rowKeys.forEach(function (rowKey, rowInd) {
             var d = [];
@@ -45,34 +96,35 @@ window.knimeRadarPlot = (function () {
             t.forEach(function (col, colInd) {
                 d.push(self.KPI.data[col][rowInd]);
                 i.push(rowKey);
+                dummyData[colInd] = 0;
             });
 
             d.push(d[0]);
             t.push(t[0]);
             var trace = new self.TraceObject(d, t, rowKey, fc, lc, n, i);
-            if (self.KPI.representation.enableGroups && self.KPI.data[col]) {
-                // TODO: test this lengend option
-                var group = self.KPI.data[self.KPI.representation.groupByColumn][rowInd];
-                groupSet.add(group);
+            if (self.KPI.representation.options.groupByColumn &&
+                self.KPI.data[self.KPI.representation.options.groupByColumn]) {
+                var group = self.KPI.data[self.KPI.representation.options.groupByColumn][rowInd];
+                if (!self.groupSet.has(group)) {
+                    self.groupColors[group] = [];
+                }
+                self.groupSet.add(group);
+                self.groupColors[group].push(lc);
                 trace.legendgroup = group;
             }
             traces.push(trace);
         });
 
-        var groups = groupSet.getArray();
+        var groups = self.groupSet.getArray();
 
         if (groups.length > 0 && this.KPI.value.options.showLegend) {
-            // TODO: test this lengend option
             groups.forEach(function (group) {
-                var gTrace = {
-                    name: group,
-                    r: [0],
-                    theta: [0],
-                    legendgroup: group,
-                    showlegend: true,
-                    ids: ['']
-                };
-                traces.push(gTrace);
+                var groupColor = self.KPI.getMostFrequentColor(self.groupColors[group]);
+                self.groupColors[group].mostColor = groupColor;
+                var gTrace = new self.TraceObject(dummyData, self.inclColumns,
+                    '', groupColor, groupColor, group, [''])
+                gTrace.showlegend = true;
+                self.legendTraces.push(gTrace);
             });
         }
 
@@ -82,11 +134,12 @@ window.knimeRadarPlot = (function () {
     RadarPlot.TraceObject = function (rData, thetaData, rowId, fillColor, lineColor, name, ids) {
         this.r = rData;
         this.theta = thetaData;
-        this.type = 'scatterpolargl';
+        this.type = 'scatterpolar';
         // this.fill = 'toself';
         this.connectends = true;
         // this.fillcolor = 'rgba(159, 159, 159, 0.1)';
         // this.fillcolor = fillColor;
+        this.legendgroup = name;
         this.showlegend = false;
         this.name = name || rowId;
         this.id = rowId;
@@ -103,10 +156,10 @@ window.knimeRadarPlot = (function () {
         return this;
     };
 
-    RadarPlot.LayoutObject = function (rep, val) {
+    RadarPlot.LayoutObject = function (rep, val, gridColor) {
         this.title = {
             text: val.options.title || 'Radar Plot',
-            y: 1.2,
+            y: 1.1,
             x: .5,
             xanchor: 'center',
             xref: 'paper',
@@ -124,7 +177,8 @@ window.knimeRadarPlot = (function () {
                 visible: true,
                 title: {
                     text: val.options.axisLabel || ''
-                }
+                },
+                color: gridColor,
             }
         };
         this.font = {
@@ -139,8 +193,8 @@ window.knimeRadarPlot = (function () {
             pad: 0
         };
         this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none';
-        this.paper_bgcolor = rep.options.daColor || '#ffffff';
-        this.plot_bgcolor = rep.options.backgroundColor || '#ffffff';
+        this.paper_bgcolor = rep.options.backgroundColor || '#ffffff';
+        this.plot_bgcolor = rep.options.daColor || '#ffffff';
     };
 
     RadarPlot.ConfigObject = function (rep, val) {
@@ -210,6 +264,9 @@ window.knimeRadarPlot = (function () {
         } else {
             this.KPI.data.rowKeys.forEach(function (rowKey, rowInd) {
                 var vis = self.KPI.filtered.has(rowKey);
+                if (self.KPI.representation.options.groupByColumn && self.legendTraces.length > 0 && vis) {
+                    vis = !self.hiddenSet.has(self.KPI.data[self.KPI.representation.options.groupByColumn][rowInd]);
+                }
                 var selected = self.KPI.selected.has(rowKey);
                 var origColor = self.KPI.data.rowColors[rowInd];
                 var color = selected ? self.KPI.hexToRGBA(origColor, self.opacity)
@@ -218,6 +275,11 @@ window.knimeRadarPlot = (function () {
                 changeObj.visible.push(self.KPI.showOnlySelected && vis ? selected : vis);
                 changeObj['line.color'].push(color);
                 changeObj['line.width'].push(self.KPI.totalSelected > 0 ? width : 3);
+            });
+            this.legendTraces.forEach(function (legend) {
+                changeObj.visible.push(true);
+                changeObj['line.color'].push(self.groupColors[legend.name].mostColor);
+                changeObj['line.width'].push(3);
             });
         }
         return changeObj;
@@ -370,7 +432,7 @@ window.knimeRadarPlot = (function () {
                         function () {
                             if (self.KPI.value.options.publishSelection !== this.checked) {
                                 self.KPI.value.options.publishSelection = this.checked;
-                                self.KPI.togglePublishSelection();
+                                self.KPI.togglePublishSelection(self.onSelectionChange);
                             }
                         },
                         true
@@ -395,7 +457,7 @@ window.knimeRadarPlot = (function () {
                         function () {
                             if (self.KPI.value.options.subscribeToSelection !== this.checked) {
                                 self.KPI.value.options.subscribeToSelection = this.checked;
-                                self.KPI.toggleSubscribeToSelection();
+                                self.KPI.toggleSubscribeToSelection(self.onSelectionChange);
                             }
                         },
                         true
@@ -419,7 +481,7 @@ window.knimeRadarPlot = (function () {
                         function () {
                             if (self.KPI.value.options.subscribeToFilters !== this.checked) {
                                 self.KPI.value.options.subscribeToFilters = this.checked;
-                                self.KPI.toggleSubscribeToFilters();
+                                self.KPI.toggleSubscribeToFilters(self.onFilterChange);
                             }
                         },
                         true

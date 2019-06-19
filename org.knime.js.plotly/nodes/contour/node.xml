@@ -63,7 +63,7 @@
 					Select the columns to be plotted.
 				</columnFilterOption>
 				<checkBoxOption name="Report on missing values" id="reportMissing" 
-					label="Report on missing values" defaultValue="true" loadDefaults="true"> 
+					label="Report on missing values" defaultValue="true" > 
 					When enabled this will display a warning whenever there is a missing value 
 					present in the data and give a count on how many missing values 
 					exist in the data.
@@ -105,12 +105,6 @@
 					label="Display legend" defaultValue="true" saveInView="true">
 					When checked,
 					the chart's legend is displayed.
-				</checkBoxOption>
-				<checkBoxOption name="Show grid" id="showGrid"
-					label="Show grid" defaultValue="true" saveInView="true">
-					When checked,
-					a
-					grid is displayed on the chart.
 				</checkBoxOption>
 				<!-- <checkBoxOption name="Show warnings in view" id="showWarnings" label="Show 
 					warnings in view" defaultValue="true" saveInView="true"> When checked, the 
@@ -215,7 +209,7 @@
 			<options>
 				<checkBoxOption name="Subscribe to filter events"
 					id="subscribeToFilters" label="Subscribe to filter events"
-					defaultValue="true" loadDefaults="true" saveInView="true">
+					defaultValue="true"  saveInView="true">
 					If checked, the view reacts on notifications from other interactive
 					views that a filter has
 					been created or modified.
