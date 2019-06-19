@@ -146,6 +146,12 @@ window.KnimePlotlyInterface = function () {
                 });
             });
         }
+        var polarClips = document.querySelector('.polarsublayer');
+        if (polarClips && polarClips.children.length && polarClips.children.length > 0) {
+            polarClips.childNodes.forEach(function (pathChild) {
+                pathChild.style.fill = self.representation.options.backgroundColor;
+            });
+        }
         var svgElem = document.querySelectorAll('#' + this.divID + '> div > div > svg');
         var svgCol = '<svg class="main-svg" xmlns="http://www.w3.org/2000/svg"' +
             ' xmlns:xlink="http://www.w3.org/1999/xlink" width="' + w +
@@ -583,7 +589,7 @@ window.KnimePlotlyInterface = function () {
             }
 
             return [sortedArr.concat(lArr[0].slice(lInd)).concat(rArr[0].slice(rInd)),
-                sortedInd.concat(lArr[1].slice(lInd)).concat(rArr[1].slice(rInd))];
+            sortedInd.concat(lArr[1].slice(lInd)).concat(rArr[1].slice(rInd))];
         };
 
         var mergeSort = function (subArr, indArr) {
