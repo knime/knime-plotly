@@ -68,7 +68,7 @@ window.knimeBubbleChart = (function () {
             color: [],
             opacity: .5,
             size: sizeData,
-            sizeref: 2.0 * max / sizeMult ** 2, // arb 40
+            sizeref: 2.0 * max / Math.pow(sizeMult, 2), // arb 40
             sizemode: 'area'
         };
         this.unselected = {
@@ -325,7 +325,7 @@ window.knimeBubbleChart = (function () {
                                 sizeData.forEach(function (size) {
                                     max = Math.max(max, size);
                                 });
-                                changeObj['marker.sizeref'].push(2.0 * max / newSizeMult ** 2); // arb 40
+                                changeObj['marker.sizeref'].push(2.0 * max / Math.pow(newSizeMult, 2)); // arb 40
                             });
                             var valueObj = {
                                 sizeMultiplier: newSizeMult

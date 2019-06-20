@@ -1,4 +1,4 @@
-/* global kt:false, KnimePlotlyInterface:false  */
+/* global kt:false, KnimePlotlyInterface:false */
 window.knimeViolin = (function () {
 
     var ViolinPlot = {};
@@ -42,7 +42,7 @@ window.knimeViolin = (function () {
                     }
                 }
                 if (eData['yaxis.title.text']) {
-                    if(self.plotlyNumColKey === 'y') {
+                    if (self.plotlyNumColKey === 'y') {
                         valueObj.numAxisLabel = eData['yaxis.title.text'];
                     } else {
                         valueObj.groupedAxisLabel = eData['yaxis.title.text'];
@@ -273,6 +273,7 @@ window.knimeViolin = (function () {
             }
 
             if (self.KPI.representation.options.enableFeatureSelection) {
+                var plotlyLayoutKey = self.plotlyNumColKey + 'axis.title';
                 var axisColSelection = knimeService.createMenuSelect(
                     'axis-col-menu-item',
                     this.axisCol,
@@ -287,9 +288,8 @@ window.knimeViolin = (function () {
                                 dataKeys: [self.axisCol, self.groupByCol, 'rowKeys', 'rowColors'],
                                 plotlyKeys: [[self.plotlyNumColKey], [self.plotlyGroupColKey], ['text', 'ids'], ['marker.color']]
                             };
-                            var layoutObj = {
-                                [self.plotlyNumColKey + 'axis.title']: self.axisCol
-                            };
+                            var layoutObj = {};
+                            layoutObj[plotlyLayoutKey] = self.axisCol;
                             self.KPI.updateValue(valueObj);
                             self.KPI.updateKeys(keys);
                             var changeObj = self.getChangeObject();

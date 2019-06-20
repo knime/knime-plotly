@@ -6,6 +6,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
 	jsNamespace="knimePlotlyScatterPlot3D" nodeID="plotly_scatter_plot_3D"
+	afterID="org.knime.dynamic.js.v30.DynamicJSNodeFactory#3D Scatter Plot (Plotly)"
 	categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
 	<name>3D Scatter Plot (Plotly)</name>
 	<shortDescription>A 3D scatter plot based on the Plotly.js library.</shortDescription>
@@ -15,27 +16,29 @@
 				A 3D scatter plot based on the Plotly.js library. This chart is
 				useful when visualizing multi-dimensional distribution between three
 				features.
-				this node requires a data table with at least three numeric columns,
-				although you can visualize categorical/nominal data as well. You can
-				also
-				provide an optional categorical/nominal column to enable further filtering
-				options.
 			</n:p>
 			<n:p>
-				This node can subscribe to selection and filter events from other nodes
-				in an interactive view, but selection is currently not supported
+				This node can subscribe to selection and filter events from
+				other nodes
+				in an interactive view, but selection is currently not
+				supported
 				within this
-				view itself. Additionally, this node uses OpenGL software, so CSS
-				styling of the chart itself is not available. You can style the
+				view itself. Additionally, this node uses OpenGL
+				software, so CSS
+				styling of the chart itself is not available. You
+				can style the
 				other elements in the
-				view, although KNIME classes are not current supported.
+				view, although KNIME classes are
+				not current supported.
 			</n:p>
 			<n:p>
-				Please note: the Plotly.js KNIME extension is currently in Beta. It
+				Please note: the Plotly.js KNIME extension is currently in Labs. It
 				is recommended that you handle missing values and normalize your
 				data before using
-				visualization nodes in this extension until a more stable version is released.
-				Please feel free to leave feedback and suggestions on our community
+				visualization nodes in this extension to improve
+				performance.
+				Please feel free to leave feedback and suggestions on
+				our community
 				forum
 				<n:a href="https://forum.knime.com/">here</n:a>
 				.
@@ -43,16 +46,20 @@
 		</intro>
 		<tab name="Options">
 			<description>
-				General options for the KNIME 3D Scatter Plot with Plotly. The columns will
+				General options for the KNIME 3D Scatter Plot with
+				Plotly. The columns will
 				be available for selection
 				within the view.
 			</description>
 			<options>
-				<svgOption name="Image" id="svg" portIndex="0" label="Image" additionalWait="500" 
-					defaultWidth="800" defaultHeight="600" defaultFullscreen="true" configOnly="true"> Settings 
-					for the size of the view.</svgOption>
+				<svgOption name="Image" id="svg" portIndex="0"
+					label="Image" additionalWait="500" defaultWidth="800"
+					defaultHeight="600" defaultFullscreen="true"> Settings
+					for the size of the view.
+				</svgOption>
 				<columnSelectorOption name="X-Axis Column"
-					id="xAxisColumn" inPortIndex="0" label="X-Axis Column" allowRowID="true"
+					id="xAxisColumn" inPortIndex="0" label="X-Axis Column"
+					allowRowID="true"
 					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue
 					org.knime.core.data.NominalValue org.knime.core.data.date.DateAndTimeValue org.knime.core.data.StringValue"
 					saveInView="true">
@@ -60,7 +67,8 @@
 					X-Axis.
 				</columnSelectorOption>
 				<columnSelectorOption name="Y-Axis Column"
-					id="yAxisColumn" inPortIndex="0" label="Y-Axis Column" allowRowID="true"
+					id="yAxisColumn" inPortIndex="0" label="Y-Axis Column"
+					allowRowID="true"
 					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue
 					org.knime.core.data.NominalValue org.knime.core.data.date.DateAndTimeValue org.knime.core.data.StringValue"
 					saveInView="true">
@@ -68,7 +76,8 @@
 					Y-Axis.
 				</columnSelectorOption>
 				<columnSelectorOption name="Z-Axis Column"
-					id="zAxisColumn" inPortIndex="0" label="Z-Axis Column" allowRowID="true"
+					id="zAxisColumn" inPortIndex="0" label="Z-Axis Column"
+					allowRowID="true"
 					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue
 					org.knime.core.data.NominalValue org.knime.core.data.date.DateAndTimeValue org.knime.core.data.StringValue"
 					saveInView="true">
@@ -79,28 +88,35 @@
 					id="groupByColumn" inPortIndex="0" label="'Group-By' Column"
 					allowNoneColumn="true" optional="true" defaultColumn="none"
 					filterClasses="org.knime.core.data.StringValue org.knime.core.data.NominalValue">
-					If a previous cluster/binning operation has been
-					performed, selected the column containing each rows membership
-					for a
-					more dynamic interactive experience. These nominal groups will be
-					used to categorize the data as it's displayed
-					and allow you to
-					hide/show various groups by clicking/double-clicking on the group
-					in the legend.
+					If "Display Legend" is enabled, this column will be
+					used to group different visual elements
+					based on their membership in
+					the chosen "Group-By" column in the legend. With the legend enabled
+					and groups chosen, you can then toggle the visibility of visual
+					elements by group through
+					legend interactions.
 				</columnSelectorOption>
-				<checkBoxOption name="Report on missing values" id="reportMissing" 
-					label="Report on missing values" defaultValue="true" > 
-					When enabled this will display a warning whenever there is a missing value 
-					present in the data and give a count on how many missing values 
+				<checkBoxOption name="Report on missing values"
+					id="reportMissing" label="Report on missing values"
+					defaultValue="true">
+					When enabled this will display a warning whenever there is a missing
+					value
+					present in the data and give a count on how many missing values
 					exist in the data.
 				</checkBoxOption>
-				<radioButtonOption name="Missing values 
-					handling" id="mValues" possibleValues="Skip&#160;rows&#160;with&#160;missing&#160;values 
-					Leave&#160;missing&#160;values" label="Missing 
-					values" defaultValue="Leave&#160;missing&#160;values" 
-					saveInView="true">The way in which this view tries to compensate for missing or invalid values.
-					"Skip rows with missing values" will omit the entire row if a single cell is missing. This can 
-					affect multiple traces on the chart in some circumstances. "Leave missing" will leave a gap where 
+				<radioButtonOption
+					name="Missing values 
+					handling" id="mValues"
+					possibleValues="Skip&#160;rows&#160;with&#160;missing&#160;values 
+					Leave&#160;missing&#160;values"
+					label="Missing 
+					values"
+					defaultValue="Leave&#160;missing&#160;values" saveInView="true">The way in
+					which this view tries to compensate for missing or invalid values.
+					"Skip rows with missing values" will omit the entire row if a
+					single cell is missing. This can
+					affect multiple traces on the chart in some circumstances. "Leave
+					missing" will leave a gap where
 					the missing value exists and draw the chart anyways.
 				</radioButtonOption>
 			</options>
@@ -135,7 +151,8 @@
 				</stringOption>
 				<checkBoxOption name="Display legend" id="showLegend"
 					label="Display legend" defaultValue="false" saveInView="true">
-					When checked,
+					When
+					checked,
 					the chart's legend is displayed.
 				</checkBoxOption>
 				<checkBoxOption name="Show grid" id="showGrid"
@@ -144,47 +161,58 @@
 					a
 					grid is displayed on the chart.
 				</checkBoxOption>
-				<!-- <checkBoxOption name="Show warnings in view" id="showWarnings" label="Show 
-					warnings in view" defaultValue="true" saveInView="true"> When checked, the 
-					any warnings will be displayed in the view. </checkBoxOption> -->
-				<checkBoxOption name="Override colors" id="overrideColors"
-					label="Override colors" defaultValue="false">
-					When checked, the colors provided by the data table will be
-					ignored and the color chosen below for "Data color" will be 
-					applied to the plot. If there are no colors provided with the
-					data, the node will use the "Data color" by default, even if
-					this option has not been selected.
+				<checkBoxOption name="Show warnings in view"
+					id="showWarnings" label="Show 
+					warnings in view"
+					defaultValue="true" saveInView="true"> When checked, the
+					any warnings will be displayed in the view.
 				</checkBoxOption>
-				<colorOption name="Data color"
-					id="dataColor" label="Data color" format="HexString"
-					defaultR="0" defaultG="0" defaultB="255" defaultAlpha="255">
-					The color of the data on the plot if there are no colors provided with the table
-					(i.e. from the "Color Manager" node) or if "Override colors" has been chosen. This
-					color will not be automatically applied if the data has "Default" colors, it will only
-					be automatically applied if in the absence of ANY colors. You can always apply this
-					color to the data by selecting the "Override colors" option.
+				<checkBoxOption name="Override colors"
+					id="overrideColors" label="Override colors" defaultValue="false">
+					When
+					checked, the colors provided by the data table will be
+					ignored and
+					the color chosen below for "Data color" will be
+					applied to the plot. If there are no colors provided with the
+					data, the
+					node will use the "Data color" by default, even if
+					this option has
+					not been selected.
+				</checkBoxOption>
+				<colorOption name="Data color" id="dataColor"
+					label="Data color" format="HexString" defaultR="0" defaultG="0"
+					defaultB="255" defaultAlpha="255">
+					The color of the data on the plot if
+					there are no colors provided with the table
+					(i.e. from the "Color
+					Manager" node) or if "Override colors" has been chosen. This
+					color
+					will not be automatically applied if the data has "Default" colors,
+					it will only
+					be automatically applied if in the absence of ANY
+					colors. You can always apply this
+					color to the data by selecting the
+					"Override colors" option.
 				</colorOption>
 				<colorOption name="Background color"
 					id="backgroundColor" label="Background color" format="HexString"
 					defaultR="255" defaultG="255" defaultB="255" defaultAlpha="255">
-					The background color of the plot, including the axes labels, the title
+					The
+					background color of the plot, including the axes labels, the title
 					and the subtitle.
 				</colorOption>
-				<colorOption name="Data area color" id="daColor"
-					label="Data area color" format="HexString" defaultR="255"
-					defaultG="255" defaultB="255" defaultAlpha="255">
-					The background color of the data area, within the axes.
-				</colorOption>
 				<colorOption name="Grid color" id="gridColor"
-					label="Grid color" format="HexString" defaultR="0"
-					defaultG="0" defaultB="0" defaultAlpha="255">
-					The background color of the grid and axis base lines.
+					label="Grid color" format="HexString" defaultR="0" defaultG="0"
+					defaultB="0" defaultAlpha="255">
+					The background color of the grid and axis
+					base lines.
 				</colorOption>
 			</options>
 		</tab>
 		<tab name="Control Options">
 			<description>
-				Use these options to configure the available controls within the view.
+				Use these options to configure the available controls
+				within the view.
 			</description>
 			<options>
 				<checkBoxOption name="Enable view controls"
@@ -256,34 +284,38 @@
 		</tab>
 		<tab name="Interactivity">
 			<description>
-				This KNIME implementation of Plotly is compatible with the other
+				This KNIME implementation of Plotly is compatible with
+				the other
 				interactive JavaScript views
-				in the KNIME analytics platform. Use these options to control the
+				in the KNIME analytics
+				platform. Use these options to control the
 				degree to which this chart
 				interacts with other views.
 			</description>
 			<options>
 				<checkBoxOption name="Enable selection"
-					id="enableSelection" label="Enable selection" defaultValue="true"
-					>
-					If checked a separate column containing checkboxes is rendered in the
+					id="enableSelection" label="Enable selection" defaultValue="true">
+					If checked a separate column containing checkboxes is rendered in
+					the
 					view.
 				</checkBoxOption>
 				<checkBoxOption name="Subscribe to selection events"
 					id="subscribeToSelection" label="Subscribe to selection events"
-					defaultValue="true" 
-					enableDependency="enableSelection" enableValue="true"
-					saveInView="true">
-					If checked, the view reacts on notifications from other interactive
+					defaultValue="true" enableDependency="enableSelection"
+					enableValue="true" saveInView="true">
+					If checked, the view reacts on
+					notifications from other interactive
 					views that the selection has
 					been changed.
 				</checkBoxOption>
 				<checkBoxOption name="Subscribe to filter events"
 					id="subscribeToFilters" label="Subscribe to filter events"
-					defaultValue="true"  saveInView="true">
-					If checked, the view reacts on notifications from other interactive
+					defaultValue="true" saveInView="true">
+					If checked, the view reacts on
+					notifications from other interactive
 					views that a filter has
-					been created or modified.
+					been
+					created or modified.
 				</checkBoxOption>
 			</options>
 		</tab>
@@ -299,12 +331,10 @@
 	</interactiveView>
 	<ports>
 		<inPort portType="Data" name="Display data" index="0">
-			Data table
-			containing three or more numeric columns to display in an interactive
+			Data table to
+			display in an interactive
 			3D Scatter Plot.
 		</inPort>
-		<!--<outPort portType="Image" name="3D Scatter plot image" index="0"> SVG 
-			image of the 3D Scatter plot if that option has been enabled. </outPort> -->
 		<outPort portType="Data" name="Input Data + View Selection"
 			index="0">
 			Data table containing the input data with an appended boolean
@@ -318,8 +348,8 @@
 		<js:resource type="css" path="scatterPlot3D.css" />
 	</js:resources>
 	<js:dependencies>
-		<js:dependency name="Moment" path="moment_timezone_locales_2_17"
-			type="local" exports="moment" />
+		<js:dependency name="Moment"
+			path="moment_timezone_locales_2_17" type="local" exports="moment" />
 		<js:dependency name="Plotly" path="plotly.js-1.47.4"
 			type="local" exports="Plotly" />
 	</js:dependencies>

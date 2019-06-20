@@ -6,6 +6,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
 	jsNamespace="knimeErrorBarsPlot" nodeID="plotly_error_bars_plot"
+	afterID="org.knime.dynamic.js.v30.DynamicJSNodeFactory#Error Bars Plot (Plotly)"
 	categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
 	<name>Error Bars Plot (Plotly)</name>
 	<shortDescription>Error bars plot based on the Plotly.js library.</shortDescription>
@@ -20,8 +21,7 @@
 				Various measurement and
 				grouping options can provide insight into different
 				aspects of the
-				data set. Requires a data table with at least two
-				numeric columns.
+				data set.
 			</n:p>
 			<n:p>
 				The node supports custom CSS styling.
@@ -40,13 +40,13 @@
 				release.
 			</n:p>
 			<n:p>
-				Please note: the Plotly.js KNIME extension is currently in Beta. It
+				Please note: the Plotly.js KNIME extension is currently in Labs. It
 				is recommended that you handle missing values and normalize your
 				data before using
-				visualization nodes in this extension until a more
-				stable version is released.
-				Please feel free to leave feedback and
-				suggestions on our community
+				visualization nodes in this extension to improve
+				performance.
+				Please feel free to leave feedback and suggestions on
+				our community
 				forum
 				<n:a href="https://forum.knime.com/">here</n:a>
 				.
@@ -67,7 +67,8 @@
 					generation.
 				</svgOption>
 				<columnSelectorOption name="X-Axis column"
-					id="xAxisColumn" inPortIndex="0" label="X-Axis column" allowRowID="true"
+					id="xAxisColumn" inPortIndex="0" label="X-Axis column"
+					allowRowID="true"
 					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue
 					org.knime.core.data.NominalValue org.knime.core.data.date.DateAndTimeValue org.knime.core.data.StringValue"
 					saveInView="true">
@@ -81,31 +82,23 @@
 					Select the columns to be plotted as lines or line
 					segments.
 				</columnFilterOption>
-				<!-- <checkBoxOption name="Enable grouping" id="enableGroups" label="Enable 
-					grouping" defaultValue="false" > When enabled this will 
-					use the nominal/categorical column selected as the 'Group-by' column to create 
-					separate line segments for each group. </checkBoxOption> <checkBoxOption 
-					name="Aggregate data" id="enableAggregate" label="Aggregate data" defaultValue="false" 
-					> When enabled this will use the columns selected in the 
-					'Included columns' option </checkBoxOption> <columnSelectorOption name="'Group-By' 
-					column" id="groupByColumn" inPortIndex="0" label="'Group-By' Column" filterClasses="org.knime.core.data.StringValue" 
-					enableDependency="enableGroups" enableValue="true"> If a previous cluster/binning 
-					operation has been performed, selected the column containing each rows membership 
-					for a more dynamic interactive experience. These nominal groups will be used 
-					to categorize the data as it's displayed and allow you to hide/show various 
-					groups by clicking/double-clicking on the group in the legend. </columnSelectorOption> -->
 				<radioButtonOption name="Error Bar calculation"
 					id="calcMethod"
-					possibleValues="Variance Standard&#160;Deviation Percent Fixed&#160;Value"
-					label="Error Bar calculation" defaultValue="Variance"
-					saveInView="true">
+					possibleValues="Standard&#160;Deviation Percent Fixed&#160;Value Data&#160;Column"
+					label="Error Bar calculation"
+					defaultValue="Standard&#160;Deviation" saveInView="true">
 					The error bar calculation method.
+
+					Standard Deviation is calculated
+					using
+					<n:a href="https://en.wikipedia.org/wiki/Bessel%27s_correction">Bessel's correction</n:a>
+					to yield the correct sample standard deviation.
 				</radioButtonOption>
 				<doubleOption name="Calculation multiplier"
 					id="calcMultiplier" label="Calculation multiplier"
 					defaultValue=".5" minValue="0" stepSize=".25"
 					enableDependency="calcMethod"
-					enableValue="Variance Standard&#160;Deviation">
+					enableValue="Standard&#160;Deviation Data&#160;Column">
 					The
 					scale of
 					the calculated values. For example,
@@ -134,32 +127,55 @@
 					at (0,1.05) and (0,.95) which is +/- 5%.
 				</integerOption>
 				<doubleOption name="Fixed value" id="fixedValue"
-					label="Fixed value" defaultValue=".5" minValue="0"
-					stepSize=".25" enableDependency="calcMethod"
-					enableValue="Fixed&#160;Value">
-					Enabled if the Error Bar Calculation
+					label="Fixed value" defaultValue=".5" minValue="0" stepSize=".25"
+					enableDependency="calcMethod" enableValue="Fixed&#160;Value">
+					Enabled if the Error Bar
+					Calculation
 					method is set to
-					'Fixed Value', this value will be the real number
+					'Fixed Value', this value will be the
+					real number
 					displayed for each
 					error bar, +/- the
-					actual data point 'y' value. For example, if this
+					actual data point
+					'y' value. For example, if this
 					value is .5, a point at
-					(0,1) will have error bar end-points at
+					(0,1) will
+					have error bar end-points at
 					(0,.5) and (0,1.5).
 				</doubleOption>
-				<checkBoxOption name="Report on missing values" id="reportMissing" 
-					label="Report on missing values" defaultValue="true" > 
-					When enabled this will display a warning whenever there is a missing value 
-					present in the data and give a count on how many missing values 
+				<columnSelectorOption name="Data Column"
+					id="errorColumn" inPortIndex="0" label="Data Column"
+					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue"
+					saveInView="true" enableDependency="calcMethod"
+					enableValue="Data&#160;Column">
+					Enabled if the Error Bar Calculation
+					method is set to
+					'Data Column', this column will be mapped 1:1 against each data
+					point in the lines displayed
+					and the value used as the +/- value
+					(and size) of the error bar.
+				</columnSelectorOption>
+				<checkBoxOption name="Report on missing values"
+					id="reportMissing" label="Report on missing values"
+					defaultValue="true">
+					When enabled this will display a warning whenever there is a missing
+					value
+					present in the data and give a count on how many missing values
 					exist in the data.
 				</checkBoxOption>
-				<radioButtonOption name="Missing values 
-					handling" id="mValues" possibleValues="Skip&#160;rows&#160;with&#160;missing&#160;values 
-					Leave&#160;missing&#160;values" label="Missing 
-					values" defaultValue="Leave&#160;missing&#160;values" 
-					saveInView="true">The way in which this view tries to compensate for missing or invalid values.
-					"Skip rows with missing values" will omit the entire row if a single cell is missing. This can 
-					affect multiple traces on the chart in some circumstances. "Leave missing" will leave a gap where 
+				<radioButtonOption
+					name="Missing values 
+					handling" id="mValues"
+					possibleValues="Skip&#160;rows&#160;with&#160;missing&#160;values 
+					Leave&#160;missing&#160;values"
+					label="Missing 
+					values"
+					defaultValue="Leave&#160;missing&#160;values" saveInView="true">The way in
+					which this view tries to compensate for missing or invalid values.
+					"Skip rows with missing values" will omit the entire row if a
+					single cell is missing. This can
+					affect multiple traces on the chart in some circumstances. "Leave
+					missing" will leave a gap where
 					the missing value exists and draw the chart anyways.
 				</radioButtonOption>
 			</options>
@@ -198,25 +214,38 @@
 					a
 					grid is displayed on the chart.
 				</checkBoxOption>
-				<!-- <checkBoxOption name="Show warnings in view" id="showWarnings" label="Show 
-					warnings in view" defaultValue="true" saveInView="true"> When checked, the 
-					any warnings will be displayed in the view. </checkBoxOption> -->
-				<checkBoxOption name="Override colors" id="overrideColors"
-					label="Override colors" defaultValue="false">
-					When checked, the colors provided by the data table will be
-					ignored and the color chosen below for "Data color" will be 
-					applied to the plot. If there are no colors provided with the
-					data, the node will use the "Data color" by default, even if
-					this option has not been selected.
+				<checkBoxOption name="Show warnings in view"
+					id="showWarnings" label="Show 
+					warnings in view"
+					defaultValue="true" saveInView="true"> When checked, the
+					any warnings will be displayed in the view.
 				</checkBoxOption>
-				<colorOption name="Data color"
-					id="dataColor" label="Data color" format="HexString"
-					defaultR="0" defaultG="0" defaultB="255" defaultAlpha="255">
-					The color of the data on the plot if there are no colors provided with the table
-					(i.e. from the "Color Manager" node) or if "Override colors" has been chosen. This
-					color will not be automatically applied if the data has "Default" colors, it will only
-					be automatically applied if in the absence of ANY colors. You can always apply this
-					color to the data by selecting the "Override colors" option.
+				<checkBoxOption name="Override colors"
+					id="overrideColors" label="Override colors" defaultValue="false">
+					When
+					checked, the colors provided by the data table will be
+					ignored and
+					the color chosen below for "Data color" will be
+					applied to the plot. If there are no colors provided with the
+					data, the
+					node will use the "Data color" by default, even if
+					this option has
+					not been selected.
+				</checkBoxOption>
+				<colorOption name="Data color" id="dataColor"
+					label="Data color" format="HexString" defaultR="0" defaultG="0"
+					defaultB="255" defaultAlpha="255">
+					The color of the data on the plot if
+					there are no colors provided with the table
+					(i.e. from the "Color
+					Manager" node) or if "Override colors" has been chosen. This
+					color
+					will not be automatically applied if the data has "Default" colors,
+					it will only
+					be automatically applied if in the absence of ANY
+					colors. You can always apply this
+					color to the data by selecting the
+					"Override colors" option.
 				</colorOption>
 				<colorOption name="Background color"
 					id="backgroundColor" label="Background color" format="HexString"
@@ -232,17 +261,22 @@
 					the data area, within the axes.
 				</colorOption>
 				<colorOption name="Grid color" id="gridColor"
-					label="Grid color" format="HexString" defaultR="0"
-					defaultG="0" defaultB="0" defaultAlpha="255">
-					The background color of the grid and axis base lines.
+					label="Grid color" format="HexString" defaultR="0" defaultG="0"
+					defaultB="0" defaultAlpha="255">
+					The background color of the grid and axis
+					base lines.
 				</colorOption>
 				<checkBoxOption name="Use WebGL graphic library"
 					id="enableGL" label="Use WebGL graphic library"
 					defaultValue="false">
-					This option enables the use of an additional WebGL library when rendering the plot.
-					This can improve performance with larger dataset. It can also lead to unexpected behavior 
-					with some plots, data, operating systems and browsers. This behavior can range from styles not
-					being applied properly to the view not showing up at all. Enable this option with CAUTION.
+					This option enables the use of an additional WebGL
+					library when rendering the plot.
+					This can improve performance with
+					larger dataset. It can also lead to unexpected behavior
+					with some plots, data, operating systems and browsers. This behavior
+					can range from styles not
+					being applied properly to the view not
+					showing up at all. Enable this option with CAUTION.
 				</checkBoxOption>
 			</options>
 		</tab>
@@ -349,25 +383,26 @@
 			</description>
 			<options>
 				<checkBoxOption name="Enable selection"
-					id="enableSelection" label="Enable selection" defaultValue="true"
-					>
+					id="enableSelection" label="Enable selection" defaultValue="true">
 					If checked a separate column containing checkboxes is
-					rendered in the
+					rendered in
+					the
 					view.
 				</checkBoxOption>
 				<checkBoxOption name="Display clear selection button"
 					id="showClearSelectionButton"
 					label="Display clear selection button" defaultValue="true"
-					enableDependency="enableSelection" >
+					enableDependency="enableSelection">
 					Displays a button
-					to clear current selection.
+					to clear
+					current selection.
 				</checkBoxOption>
 				<checkBoxOption name="Subscribe to selection events"
 					id="subscribeToSelection" label="Subscribe to selection events"
-					defaultValue="true" 
-					enableDependency="enableSelection" enableValue="true"
-					saveInView="true">
-					If checked, the view reacts on notifications from other
+					defaultValue="true" enableDependency="enableSelection"
+					enableValue="true" saveInView="true">
+					If checked, the view reacts on
+					notifications from other
 					interactive
 					views that the selection has
 					been changed. See also
@@ -375,23 +410,26 @@
 				</checkBoxOption>
 				<checkBoxOption name="Publish selection events"
 					id="publishSelection" label="Publish selection events"
-					defaultValue="true" 
-					enableDependency="enableSelection" enableValue="true"
-					saveInView="true">
-					If checked, notifies other interactive views when user
+					defaultValue="true" enableDependency="enableSelection"
+					enableValue="true" saveInView="true">
+					If checked, notifies other
+					interactive views when user
 					changes the
-					selection in the current view.
+					selection in the current
+					view.
 					See also "Subscribe to
 					selection events".
 				</checkBoxOption>
 				<checkBoxOption name="Subscribe to filter events"
 					id="subscribeToFilters" label="Subscribe to filter events"
-					defaultValue="true"  saveInView="true">
+					defaultValue="true" saveInView="true">
 					If checked, the
-					view reacts on notifications from other interactive
+					view reacts on
+					notifications from other interactive
 					views that a
 					filter has
-					been created or modified.
+					been
+					created or modified.
 				</checkBoxOption>
 			</options>
 		</tab>
@@ -407,8 +445,8 @@
 	</interactiveView>
 	<ports>
 		<inPort portType="Data" name="Display data" index="0">
-			Data table
-			containing two or more numeric columns to display in an interactive
+			Data table to
+			display in an interactive
 			Error Bars Plot.
 		</inPort>
 		<outPort portType="Image" name="Error Bars image" index="0">
@@ -428,8 +466,8 @@
 		<js:resource type="css" path="errorBars.css" />
 	</js:resources>
 	<js:dependencies>
-		<js:dependency name="Moment" path="moment_timezone_locales_2_17"
-			type="local" exports="moment" />
+		<js:dependency name="Moment"
+			path="moment_timezone_locales_2_17" type="local" exports="moment" />
 		<js:dependency name="Plotly" path="plotly.js-1.47.4"
 			type="local" exports="Plotly" />
 		<js:dependency name="MultipleSelections"

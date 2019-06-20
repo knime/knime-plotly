@@ -74,13 +74,13 @@ window.knimePlotlyStackedArea = (function () {
     StackedArea.TraceObject = function (xData, yData) {
         this.x = xData;
         this.y = yData;
-        // this.mode = 'lines+markers';
+        this.mode = 'lines+markers';
         this.type = 'scatter';
         this.name = '';
         this.marker = {
             color: [],
             opacity: .5,
-            size: 4
+            size: 1
             // line: {
             //     width: 1
             // }
@@ -92,13 +92,13 @@ window.knimePlotlyStackedArea = (function () {
         };
         this.unselected = {
             marker: {
-                opacity: .1
+                opacity: .1,
             }
         };
         this.selected = {
             marker: {
                 opacity: 1,
-                size: 10,
+                size: 5,
                 line: {
                     width: 10,
                     color: '#ffffff'
@@ -318,7 +318,7 @@ window.knimePlotlyStackedArea = (function () {
                         if (self.KPI.representation.options.tooltipToggle !== this.checked) {
                             self.KPI.representation.options.tooltipToggle = this.checked;
                             var layoutObj = {
-                                hovermode: self.representation.options.tooltipToggle
+                                hovermode: self.KPI.representation.options.tooltipToggle
                                     ? 'closest' : false
                             };
                             self.KPI.update(false, layoutObj, true);

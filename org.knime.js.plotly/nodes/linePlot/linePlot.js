@@ -305,7 +305,7 @@ window.knimePlotlyLinePlot = (function () {
                         if (self.KPI.representation.options.tooltipToggle !== this.checked) {
                             self.KPI.representation.options.tooltipToggle = this.checked;
                             var layoutObj = {
-                                hovermode: self.representation.options.tooltipToggle
+                                hovermode: self.KPI.representation.options.tooltipToggle
                                     ? 'closest' : false
                             };
                             self.KPI.update(false, layoutObj, true);

@@ -41,7 +41,8 @@ window.knimeSurface3DPlot = (function () {
         };
         this.KPI.updateKeys(keys);
         var data = self.KPI.getData(keys);
-        var zData = [data[self.zAxisCol][0]];
+        var zData = [];
+        // var zData = self.zAxisCol === 'rowKeys' ? [] : [data[self.zAxisCol][0]];
 
         this.vectorColumns.forEach(function (vCol) {
             zData.push(self.KPI.getOrderedArray(self.KPI.getData({ dataKeys: [vCol] })[vCol][0]));
@@ -138,7 +139,7 @@ window.knimeSurface3DPlot = (function () {
         };
         this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none';
         this.paper_bgcolor = rep.options.backgroundColor || '#ffffff';
-        this.plot_bgcolor = rep.options.daColor || '#ffffff';
+        this.plot_bgcolor = '#ffffff';
     };
 
     SurfacePlot.ConfigObject = function (rep, val) {
@@ -296,7 +297,7 @@ window.knimeSurface3DPlot = (function () {
                         if (self.KPI.representation.options.tooltipToggle !== this.checked) {
                             self.KPI.representation.options.tooltipToggle = this.checked;
                             var layoutObj = {
-                                hovermode: self.representation.options.tooltipToggle ?
+                                hovermode: self.KPI.representation.options.tooltipToggle ?
                                     'closest' : false
                             };
                             self.KPI.update(false, layoutObj, true);

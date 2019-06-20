@@ -18,8 +18,6 @@
 				the Y-Axis, and a third displayed as the relative size of the 'bubbles'
 				in the plot). It is similar to a scatter plot in use and
 				functionality.
-				This plot requires three numeric columns and an optional
-				nominal/categorical column for further filtering options.
 			</n:p>
 			<n:p>
 				The node supports custom CSS styling.
@@ -32,10 +30,10 @@
 				classes in an upcoming update.
 			</n:p>
 			<n:p>
-				Please note: the Plotly.js KNIME extension is currently in Beta. It
+				Please note: the Plotly.js KNIME extension is currently in Labs. It
 				is recommended that you handle missing values and normalize your
 				data before using
-				visualization nodes in this extension until a more stable version is released.
+				visualization nodes in this extension to improve performance.
 				Please feel free to leave feedback and suggestions on our community
 				forum
 				<n:a href="https://forum.knime.com/">here</n:a>
@@ -83,14 +81,10 @@
 					id="groupByColumn" inPortIndex="0" label="'Group-By' Column"
 					allowNoneColumn="true" optional="true" defaultColumn="none"
 					filterClasses="org.knime.core.data.StringValue org.knime.core.data.NominalValue">
-					If a previous cluster/binning operation has been
-					performed, selected the column containing each rows membership
-					for a
-					more dynamic interactive experience. These nominal groups will be
-					used to categorize the data as it's displayed
-					and allow you to
-					hide/show various groups by clicking/double-clicking on the group
-					in the legend.
+					If "Display Legend" is enabled, this column will be used to group different visual elements
+					based on their membership in the chosen "Group-By" column in the legend. With the legend enabled
+					and groups chosen, you can then toggle the visibility of visual elements by group through
+					legend interactions. 
 				</columnSelectorOption>
 				<doubleOption name="Bubble size parameter" id="sizeMultiplier"
 					label="Bubble size parameter" defaultValue="40" minValue="0"
@@ -150,9 +144,9 @@
 					a
 					grid is displayed on the chart.
 				</checkBoxOption>
-				<!-- <checkBoxOption name="Show warnings in view" id="showWarnings" label="Show 
+				<checkBoxOption name="Show warnings in view" id="showWarnings" label="Show 
 					warnings in view" defaultValue="true" saveInView="true"> When checked, the 
-					any warnings will be displayed in the view. </checkBoxOption> -->
+					any warnings will be displayed in the view. </checkBoxOption>
 				<checkBoxOption name="Override colors" id="overrideColors"
 					label="Override colors" defaultValue="false">
 					When checked, the colors provided by the data table will be
@@ -341,8 +335,7 @@
 	</interactiveView>
 	<ports>
 		<inPort portType="Data" name="Display data" index="0">
-			Data table
-			containing three or more numeric columns to display in an interactive
+			Data table to display in an interactive
 			Bubble Chart.
 		</inPort>
 		<outPort portType="Image" name="Bubble chart image" index="0">

@@ -74,11 +74,16 @@ public class ConfigCheck extends DynamicStatefulJSProcessor {
 
 		long tableSize = table.size();
 		int maxRows = config.getMaxRows();
-
-		if (tableSize >= 250000 && maxRows >= 250000) {
+		String glWarning = "";
+		
+		if (config.getModel("enableGL") != null) {
+			glWarning = "If available, enabling \"Use WebGL graphic library\" may help.";
+		}
+		
+		if (tableSize >= 100000 && maxRows >= 250000) {
 			setWarningMessage("The number of rows you are trying to visualize may cause performance issues\n"
-					+ "in some circumstances. If available, enabling \"Use WebGL graphic library\" may help.\n"
-					+ "If the view does not load please try again or reduce the size of your data.");
+					+ "in some circumstances. If the view does not load please try again or reduce the size\n"
+					+ "of your data. " + glWarning);
 		}
 
 		Object[] outObjects = new Object[inObjects.length];

@@ -4,7 +4,7 @@ window.knimeContourPlot = (function () {
     var Contour = {};
 
     Contour.init = function (representation, value) {
-        
+
         this.KPI = new KnimePlotlyInterface();
         this.KPI.initialize(representation, value, new kt(), arguments[2]);
         this.columns = this.KPI.getXYCartesianColsWODate(true);
@@ -40,7 +40,8 @@ window.knimeContourPlot = (function () {
         };
         this.KPI.updateKeys(keys);
         var data = self.KPI.getData(keys);
-        var zData = [data[self.zAxisCol][0]];
+        var zData = [];
+        // var zData = [data[self.zAxisCol][0]];
 
         this.vectorColumns.forEach(function (vCol) {
             zData.push(self.KPI.getOrderedArray(self.KPI.getData({ dataKeys: [vCol] })[vCol][0]));
@@ -80,8 +81,8 @@ window.knimeContourPlot = (function () {
             family: 'sans-serif'
         };
         this.xaxis = {
-            title: val.options.xAxisLabel.length > 0 ? val.options.xAxisLabel
-                : val.options.zAxisColumn,
+            title: (val.options.xAxisLabel && val.options.xAxisLabel.length > 0)
+                ? val.options.xAxisLabel : val.options.zAxisColumn,
             font: {
                 size: 12,
                 family: 'sans-serif'
@@ -94,8 +95,8 @@ window.knimeContourPlot = (function () {
 
         };
         this.yaxis = {
-            title: val.options.yAxisLabel.length > 0 ? val.options.yAxisLabel
-                : 'y',
+            title: (val.options.yAxisLabel && val.options.yAxisLabel.length > 0)
+                ? val.options.xAxisLabel : 'y',
             font: {
                 size: 12,
                 family: 'sans-serif'
@@ -268,7 +269,7 @@ window.knimeContourPlot = (function () {
                         if (self.KPI.representation.options.tooltipToggle !== this.checked) {
                             self.KPI.representation.options.tooltipToggle = this.checked;
                             var layoutObj = {
-                                hovermode: self.representation.options.tooltipToggle
+                                hovermode: self.KPI.representation.options.tooltipToggle
                                     ? 'closest' : false
                             };
                             self.KPI.update(false, layoutObj, true);

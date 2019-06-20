@@ -11,9 +11,10 @@ window.knimeErrorBarsPlot = (function () {
         this.numericColumns = this.KPI.getNumericColumns();
         this.xAxisCol = this.KPI.value.options.xAxisColumn || 'rowKeys';
         this.lineColumns = this.KPI.value.options.columns || [];
+        this.errorCol = this.KPI.value.options.errorColumn || this.numericColumns[0];
         this.onSelectionChange = this.onSelectionChange.bind(this);
         this.onFilterChange = this.onFilterChange.bind(this);
-        this.calculationMethods = ['Variance', 'Standard Deviation', 'Percent', 'Fixed Value'];
+        this.calculationMethods = ['Standard Deviation', 'Percent', 'Fixed Value', 'Data Column'];
         this.needsTypeChange = false;
 
         this.drawChart();
@@ -51,7 +52,12 @@ window.knimeErrorBarsPlot = (function () {
             self.lineColumns.forEach(function (col, colInd) {
                 var yData = self.KPI.getData({ dataKeys: [col] });
                 var xData = data[self.xAxisCol][traceInd];
-                var eData = self.getErrorObject(yData[col]);
+                var eData;
+                if (self.KPI.value.options.calcMethod.replace(/\s/g, ' ') === 'Data Column') {
+                    eData = self.getErrorObject(data.rowKeys[traceInd]);
+                } else {
+                    eData = self.getErrorObject(yData[col]);
+                }
                 var newTrace = new self.TraceObject(xData, yData[col][0], eData);
                 if (self.KPI.representation.options.enableGroups) {
                     newTrace.line.color = self.KPI.hexToRGBA(self.KPI.getMostFrequentColor(data.rowColors[traceInd].slice()), 1);
@@ -221,7 +227,16 @@ window.knimeErrorBarsPlot = (function () {
         };
 
         switch (String(this.KPI.value.options.calcMethod.replace(/\s/g, ' '))) {
-        case 'Variance':
+        case 'Data Column':
+            var data = this.KPI.data[this.errorCol];
+            error_y.type = 'data';
+            error_y.array = [];
+            delete error_y.value;
+            yValues.forEach(function (rowKey) {
+                error_y.array.push(data[self.KPI.data.rowKeys.indexOf(rowKey)] *
+                    self.KPI.representation.options.calcMultiplier);
+            });
+            break;
         case 'Standard Deviation':
             var sum = 0;
             var count = 0;
@@ -244,10 +259,7 @@ window.knimeErrorBarsPlot = (function () {
                 variance = 0;
             }
             error_y.type = 'constant';
-            if (this.KPI.value.options.calcMethod.replace(/\s/g, ' ') === 'Standard Deviation') {
-                variance = Math.sqrt(variance);
-                // variance = Math.pow(Math.E, Math.log(variance) / 2);
-            }
+            variance = Math.sqrt(variance);
             error_y.value = variance * self.KPI.representation.options.calcMultiplier;
             break;
         case 'Percent':
@@ -265,7 +277,6 @@ window.knimeErrorBarsPlot = (function () {
         if (isNaN(error_y.value) || error_y.value === null || typeof error_y.value === 'undefined') {
             error_y.value = 0;
         }
-
         return error_y;
     };
 
@@ -310,8 +321,12 @@ window.knimeErrorBarsPlot = (function () {
                             self.KPI.value.options.calcMethod = this.value;
                             var changeObj = self.KPI.getFilteredChangeObject();
                             var errorChanges = [];
-                            changeObj.y.forEach(function (dataArr) {
-                                errorChanges.push(self.getErrorObject(dataArr));
+                            changeObj.y.forEach(function (dataArr, traceInd) {
+                                if (self.KPI.value.options.calcMethod.replace(/\s/g, ' ') === 'Data Column') {
+                                    errorChanges.push(self.getErrorObject(changeObj.ids[traceInd]));
+                                } else {
+                                    errorChanges.push(self.getErrorObject(dataArr));
+                                }
                             });
 
                             changeObj.error_y = errorChanges;
@@ -413,7 +428,7 @@ window.knimeErrorBarsPlot = (function () {
                         if (self.KPI.representation.options.tooltipToggle !== this.checked) {
                             self.KPI.representation.options.tooltipToggle = this.checked;
                             var layoutObj = {
-                                hovermode: self.representation.options.tooltipToggle
+                                hovermode: self.KPI.representation.options.tooltipToggle
                                     ? 'closest' : false
                             };
                             self.KPI.update(false, layoutObj, true);

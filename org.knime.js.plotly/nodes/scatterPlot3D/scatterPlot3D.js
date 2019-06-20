@@ -151,7 +151,7 @@ window.knimePlotlyScatterPlot3D = (function () {
         };
         this.hovermode = rep.options.tooltipToggle ? 'closest' : 'none';
         this.paper_bgcolor = rep.options.backgroundColor || '#ffffff';
-        this.plot_bgcolor = rep.options.daColor || '#ffffff';
+        this.plot_bgcolor = '#ffffff';
     };
 
     ScatterPlot3D.ConfigObject = function (rep, val) {

@@ -11,8 +11,9 @@ window.knimeRadarPlot = (function () {
         this.inclColumns = this.KPI.value.options.columns;
         this.onSelectionChange = this.onSelectionChange.bind(this);
         this.onFilterChange = this.onFilterChange.bind(this);
-        this.opacity = this.KPI.totalRows > 2500 ? .5 / Math.log10(this.KPI.totalRows)
-            : .5 / Math.log10(this.KPI.totalRows);
+        var ie11Log = Math.log(this.KPI.totalRows) * Math.LOG10E;
+        this.opacity = this.KPI.totalRows > 2500 ? .5 / ie11Log
+            : .5 / ie11Log;
         this.legendTraces = [];
         this.groupSet = new this.KPI.KSet([]);
         this.hiddenSet = new this.KPI.KSet([]);
@@ -58,7 +59,7 @@ window.knimeRadarPlot = (function () {
 
     RadarPlot.colorDataArea = function () {
         var dataArea = document.querySelector('.plotbg');
-        if (dataArea) {
+        if (dataArea && dataArea.children) {
             dataArea.children[0].setAttribute('style', 'fill: ' + this.KPI.representation.options.daColor +
                 ';fill-opacity: 1');
         }
@@ -249,10 +250,10 @@ window.knimeRadarPlot = (function () {
     RadarPlot.getChangeObj = function () {
         var self = this;
         var changeObj = {
-            ['line.width']: [],
-            ['line.color']: [],
             visible: []
         };
+        changeObj['line.width'] = [];
+        changeObj['line.color'] = [];
         if (self.KPI.totalSelected === 0 && self.KPI.showOnlySelected) {
             this.KPI.data.rowKeys.forEach(function (rowKey, rowInd) {
                 changeObj.visible.push(false);

@@ -87,7 +87,7 @@ window.KnimePlotlyInterface = function () {
             self.totalRows++;
         });
 
-        if (rep.options.reportMissing && this.mRows.size() > 0) {
+        if (rep.options.reportMissing && this.mRows.size() > 0 && val.options.showWarnings) {
             knimeService.setWarningMessage('There are missing values in this dataset! Total rows with missing values: ' +
                 this.mRows.size() + '. Please use caution when interpreting results.');
         }
@@ -196,7 +196,7 @@ window.KnimePlotlyInterface = function () {
             divElem.setAttribute('style', dimString);
         }
         divElem.setAttribute('id', stringDivName);
-        document.body.append(divElem);
+        document.body.appendChild(divElem);
     };
 
     KnimePlotlyInterface.getData = function (keys) {
@@ -539,7 +539,7 @@ window.KnimePlotlyInterface = function () {
         this.isOrdered = true;
         var array = self.data[newOrderedColumnName];
         if (typeof array[0] === 'string') {
-            if (array[0].includes('Row')) {
+            if (array[0].indexOf('Row') !== -1) {
                 var failedParse = false;
                 array = array.map(function (rowId) {
                     var rowNum = parseFloat(rowId.split('Row')[1]);

@@ -6,30 +6,37 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
 	jsNamespace="knimeSurface3DPlot" nodeID="plotly_surface_plot"
+	afterID="org.knime.dynamic.js.v30.DynamicJSNodeFactory#Surface Plot (Plotly)"
 	categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
 	<name>Surface Plot (Plotly)</name>
 	<shortDescription>A 3D surface plot based on the Plotly.js library.</shortDescription>
 	<fullDescription>
 		<intro>
 			<n:p>
-				A 3D surface plot based on the Plotly.js library. This node requires
-				a data table with at least two numeric columns.
+				A 3D surface plot based on the Plotly.js library.
 			</n:p>
 			<n:p>
-				This node can subscribe to selection and filter events from other nodes
-				in an interactive view, but selection is currently not supported
+				This node can subscribe to selection and filter events from
+				other nodes
+				in an interactive view, but selection is currently not
+				supported
 				within this
-				view itself. Additionally, this node uses OpenGL software, so CSS
-				styling of the chart itself is not available. You can style the
+				view itself. Additionally, this node uses OpenGL
+				software, so CSS
+				styling of the chart itself is not available. You
+				can style the
 				other elements in the
-				view, although KNIME classes are not current supported.
+				view, although KNIME classes are
+				not current supported.
 			</n:p>
 			<n:p>
-				Please note: the Plotly.js KNIME extension is currently in Beta. It
+				Please note: the Plotly.js KNIME extension is currently in Labs. It
 				is recommended that you handle missing values and normalize your
 				data before using
-				visualization nodes in this extension until a more stable version is released.
-				Please feel free to leave feedback and suggestions on our community
+				visualization nodes in this extension to improve
+				performance.
+				Please feel free to leave feedback and suggestions on
+				our community
 				forum
 				<n:a href="https://forum.knime.com/">here</n:a>
 				.
@@ -37,16 +44,20 @@
 		</intro>
 		<tab name="Options">
 			<description>
-				General options for the KNIME Surface Plot with Plotly. The columns will be
+				General options for the KNIME Surface Plot with Plotly.
+				The columns will be
 				available for selection
 				within the view.
 			</description>
 			<options>
-				<svgOption name="Image" id="svg" portIndex="0" label="Image" additionalWait="500" 
-					defaultWidth="800" defaultHeight="600" defaultFullscreen="true" configOnly="true"> Settings 
-					for the size of the view.</svgOption>
+				<svgOption name="Image" id="svg" portIndex="0"
+					label="Image" additionalWait="500" defaultWidth="800"
+					defaultHeight="600" defaultFullscreen="true"> Settings
+					for the size of the view.
+				</svgOption>
 				<columnSelectorOption name="X-Axis Column"
-					id="zAxisColumn" inPortIndex="0" label="X-Axis Column" allowRowID="true"
+					id="zAxisColumn" inPortIndex="0" label="X-Axis Column"
+					allowRowID="true"
 					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue
 					org.knime.core.data.NominalValue org.knime.core.data.date.DateAndTimeValue org.knime.core.data.StringValue"
 					saveInView="true">
@@ -60,19 +71,27 @@
 					Select the columns to be plotted as vectors or slices in
 					3D space on the surface.
 				</columnFilterOption>
-				<checkBoxOption name="Report on missing values" id="reportMissing" 
-					label="Report on missing values" defaultValue="true" > 
-					When enabled this will display a warning whenever there is a missing value 
-					present in the data and give a count on how many missing values 
+				<checkBoxOption name="Report on missing values"
+					id="reportMissing" label="Report on missing values"
+					defaultValue="true">
+					When enabled this will display a warning whenever there is a missing
+					value
+					present in the data and give a count on how many missing values
 					exist in the data.
 				</checkBoxOption>
-				<radioButtonOption name="Missing values 
-					handling" id="mValues" possibleValues="Skip&#160;rows&#160;with&#160;missing&#160;values 
-					Leave&#160;missing&#160;values" label="Missing 
-					values" defaultValue="Leave&#160;missing&#160;values" 
-					saveInView="true">The way in which this view tries to compensate for missing or invalid values.
-					"Skip rows with missing values" will omit the entire row if a single cell is missing. This can 
-					affect multiple traces on the chart in some circumstances. "Leave missing" will leave a gap where 
+				<radioButtonOption
+					name="Missing values 
+					handling" id="mValues"
+					possibleValues="Skip&#160;rows&#160;with&#160;missing&#160;values 
+					Leave&#160;missing&#160;values"
+					label="Missing 
+					values"
+					defaultValue="Leave&#160;missing&#160;values" saveInView="true">The way in
+					which this view tries to compensate for missing or invalid values.
+					"Skip rows with missing values" will omit the entire row if a
+					single cell is missing. This can
+					affect multiple traces on the chart in some circumstances. "Leave
+					missing" will leave a gap where
 					the missing value exists and draw the chart anyways.
 				</radioButtonOption>
 			</options>
@@ -116,9 +135,12 @@
 					a
 					grid is displayed on the chart.
 				</checkBoxOption>
-				<!-- <checkBoxOption name="Show warnings in view" id="showWarnings" label="Show 
-					warnings in view" defaultValue="true" saveInView="true"> When checked, the 
-					any warnings will be displayed in the view. </checkBoxOption> -->
+				<checkBoxOption name="Show warnings in view"
+					id="showWarnings" label="Show 
+					warnings in view"
+					defaultValue="true" saveInView="true"> When checked, the
+					any warnings will be displayed in the view.
+				</checkBoxOption>
 				<stringListOption name="Plot color scale:"
 					id="colorscale"
 					possibleValues="Hot Greys YlGnBu Greens YlOrRd Bluered RdBu Reds Blues
@@ -128,30 +150,29 @@
 					Choose the
 					colorscale you would like to use initially for the plot. If you
 					select
-					"Enable contour color controls", then you will be able to change this
+					"Enable contour color controls", then you will be able to
+					change this
 					option in the view menu.
 				</stringListOption>
 				<colorOption name="Background color"
 					id="backgroundColor" label="Background color" format="HexString"
 					defaultR="255" defaultG="255" defaultB="255" defaultAlpha="255">
-					The background color of the plot, including the axes labels, the title
+					The
+					background color of the plot, including the axes labels, the title
 					and the subtitle.
 				</colorOption>
-				<colorOption name="Data area color" id="daColor"
-					label="Data area color" format="HexString" defaultR="255"
-					defaultG="255" defaultB="255" defaultAlpha="255">
-					The background color of the data area, within the axes.
-				</colorOption>
 				<colorOption name="Grid color" id="gridColor"
-					label="Grid color" format="HexString" defaultR="0"
-					defaultG="0" defaultB="0" defaultAlpha="255">
-					The background color of the grid and axis base lines.
+					label="Grid color" format="HexString" defaultR="0" defaultG="0"
+					defaultB="0" defaultAlpha="255">
+					The background color of the grid and axis
+					base lines.
 				</colorOption>
 			</options>
 		</tab>
 		<tab name="Control Options">
 			<description>
-				Use these options to configure the available controls within the view.
+				Use these options to configure the available controls
+				within the view.
 			</description>
 			<options>
 				<checkBoxOption name="Enable view controls"
@@ -215,25 +236,29 @@
 		</tab>
 		<tab name="Interactivity">
 			<description>
-				This KNIME implementation of Plotly is compatible with the other
+				This KNIME implementation of Plotly is compatible with
+				the other
 				interactive JavaScript views
-				in the KNIME analytics platform. Use these options to control the
+				in the KNIME analytics
+				platform. Use these options to control the
 				degree to which this chart
 				interacts with other views.
 			</description>
 			<options>
 				<checkBoxOption name="Subscribe to filter events"
 					id="subscribeToFilters" label="Subscribe to filter events"
-					defaultValue="true"  saveInView="true">
-					If checked, the view reacts on notifications from other interactive
+					defaultValue="true" saveInView="true">
+					If checked, the view reacts on
+					notifications from other interactive
 					views that a filter has
-					been created or modified.
+					been
+					created or modified.
 				</checkBoxOption>
 			</options>
 		</tab>
 	</fullDescription>
 	<outputOptions>
-		<dataOutputOption outPortIndex="1" id="selection"
+		<dataOutputOption outPortIndex="0" id="selection"
 			additionalColumnName="Surface Selection"
 			additionalColumnType="BOOLEAN" inPortIndex="0" />
 	</outputOptions>
@@ -243,12 +268,10 @@
 	</interactiveView>
 	<ports>
 		<inPort portType="Data" name="Display data" index="0">
-			Data table
-			containing two or more numeric columns to display in an interactive
+			Data table to
+			display in an interactive
 			Surface Plot.
 		</inPort>
-		<!--<outPort portType="Image" name="3D Surface plot image" index="0"> SVG 
-			image of the 3D Surface plot if that option has been enabled. </outPort> -->
 		<outPort portType="Data" name="Input Data + View Selection"
 			index="0">
 			Data table containing the input data with an appended boolean
