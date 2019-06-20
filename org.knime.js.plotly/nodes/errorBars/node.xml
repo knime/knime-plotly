@@ -214,11 +214,11 @@
 					a
 					grid is displayed on the chart.
 				</checkBoxOption>
-				<checkBoxOption name="Show warnings in view"
-					id="showWarnings" label="Show 
-					warnings in view"
-					defaultValue="true" saveInView="true"> When checked, the
-					any warnings will be displayed in the view.
+				<checkBoxOption name="Show warnings in view" id="showWarnings" 
+					label="Show warnings in view" 
+					defaultValue="true" saveInView="true">
+					When checked, the 
+					any warnings will be displayed in the view. 
 				</checkBoxOption>
 				<checkBoxOption name="Override colors"
 					id="overrideColors" label="Override colors" defaultValue="false">

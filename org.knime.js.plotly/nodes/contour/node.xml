@@ -122,11 +122,11 @@
 					When checked,
 					the chart's legend is displayed.
 				</checkBoxOption>
-				<checkBoxOption name="Show warnings in view"
-					id="showWarnings" label="Show 
-					warnings in view"
-					defaultValue="true" saveInView="true"> When checked, the
-					any warnings will be displayed in the view.
+				<checkBoxOption name="Show warnings in view" id="showWarnings" 
+					label="Show warnings in view" 
+					defaultValue="true" saveInView="true">
+					When checked, the 
+					any warnings will be displayed in the view. 
 				</checkBoxOption>
 				<stringListOption name="Plot color scale:"
 					id="colorscale"
