@@ -7,7 +7,6 @@
 	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
 	jsNamespace="knimeContinuousErrorPlot"
 	nodeID="plotly_continuous_error_plot"
-	afterID="org.knime.dynamic.js.v30.DynamicJSNodeFactory#Continuous Error Plot (Plotly)"
 	categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
 	<name>Continuous Error Plot (Plotly)</name>
 	<shortDescription>Continuous Error plot based on the Plotly.js library.</shortDescription>

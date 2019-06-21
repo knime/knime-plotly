@@ -6,7 +6,6 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
 	jsNamespace="knimeViolin" nodeID="plotly_violin"
-	afterID="org.knime.dynamic.js.v30.DynamicJSNodeFactory#Violin Plot (Plotly)"
 	categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
 	<name>Violin Plot (Plotly)</name>
 	<shortDescription>A Violin plot built with the Plotly.js library.</shortDescription>

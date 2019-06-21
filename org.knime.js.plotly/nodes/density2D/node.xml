@@ -6,7 +6,6 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
 	jsNamespace="knimeDensity2D" nodeID="plotly_density2D"
-	afterID="org.knime.dynamic.js.v30.DynamicJSNodeFactory#2D Density Plot (Plotly)"
 	categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
 	<name>2D Density Plot (Plotly)</name>
 	<shortDescription>A 2D Density plot with optional axis-based histograms built with the Plotly.js library.</shortDescription>

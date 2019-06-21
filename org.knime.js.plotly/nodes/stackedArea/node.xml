@@ -6,7 +6,6 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
 	jsNamespace="knimePlotlyStackedArea" nodeID="plotly_stacked_plot"
-	afterID="org.knime.dynamic.js.v30.DynamicJSNodeFactory#Stacked Area Chart (Plotly)"
 	categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
 	<name>Stacked Area Chart (Plotly)</name>
 	<shortDescription>A Stacked Area Chart based on the Plotly.js library.</shortDescription>

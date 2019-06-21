@@ -6,7 +6,6 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
 	jsNamespace="knimePlotlyScatterPlot3D" nodeID="plotly_scatter_plot_3D"
-	afterID="org.knime.dynamic.js.v30.DynamicJSNodeFactory#3D Scatter Plot (Plotly)"
 	categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
 	<name>3D Scatter Plot (Plotly)</name>
 	<shortDescription>A 3D scatter plot based on the Plotly.js library.</shortDescription>

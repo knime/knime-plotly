@@ -6,7 +6,6 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
 	jsNamespace="knimeRadarPlot" nodeID="plotly_radar_plot"
-	afterID="org.knime.dynamic.js.v30.DynamicJSNodeFactory#Radar Plot (Plotly)"
 	categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
 	<name>Radar Plot (Plotly)</name>
 	<shortDescription>A radar plot based on the Plotly.js library.</shortDescription>
