@@ -6,6 +6,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/dynamicjsnode/v3.0 http://www.knime.org/node/dynamicJSNode_v3.0.xsd"
 	jsNamespace="knimeBubbleChart" nodeID="plotly_bubble_chart"
+	afterID=""
 	categoryPath="/labs/js-views/plotly" icon="../js.png" type="Visualizer">
 	<name>Bubble Chart (Plotly)</name>
 	<shortDescription>A bubble chart based on the Plotly.js library.</shortDescription>
