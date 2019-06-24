@@ -56,7 +56,7 @@ window.knimeErrorBarsPlot = (function () {
                 if (self.KPI.value.options.calcMethod.replace(/\s/g, ' ') === 'Data Column') {
                     eData = self.getErrorObject(data.rowKeys[traceInd]);
                 } else {
-                    eData = self.getErrorObject(yData[col]);
+                    eData = self.getErrorObject(yData[col][0]);
                 }
                 var newTrace = new self.TraceObject(xData, yData[col][0], eData);
                 if (self.KPI.representation.options.enableGroups) {
@@ -64,10 +64,12 @@ window.knimeErrorBarsPlot = (function () {
                 }
 
                 newTrace.marker.color = data.rowColors[traceInd];
-                newTrace.line.color = data.rowColors[traceInd];
-                newTrace.text = self.getHoverText(data.rowKeys[traceInd], col, data.names[traceInd]);
+                newTrace.line.color = self.KPI.representation.options.overrideColors
+                    ? self.KPI.representation.options.dataColor
+                    : data.rowColors[traceInd];
+                // newTrace.text = self.getHoverText(data.rowKeys[traceInd], col, data.names[traceInd]);
                 newTrace.ids = data.rowKeys[traceInd];
-                newTrace.name = col;
+                newTrace.name = 'Col: ' + col;
                 // newTrace.name = col + '<br>' + data.names[traceInd];
                 newTrace.dataKeys = [self.xAxisCol, col, 'rowKeys', 'rowColors'];
                 if (xData.length < 2) {
@@ -234,7 +236,7 @@ window.knimeErrorBarsPlot = (function () {
             delete error_y.value;
             yValues.forEach(function (rowKey) {
                 error_y.array.push(data[self.KPI.data.rowKeys.indexOf(rowKey)] *
-                    self.KPI.representation.options.calcMultiplier);
+                        self.KPI.representation.options.calcMultiplier);
             });
             break;
         case 'Standard Deviation':

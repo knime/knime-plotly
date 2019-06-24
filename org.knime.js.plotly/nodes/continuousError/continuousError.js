@@ -55,11 +55,16 @@ window.knimeContinuousErrorPlot = (function () {
                 var yData = self.KPI.getData({ dataKeys: [col] });
                 var xData = data[self.xAxisCol][traceInd];
                 var newTrace = new self.TraceObject(xData, yData[col][0]);
-                var mfColor = self.colorBank[colInd];
+                var mfColor = self.KPI.representation.options.overrideColors
+                    ? self.KPI.representation.options.dataColor
+                    : self.colorBank[colInd];
                 newTrace.marker.color = data.rowColors[traceInd];
                 newTrace.ids = data.rowKeys[traceInd];
                 newTrace.name = col;
                 newTrace.hoverinfo = 'all';
+                newTrace.hoverlabel = {
+                    bgcolor: mfColor
+                };
                 newTrace.hoveron = 'points';
                 newTrace.line.color = mfColor;
                 newTrace.dataKeys = [self.xAxisCol, col, 'rowKeys', 'rowColors'];
@@ -72,6 +77,9 @@ window.knimeContinuousErrorPlot = (function () {
                 var errorTrace = self.getErrorLineData(yData[col][0], xData, data.rowKeys[traceInd], col);
                 errorTrace.fillcolor = self.KPI.hexToRGBA(mfColor, .2);
                 errorTrace.hoveron = 'points';
+                errorTrace.hoverlabel = {
+                    bgcolor: mfColor
+                };
                 errorTrace.dataKeys = [self.xAxisCol, col, 'rowKeys', 'rowColors'];
                 errorTrace.legendgroup = data.names[traceInd];
                 self.auxillaryTraces.push(errorTrace);
@@ -260,8 +268,8 @@ window.knimeContinuousErrorPlot = (function () {
                         + yValues[rowInd]);
                 xData.push(xValues[rowInd]);
                 ids.push(rowKey);
-                text.push('(' + xValues[rowInd] + ', ' + yValues[rowInd] + ' + ' + diff + ')<br>' +
-                        name + ', ' + rowKey);
+                text.push('(' + xValues[rowInd] + ', ' + yValues[rowInd] + ' + ' + diff + ')<br>Col: ' +
+                        name + ', Row: ' + rowKey);
                 count++;
             });
             for (var a = count - 1; a >= 0; a--) {
@@ -272,29 +280,29 @@ window.knimeContinuousErrorPlot = (function () {
                 );
                 xData.push(xValues[a]);
                 ids.push(rowKeys[a]);
-                text.push('(' + xValues[a] + ', ' + yValues[a] + ' - ' + diff + ')<br>' +
-                        name + ', ' + rowKeys[a]);
+                text.push('(' + xValues[a] + ', ' + yValues[a] + ' - ' + diff + ')<br>Col: ' +
+                        name + ', Row: ' + rowKeys[a]);
                 count++;
             }
             break;
         case 'Standard Deviation':
             var sum = 0;
-            var count = 0;
+            var count1 = 0;
             var mean = 0;
             yValues.forEach(function (val) {
                 if (val === 0 || val) {
                     sum += val;
-                    count++;
+                    count1++;
                 }
             });
-            mean = sum / count;
+            mean = sum / count1;
             var variance = 0;
             yValues.forEach(function (val) {
                 if (val === 0 || val) {
                     variance += Math.pow(val - mean, 2);
                 }
             });
-            variance /= count - 1;
+            variance /= count1 - 1;
             if (!variance) {
                 variance = 0;
             }
@@ -305,16 +313,16 @@ window.knimeContinuousErrorPlot = (function () {
                 yData.push(yValues[i] + diff1);
                 xData.push(xValues[i]);
                 ids.push(rowKeys[i]);
-                text.push('(' + xValues[i] + ', ' + yValues[i] + ' + ' + diff1 + ')<br>' +
-                        name + ', ' + i);
+                text.push('(' + xValues[i] + ', ' + yValues[i] + ' + ' + diff1 + ')<br>Col: ' +
+                        name + ', Row: ' + rowKeys[i]);
             }
             for (var j = yValues.length - 1; j >= 0; j--) {
-                var diff2 = -1 * variance * this.KPI.representation.options.calcMultiplier;
-                yData.push(yValues[j] + diff2);
+                var diff2 = variance * this.KPI.representation.options.calcMultiplier;
+                yData.push(yValues[j] + (-1 * diff2));
                 xData.push(xValues[j]);
                 ids.push(rowKeys[j]);
-                text.push('(' + xValues[i] + ', ' + yValues[i] + ' - ' + diff2 + ')<br>' +
-                        name + ', ' + rowKeys[i]);
+                text.push('(' + xValues[j] + ', ' + yValues[j] + ' - ' + diff2 + ')<br>Col: ' +
+                        name + ', Row: ' + rowKeys[j]);
             }
 
             break;
@@ -324,16 +332,16 @@ window.knimeContinuousErrorPlot = (function () {
                 yData.push(yValues[k] + diff3);
                 xData.push(xValues[k]);
                 ids.push(rowKeys[k]);
-                text.push('(' + xValues[k] + ', ' + yValues[k] + ' + ' + diff3 + ')<br>' +
-                        name + ', ' + rowKeys[k]);
+                text.push('(' + xValues[k] + ', ' + yValues[k] + ' + ' + diff3 + ')<br>Col: ' +
+                        name + ', Row: ' + rowKeys[k]);
             }
             for (var x = yValues.length - 1; x >= 0; x--) {
-                var diff4 = -1 * yValues[x] * (this.KPI.representation.options.calcPercent / 100);
-                yData.push(yValues[x] + diff4);
+                var diff4 = yValues[x] * (this.KPI.representation.options.calcPercent / 100);
+                yData.push(yValues[x] + (-1 * diff4));
                 xData.push(xValues[x]);
                 ids.push(rowKeys[x]);
-                text.push('(' + xValues[x] + ', ' + yValues[x] + ' - ' + diff4 + ')<br>' +
-                        name + ', ' + rowKeys[x]);
+                text.push('(' + xValues[x] + ', ' + yValues[x] + ' - ' + diff4 + ')<br>Col: ' +
+                        name + ', Row: ' + rowKeys[x]);
             }
             break;
         case 'Fixed Value':
@@ -341,15 +349,15 @@ window.knimeContinuousErrorPlot = (function () {
                 yData.push(yValues[y] + this.KPI.representation.options.fixedValue);
                 xData.push(xValues[y]);
                 ids.push(rowKeys[y]);
-                text.push('(' + xValues[y] + ', ' + yValues[y] + ' + ' + this.KPI.representation.options.fixedValue + ')<br>' +
-                        name + ', ' + rowKeys[y]);
+                text.push('(' + xValues[y] + ', ' + yValues[y] + ' + ' + this.KPI.representation.options.fixedValue + ')<br>Col: ' +
+                        name + ', Row: ' + rowKeys[y]);
             }
             for (var z = yValues.length - 1; z >= 0; z--) {
                 yData.push(yValues[z] + -1 * this.KPI.representation.options.fixedValue);
                 xData.push(xValues[z]);
                 ids.push(rowKeys[z]);
-                text.push('(' + xValues[z] + ', ' + yValues[z] + ' - ' + this.KPI.representation.options.fixedValue + ')<br>' +
-                        name + ', ' + rowKeys[z]);
+                text.push('(' + xValues[z] + ', ' + yValues[z] + ' - ' + this.KPI.representation.options.fixedValue + ')<br>Col: ' +
+                        name + ', Row: ' + rowKeys[z]);
             }
             break;
         default:
