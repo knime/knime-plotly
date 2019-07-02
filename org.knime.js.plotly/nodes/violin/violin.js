@@ -104,7 +104,7 @@ window.knimeViolin = (function () {
         var numericColLabel = val.options.numAxisLabel.length === 0
             ? val.options.axisColumn : val.options.numAxisLabel;
         this.title = {
-            text: val.options.title || 'Violin Plot',
+            text: val.options.title,
             y: 1,
             yref: 'paper',
             yanchor: 'bottom'
@@ -260,8 +260,12 @@ window.knimeViolin = (function () {
                 knimeService.allowFullscreen();
             }
 
-            if (self.KPI.representation.options.enableSelection &&
-                self.KPI.representation.options.showClearSelectionButton) {
+            if (self.KPI.representation.options.showClearSelectionButton &&
+                (self.KPI.representation.options.enableSelection ||
+                    (knimeService.isInteractivityAvailable() &&
+                        (self.KPI.value.options.subscribeToSelection ||
+                            self.KPI.representation.options.subscribeSelectionToggle))
+                )) {
                 knimeService.addButton(
                     'clear-selection-button',
                     'minus-square',
@@ -339,7 +343,9 @@ window.knimeViolin = (function () {
 
             }
 
-            if (self.KPI.representation.options.showSelectedOnlyToggle) {
+            if (self.KPI.representation.options.showSelectedOnlyToggle &&
+                (self.KPI.representation.options.enableSelection || (knimeService.isInteractivityAvailable() &&
+                    (self.KPI.representation.options.subscribeSelectionToggle || self.KPI.value.options.subscribeToSelection)))) {
 
                 var showOnlySelectedCheckbox = knimeService.createMenuCheckbox(
                     'show-only-selected-checkbox',

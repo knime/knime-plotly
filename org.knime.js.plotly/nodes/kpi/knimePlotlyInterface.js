@@ -110,6 +110,13 @@ window.KnimePlotlyInterface = function () {
         if (traceArr[0] && traceArr[0].y) {
             layoutObj = this.updateTicks(traceArr[0], layout);
         }
+        if (!this.representation.options.enableSelection) {
+            if (typeof config.modeBarButtonsToRemove === 'undefined') {
+                config.modeBarButtonsToRemove = [];
+            }
+            var selectionButtons = ['lasso2d', 'select2d'];
+            selectionButtons.forEach(function (selBut) { config.modeBarButtonsToRemove.push(selBut); });
+        }
         this.Plotly.newPlot(this.divID, traceArr, layoutObj, config);
         if (this.representation.options.enableSelection) {
             if (this.value.options.selectedrows && this.value.options.selectedrows.length > 0) {
@@ -225,7 +232,7 @@ window.KnimePlotlyInterface = function () {
                     keySet.forEach(function (key) {
                         obj[key].push([]);
                     });
-                    obj.names.push(group);
+                    obj.names.push(group || 'Missing');
                     count++;
                 } else {
                     groupIndicies.push(groupLocations[group]);
@@ -589,7 +596,7 @@ window.KnimePlotlyInterface = function () {
             }
 
             return [sortedArr.concat(lArr[0].slice(lInd)).concat(rArr[0].slice(rInd)),
-            sortedInd.concat(lArr[1].slice(lInd)).concat(rArr[1].slice(rInd))];
+                sortedInd.concat(lArr[1].slice(lInd)).concat(rArr[1].slice(rInd))];
         };
 
         var mergeSort = function (subArr, indArr) {

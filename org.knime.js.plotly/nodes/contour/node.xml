@@ -48,12 +48,6 @@
 				within the view.
 			</description>
 			<options>
-				<svgOption name="Image" id="svg" portIndex="0"
-					label="Image" additionalWait="500" defaultWidth="800"
-					defaultHeight="600" defaultFullscreen="true">
-					Settings for SVG image
-					generation.
-				</svgOption>
 				<columnSelectorOption name="X-Axis Column"
 					id="zAxisColumn" inPortIndex="0" label="X-Axis Column"
 					allowRowID="true"
@@ -116,6 +110,12 @@
 					Y-Axis. If left blank, the current Y-Axis feature name will be
 					used.
 				</stringOption>
+				<svgOption name="Image" id="svg" portIndex="0"
+					label="Image" additionalWait="500" defaultWidth="800"
+					defaultHeight="600" defaultFullscreen="true">
+					Settings for SVG image
+					generation.
+				</svgOption>
 				<checkBoxOption name="Display legend" id="showLegend"
 					label="Display legend" defaultValue="true" saveInView="true">
 					When checked,

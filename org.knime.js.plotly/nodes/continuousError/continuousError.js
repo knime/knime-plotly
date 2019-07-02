@@ -126,7 +126,7 @@ window.knimeContinuousErrorPlot = (function () {
 
     ContinuousError.LayoutObject = function (rep, val, gridColor) {
         this.title = {
-            text: val.options.title || 'Continuous Error Plot',
+            text: val.options.title,
             y: 1,
             yref: 'paper',
             yanchor: 'bottom'
@@ -415,8 +415,12 @@ window.knimeContinuousErrorPlot = (function () {
                 knimeService.allowFullscreen();
             }
 
-            if (self.KPI.representation.options.enableSelection &&
-                self.KPI.representation.options.showClearSelectionButton) {
+            if (self.KPI.representation.options.showClearSelectionButton &&
+                (self.KPI.representation.options.enableSelection ||
+                    (knimeService.isInteractivityAvailable() &&
+                        (self.KPI.value.options.subscribeToSelection ||
+                            self.KPI.representation.options.subscribeSelectionToggle))
+                )) {
                 knimeService.addButton(
                     'clear-selection-button',
                     'minus-square',
@@ -555,7 +559,9 @@ window.knimeContinuousErrorPlot = (function () {
 
             }
 
-            if (self.KPI.representation.options.showSelectedOnlyToggle) {
+            if (self.KPI.representation.options.showSelectedOnlyToggle &&
+                (self.KPI.representation.options.enableSelection || (knimeService.isInteractivityAvailable() &&
+                    (self.KPI.representation.options.subscribeSelectionToggle || self.KPI.value.options.subscribeToSelection)))) {
 
                 var showOnlySelectedCheckbox = knimeService.createMenuCheckbox(
                     'show-only-selected-checkbox',
@@ -583,6 +589,32 @@ window.knimeContinuousErrorPlot = (function () {
             }
 
             if (knimeService.isInteractivityAvailable()) {
+
+                if (self.KPI.representation.options.enableSelection &&
+                    self.KPI.representation.options.publishSelectionToggle) {
+
+                    var publishSelectionCheckbox = knimeService.createMenuCheckbox(
+                        'publish-selection-checkbox',
+                        self.KPI.value.options.publishSelection,
+                        function () {
+                            if (self.KPI.value.options.publishSelection !== this.checked) {
+                                self.KPI.value.options.publishSelection = this.checked;
+                                self.KPI.togglePublishSelection(self.onSelectionChange);
+                            }
+                        },
+                        true
+                    );
+
+                    knimeService.addMenuItem(
+                        'Publish Selection',
+                        knimeService.createStackedIcon('check-square-o',
+                            'angle-right', 'faded left sm', 'right bold'),
+                        publishSelectionCheckbox,
+                        null,
+                        knimeService.SMALL_ICON
+                    );
+
+                }
 
                 if (self.KPI.representation.options.subscribeSelectionToggle) {
 

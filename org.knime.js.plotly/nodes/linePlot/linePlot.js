@@ -99,7 +99,7 @@ window.knimePlotlyLinePlot = (function () {
 
     LinePlot.LayoutObject = function (rep, val, gridColor) {
         this.title = {
-            text: val.options.title || 'Line Plot',
+            text: val.options.title,
             y: 1,
             yref: 'paper',
             yanchor: 'bottom'
@@ -210,8 +210,12 @@ window.knimePlotlyLinePlot = (function () {
                 knimeService.allowFullscreen();
             }
 
-            if (self.KPI.representation.options.enableSelection &&
-                self.KPI.representation.options.showClearSelectionButton) {
+            if (self.KPI.representation.options.showClearSelectionButton &&
+                (self.KPI.representation.options.enableSelection ||
+                    (knimeService.isInteractivityAvailable() &&
+                        (self.KPI.value.options.subscribeToSelection ||
+                            self.KPI.representation.options.subscribeSelectionToggle))
+                )) {
                 knimeService.addButton(
                     'clear-selection-button',
                     'minus-square',
@@ -326,7 +330,9 @@ window.knimePlotlyLinePlot = (function () {
 
             }
 
-            if (self.KPI.representation.options.showSelectedOnlyToggle) {
+            if (self.KPI.representation.options.showSelectedOnlyToggle &&
+                (self.KPI.representation.options.enableSelection || (knimeService.isInteractivityAvailable() &&
+                    (self.KPI.representation.options.subscribeSelectionToggle || self.KPI.value.options.subscribeToSelection)))) {
 
                 var showOnlySelectedCheckbox = knimeService.createMenuCheckbox(
                     'show-only-selected-checkbox',

@@ -159,7 +159,7 @@ window.knimeRadarPlot = (function () {
 
     RadarPlot.LayoutObject = function (rep, val, gridColor) {
         this.title = {
-            text: val.options.title || 'Radar Plot',
+            text: val.options.title,
             y: 1.1,
             x: .5,
             xanchor: 'center',
@@ -296,8 +296,12 @@ window.knimeRadarPlot = (function () {
                 knimeService.allowFullscreen();
             }
 
-            if (self.KPI.representation.options.enableSelection &&
-                self.KPI.representation.options.showClearSelectionButton) {
+            if (self.KPI.representation.options.showClearSelectionButton &&
+                (self.KPI.representation.options.enableSelection ||
+                    (knimeService.isInteractivityAvailable() &&
+                        (self.KPI.value.options.subscribeToSelection ||
+                            self.KPI.representation.options.subscribeSelectionToggle))
+                )) {
                 knimeService.addButton(
                     'clear-selection-button',
                     'minus-square',
@@ -395,7 +399,9 @@ window.knimeRadarPlot = (function () {
 
             }
 
-            if (self.KPI.representation.options.showSelectedOnlyToggle) {
+            if (self.KPI.representation.options.showSelectedOnlyToggle &&
+                (self.KPI.representation.options.enableSelection || (knimeService.isInteractivityAvailable() &&
+                    (self.KPI.representation.options.subscribeSelectionToggle || self.KPI.value.options.subscribeToSelection)))) {
 
                 var showOnlySelectedCheckbox = knimeService.createMenuCheckbox(
                     'show-only-selected-checkbox',

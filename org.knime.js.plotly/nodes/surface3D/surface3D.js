@@ -66,7 +66,7 @@ window.knimeSurface3DPlot = (function () {
 
     SurfacePlot.LayoutObject = function (rep, val, gridColor) {
         this.title = {
-            text: val.options.title || 'Surface Plot',
+            text: val.options.title,
             y: 1,
             yref: 'paper',
             yanchor: 'bottom'

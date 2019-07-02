@@ -65,7 +65,7 @@ window.knimeContourPlot = (function () {
 
     Contour.LayoutObject = function (rep, val) {
         this.title = {
-            text: val.options.title || 'Contour Plot',
+            text: val.options.title,
             y: 1,
             yref: 'paper',
             yanchor: 'bottom'

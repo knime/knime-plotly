@@ -48,12 +48,6 @@
 				within the view.
 			</description>
 			<options>
-				<svgOption name="Image" id="svg" portIndex="0"
-					label="Image" additionalWait="500" defaultWidth="800"
-					defaultHeight="600" defaultFullscreen="true">
-					Settings for SVG image
-					generation.
-				</svgOption>
 				<columnSelectorOption name="X-Axis Column"
 					id="xAxisColumn" inPortIndex="0" label="X-Axis Column" allowRowID="true"
 					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue 
@@ -134,6 +128,12 @@
 					Y-Axis. If left blank, the current Y-Axis feature name will be
 					used.
 				</stringOption>
+				<svgOption name="Image" id="svg" portIndex="0"
+					label="Image" additionalWait="500" defaultWidth="800"
+					defaultHeight="600" defaultFullscreen="true">
+					Settings for SVG image
+					generation.
+				</svgOption>
 				<checkBoxOption name="Display legend" id="showLegend"
 					label="Display legend" defaultValue="false" saveInView="true">
 					When checked,
@@ -291,23 +291,16 @@
 			<options>
 				<checkBoxOption name="Enable selection"
 					id="enableSelection" label="Enable selection" defaultValue="true">
-					If checked a separate column containing checkboxes is rendered in the
-					view.
+					If checked selection controls will be available for this view. This does
+					not disable the view from subscribing to selection events which are published
+					by other views in a combination or composite view.
 				</checkBoxOption>
 				<checkBoxOption name="Display clear selection button"
 					id="showClearSelectionButton"
-					label="Display clear selection button" defaultValue="true"
-					enableDependency="enableSelection">
-					Displays a button to clear current selection.
-				</checkBoxOption>
-				<checkBoxOption name="Subscribe to selection events"
-					id="subscribeToSelection" label="Subscribe to selection events"
-					defaultValue="true"
-					enableDependency="enableSelection" enableValue="true"
-					saveInView="true">
-					If checked, the view reacts on notifications from other interactive
-					views that the selection has
-					been changed. See also "Publish selection events".
+					label="Display clear selection button" 
+					defaultValue="true">
+					Displays a button to clear current selection if selection is enabled, you are
+					subscribed to selection or "Enable subscribe to selection toggle" is enabled in the Control Options.
 				</checkBoxOption>
 				<checkBoxOption name="Publish selection events"
 					id="publishSelection" label="Publish selection events"
@@ -317,6 +310,14 @@
 					If checked, notifies other interactive views when user changes the
 					selection in the current view.
 					See also "Subscribe to selection events".
+				</checkBoxOption>
+				<checkBoxOption name="Subscribe to selection events"
+					id="subscribeToSelection" label="Subscribe to selection events"
+					defaultValue="true"
+					saveInView="true">
+					If checked, the view reacts on notifications from other interactive
+					views that the selection has
+					been changed. See also "Publish selection events".
 				</checkBoxOption>
 				<checkBoxOption name="Subscribe to filter events"
 					id="subscribeToFilters" label="Subscribe to filter events"
