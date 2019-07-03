@@ -39,10 +39,16 @@ window.knimeBubbleChart = (function () {
 
         var data = this.KPI.getData(keys);
         var sizeMult = this.KPI.value.options.sizeMultiplier;
+        var max = -Number.MAX_SAFE_INTEGER;
 
         data.names.forEach(function (group, groupInd) {
+
+            data[self.sizeCol][groupInd].forEach(function (size) {
+                max = Math.max(max, size);
+            });
+
             var newTrace = new self.TraceObject(data[self.xAxisCol][groupInd],
-                data[self.yAxisCol][groupInd], data[self.sizeCol][groupInd], sizeMult);
+                data[self.yAxisCol][groupInd], data[self.sizeCol][groupInd]);
             newTrace.marker.color = data.rowColors[groupInd];
             newTrace.text = data.rowKeys[groupInd];
             newTrace.ids = data.rowKeys[groupInd];
@@ -51,14 +57,14 @@ window.knimeBubbleChart = (function () {
             traces.push(newTrace);
         });
 
+        traces.forEach(function (trace) {
+            trace.marker.sizeref = 2.0 * max / Math.pow(sizeMult, 2);
+        })
+
         return traces;
     };
 
-    BubbleChart.TraceObject = function (xData, yData, sizeData, sizeMult) {
-        var max = -Number.MAX_SAFE_INTEGER;
-        sizeData.forEach(function (size) {
-            max = Math.max(max, size);
-        });
+    BubbleChart.TraceObject = function (xData, yData, sizeData) {
         this.x = xData;
         this.y = yData;
         this.mode = 'markers';
@@ -68,7 +74,6 @@ window.knimeBubbleChart = (function () {
             color: [],
             opacity: .5,
             size: sizeData,
-            sizeref: 2.0 * max / Math.pow(sizeMult, 2), // arb 40
             sizemode: 'area'
         };
         this.unselected = {
@@ -323,14 +328,20 @@ window.knimeBubbleChart = (function () {
                         if (self.KPI.value.options.sizeMultiplier !== this.value) {
                             var newSizeMult = this.value;
                             var changeObj = self.KPI.getFilteredChangeObject();
+                            var numTraces = changeObj['marker.size'].length;
+                            var max = -Number.MAX_SAFE_INTEGER;
                             changeObj['marker.sizeref'] = [];
-                            changeObj['marker.size'].forEach(function (sizeData) {
-                                var max = -Number.MAX_SAFE_INTEGER;
-                                sizeData.forEach(function (size) {
-                                    max = Math.max(max, size);
-                                });
-                                changeObj['marker.sizeref'].push(2.0 * max / Math.pow(newSizeMult, 2)); // arb 40
-                            });
+                            for (var i = 0; i < 2; i++) {
+                                for (var j = 0; j < numTraces; j++) {
+                                    if (i === 0) {
+                                        changeObj['marker.size'][j].forEach(function (size) {
+                                            max = Math.max(max, size);
+                                        });
+                                    } else {
+                                        changeObj['marker.sizeref'].push(2.0 * max / Math.pow(newSizeMult, 2));
+                                    }
+                                }
+                            }
                             var valueObj = {
                                 sizeMultiplier: newSizeMult
                             };
