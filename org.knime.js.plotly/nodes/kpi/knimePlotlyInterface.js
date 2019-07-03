@@ -98,7 +98,7 @@ window.KnimePlotlyInterface = function () {
     };
 
     KnimePlotlyInterface.drawChart = function (traceArr, layout, config) {
-        if (this.representation.options.enableGL) {
+        if (this.representation.options.enableGL && this.representation.runningInView) {
             traceArr.forEach(function (trace) {
                 if (trace.type) {
                     trace.type += 'gl';
