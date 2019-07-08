@@ -61,8 +61,7 @@
 			<options>
 				<columnSelectorOption name="Data Column"
 					id="axisColumn" inPortIndex="0" label="Data Column"
-					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue
-					org.knime.core.data.NominalValue org.knime.core.data.date.DateAndTimeValue org.knime.core.data.StringValue"
+					filterClasses="org.knime.core.data.IntValue org.knime.core.data.LongValue org.knime.core.data.DoubleValue"
 					saveInView="true">
 					Select the column to be initially compared.
 				</columnSelectorOption>
@@ -236,14 +235,14 @@
 					Check to enable
 					the editing of the title and axis labels within the view.
 				</checkBoxOption>
-				<checkBoxOption
+				<!-- <checkBoxOption
 					name="Enable 'Show only selected' toggle"
 					id="showSelectedOnlyToggle"
 					label="Enable 'Show only selected' toggle" defaultValue="true"
 					enableDependency="enableViewControls" enableValue="true">
 					Check to enable
 					toggling of selection-only within view.
-				</checkBoxOption>
+				</checkBoxOption>-->
 				<checkBoxOption
 					name="Enable subscribe to selection toggle"
 					id="subscribeSelectionToggle"

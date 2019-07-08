@@ -31,6 +31,8 @@ window.KnimePlotlyInterface = function () {
         this.showOnlySelected = false;
         this.isSurface = false;
         this.rotatedTicks = false;
+        this.onlySelectedBehavior = 'normal'; // important for custom selection behavior
+        this.lastSOSState = false;  // important for custom selection behavior ('violin')
         this.mValues = val.options.mValues.replace(/\s/g, ' ') === 'Skip rows with missing values' ? 0 : 1;
         this.mRows = new this.KSet([]);
         this.data = {
@@ -190,6 +192,10 @@ window.KnimePlotlyInterface = function () {
 
     KnimePlotlyInterface.setIsSurface = function (bool) {
         this.isSurface = bool;
+    };
+
+    KnimePlotlyInterface.setOnlySelectedBehavior = function (str) {
+        this.onlySelectedBehavior = str;
     };
 
     KnimePlotlyInterface.createElement = function (stringDivName) {
@@ -491,6 +497,17 @@ window.KnimePlotlyInterface = function () {
             });
         }
 
+        if (self.totalSelected === 0 &&
+            self.showOnlySelected &&
+            self.onlySelectedBehavior === 'violin') {
+            self.showOnlySelected = false;
+            self.lastSOSState = true;
+        } else if (self.totalSelected > 0 &&
+            self.lastSOSState &&
+            self.onlySelectedBehavior === 'violin') {
+            self.showOnlySelected = true;
+        }
+
         this.updateValue({ selectedrows: self.selected.getArray() });
     };
 
@@ -596,7 +613,7 @@ window.KnimePlotlyInterface = function () {
             }
 
             return [sortedArr.concat(lArr[0].slice(lInd)).concat(rArr[0].slice(rInd)),
-                sortedInd.concat(lArr[1].slice(lInd)).concat(rArr[1].slice(rInd))];
+            sortedInd.concat(lArr[1].slice(lInd)).concat(rArr[1].slice(rInd))];
         };
 
         var mergeSort = function (subArr, indArr) {
@@ -631,6 +648,9 @@ window.KnimePlotlyInterface = function () {
 
     KnimePlotlyInterface.updateShowOnlySelected = function (bool) {
         this.showOnlySelected = bool;
+        if (!bool && self.lastSOSState) {
+            self.lastSOSState = false;
+        }
     };
 
 

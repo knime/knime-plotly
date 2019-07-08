@@ -14,6 +14,9 @@ window.knimeViolin = (function () {
         this.plotlyGroupColKey = this.KPI.value.options.plotDirection === 'Vertical' ? 'x' : 'y';
         this.onSelectionChange = this.onSelectionChange.bind(this);
         this.onFilterChange = this.onFilterChange.bind(this);
+        this.KPI.setOnlySelectedBehavior('violin');
+        this.KPI.updateShowOnlySelected(true);
+        this.KPI.updateSelected({ points: [] });
 
         this.drawChart();
         this.drawKnimeMenu();
