@@ -27,6 +27,7 @@ public class ConfigCheck extends DynamicStatefulJSProcessor {
 				"groupByColumn" };
 		HashSet<String> colNames = new HashSet<String>();
 		int colCount = 0;
+		int nullColumnCount = 0;
 
 		for (String colName : potentialColumns) {
 
@@ -35,21 +36,27 @@ public class ConfigCheck extends DynamicStatefulJSProcessor {
 				// Check category column settings
 				String chosenColName = ((SettingsModelString) config.getModel(colName)).getStringValue();
 
-//				if (chosenColName == null) { //note that 'rowId' and 'none' options currently default to null
-//					throw new IllegalArgumentException("No column selected for category values.");
-//				}
-				if (chosenColName != null) {
+				if (chosenColName == null) { //note that 'rowId' and 'none' options currently default to null
+					nullColumnCount++;
+				}
+				if (chosenColName != null && !chosenColName.equals("none")) {
 
 					int columnIndex = table.getDataTableSpec().findColumnIndex(chosenColName);
 
 					if (columnIndex < 0 && !chosenColName.equals("none")) {
 						throw new IllegalArgumentException(
-								"Index for category column with name " + chosenColName + " not found.");
+								"Column with name " + chosenColName + " not found. Please open the dialog and ensure the proper "
+										+ "columns have been selected.");
 					}
 					colCount++;
 					colNames.add(chosenColName);
 				}
 			}
+		}
+		
+		if(colCount == 0 && nullColumnCount > 0) {
+			throw new IllegalArgumentException("This node has not been configured yet. Please open the dialog and "
+					+ "ensure the proper columns have been selected.");
 		}
 
 		if (colCount > 0 && colNames.size() < colCount) {
