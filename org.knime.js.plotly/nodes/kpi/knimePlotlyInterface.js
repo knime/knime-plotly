@@ -53,6 +53,7 @@ window.KnimePlotlyInterface = function () {
         rows.forEach(function (row, rowInd) {
 
             var skipRow = false;
+            var totalPush = 0;
 
             row.data.forEach(function (data, dataInd) {
                 if (skipRow) {
@@ -67,10 +68,15 @@ window.KnimePlotlyInterface = function () {
                         return;
                     }
                 }
+                totalPush++;
                 self.data[self.columns[dataInd]].push(data);
             });
 
             if (skipRow) {
+                // remove partially inserted rows with missing values
+                for (var i = 0; i < totalPush; i++) {
+                    self.data[self.columns[i]].splice(self.data[self.columns[i]].length - 1, 1);
+                }
                 return;
             }
 
@@ -90,8 +96,13 @@ window.KnimePlotlyInterface = function () {
         });
 
         if (rep.options.reportMissing && this.mRows.size() > 0 && val.options.showWarnings) {
-            knimeService.setWarningMessage('There are missing values in this dataset! Total rows with missing values: ' +
-                this.mRows.size() + '. Please use caution when interpreting results.');
+            if (self.mValues === 0) {
+                knimeService.setWarningMessage('There were missing values in this dataset. They have been removed from the ' +
+                    ' results. Total rows with missing values (removed): ' + this.mRows.size());
+            } else {
+                knimeService.setWarningMessage('There are missing values in this dataset! Total rows with missing values: ' +
+                    this.mRows.size() + '. Please use caution when interpreting results.');
+            }
         }
 
         this.collectGarbage();
