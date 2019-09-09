@@ -813,6 +813,7 @@ window.KnimePlotlyInterface = function () {
                             return;
                         }
                         var included = true;
+                        var rKey = self.data.rowKeys[colInd];
                         if (column.type === 'numeric') {
                             if (column.minimumInclusive) {
                                 included = included && colVal >= column.minimum;
@@ -828,12 +829,12 @@ window.KnimePlotlyInterface = function () {
                             included = included && column.values.indexOf(colVal) >= 0;
                         }
                         if (included) {
-                            if (filterInd > 0 && !self.filtered.has(colInd)) {
+                            if (filterInd > 0 && !self.filtered.has(rKey)) {
                                 return;
                             }
-                            self.filtered.add(self.data.rowKeys[colInd]);
-                        } else if (self.filtered.has(colInd)) {
-                            self.filtered.remove(self.data.rowKeys[colInd]);
+                            self.filtered.add(rKey);
+                        } else if (self.filtered.has(rKey)) {
+                            self.filtered.delete(rKey);
                         }
                     });
                 }
