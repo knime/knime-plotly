@@ -242,6 +242,18 @@ window.KnimePlotlyInterface = function () {
             h + '" style="fill: ' +
             this.representation.options.backgroundColor + ';width:' + w + 'px;height:' +
             h + 'px"></rect></g>';
+        // Add css
+        if (this.representation.cssCode[0]) {
+            svgCol += '<style type="text/css">' +
+                this.representation.cssCode[0] +
+                '</style>';
+        }
+        // Add custom css
+        if (this.representation.flowVariables['css-stylesheet']) {
+            svgCol += '<style type="text/css">' +
+                this.representation.flowVariables['css-stylesheet'] +
+                '</style>';
+        }
         svgElem.forEach(function (svg, svgInd) {
             if (svg.tagName === 'svg') {
                 svgCol += new XMLSerializer().serializeToString(svg);
