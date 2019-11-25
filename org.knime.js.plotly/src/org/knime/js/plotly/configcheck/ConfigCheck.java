@@ -7,6 +7,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
@@ -27,34 +28,31 @@ public class ConfigCheck extends DynamicStatefulJSProcessor {
 				"groupByColumn" };
 		HashSet<String> colNames = new HashSet<String>();
 		int colCount = 0;
-		int nullColumnCount = 0;
 
 		for (String colName : potentialColumns) {
-
-			if (config.getModel(colName) != null) {
-
-				// Check category column settings
-				String chosenColName = ((SettingsModelString) config.getModel(colName)).getStringValue();
-
-				if (chosenColName == null) { //note that 'rowId' and 'none' options currently default to null
-					nullColumnCount++;
+			SettingsModel settingsModel = config.getModel(colName);
+			
+			if (settingsModel != null) {
+				String chosenColName = ((SettingsModelString) settingsModel).getStringValue();
+				boolean isUserProvidedColumn = chosenColName != null && !chosenColName.equals("none");
+				boolean isRowIdColumn = false;
+				if (settingsModel instanceof SettingsModelColumnName) {
+					isRowIdColumn = ((SettingsModelColumnName) settingsModel).useRowID() && chosenColName == null;
 				}
-				if (chosenColName != null && !chosenColName.equals("none")) {
-
-					int columnIndex = table.getDataTableSpec().findColumnIndex(chosenColName);
-
-					if (columnIndex < 0 && !chosenColName.equals("none")) {
+				
+				if (isUserProvidedColumn || isRowIdColumn) {
+					if (isUserProvidedColumn && table.getDataTableSpec().findColumnIndex(chosenColName) < 0) {
 						throw new IllegalArgumentException(
 								"Column with name " + chosenColName + " not found. Please open the dialog and ensure the proper "
 										+ "columns have been selected.");
 					}
 					colCount++;
-					colNames.add(chosenColName);
+					colNames.add(isRowIdColumn ? "<rowId>" : chosenColName);
 				}
 			}
 		}
 		
-		if(colCount == 0 && nullColumnCount > 0) {
+		if(colCount == 0) {
 			throw new IllegalArgumentException("This node has not been configured yet. Please open the dialog and "
 					+ "ensure the proper columns have been selected.");
 		}

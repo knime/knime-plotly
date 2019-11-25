@@ -59,7 +59,7 @@ window.knimeBubbleChart = (function () {
 
         traces.forEach(function (trace) {
             trace.marker.sizeref = 2.0 * max / Math.pow(sizeMult, 2);
-        })
+        });
 
         return traces;
     };
@@ -100,7 +100,8 @@ window.knimeBubbleChart = (function () {
         this.autoSize = true;
         this.legend = {
             x: 1,
-            y: 1
+            y: 1,
+            itemsizing: 'constant'
         };
         this.font = {
             size: 12,
