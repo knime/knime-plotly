@@ -49,6 +49,7 @@ window.KnimePlotlyInterface = function () {
     KnimePlotlyInterface.initialize = function (rep, val, knimeDataTable, args) {
 
         var self = this;
+        this.supportsWebGl = this.checkWebGlInBrowser();
         this.representation = rep;
         this.value = val;
         this.table = knimeDataTable;
@@ -163,7 +164,13 @@ window.KnimePlotlyInterface = function () {
      * @param  {} config the Plotly config object
      */
     KnimePlotlyInterface.drawChart = function (traceArr, layout, config) {
-        if (this.representation.options.enableGL && this.representation.runningInView) {
+        /*
+        If WebGL supported, option enabled and running in a non-headless instance
+        then we will tell Plotly to render with WebGL.
+        */
+        if (this.supportsWebGl &&
+            this.representation.options.enableGL &&
+            this.representation.runningInView) {
             traceArr.forEach(function (trace) {
                 if (trace.type) {
                     trace.type += 'gl';
@@ -1585,6 +1592,49 @@ window.KnimePlotlyInterface = function () {
     KnimePlotlyInterface.collectGarbage = function () {
         this.representation.inObjects[0].rows = null;
         this.table.setDataTable(this.representation.inObjects[0]);
+    };
+
+    /**
+     * Checks the support and current state of WebGL in the browser instance.
+     * This was added when we moved the Plotly extension to use WebGL by
+     * default. It not only checks whether WebGL is supported by the browser,
+     * but also whether or not it has been disabled.
+     *
+     * The approach used to check the WebGL support was inspired by multiple
+     * sources:
+     *  1) Modernizer.js: https://modernizr.com/download?webgl-dontmin-setclasses
+     *  2) StackOverflow: @Balthazar && @oabarca
+     *      https://stackoverflow.com/questions/11871077/proper-way-to-detect-webgl-support
+     *
+     * @returns {boolean} if WebGL can be used to render charts.
+     */
+    KnimePlotlyInterface.checkWebGlInBrowser = function () {
+        var isSVG = document.documentElement.nodeName.toLowerCase() === 'svg';
+        var canvas;
+        var supported = false;
+        var enabled = false;
+        if (typeof document.createElement !== 'function') {
+            // This is the case in IE7, where the type of createElement is "object".
+            // For this reason, we cannot call apply() as Object is not a Function.
+            canvas = document.createElement('canvas');
+        } else if (isSVG) {
+            canvas = document.createElementNS.call(document, 'http://www.w3.org/2000/svg', 'canvas');
+        } else {
+            canvas = document.createElement('canvas');
+        }
+        var supports = 'probablySupportsContext' in canvas ? 'probablySupportsContext' :  'supportsContext';
+        if (supports in canvas) {
+            supported = Boolean(canvas[supports]('webgl') || canvas[supports]('experimental-webgl'));
+        } else {
+            supported = 'WebGLRenderingContext' in window;
+        }
+        try {
+            enabled = Boolean(!!window.WebGLRenderingContext &&
+                (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+        } catch (e) {
+            // do nothing; leave enabled false
+        }
+        return supported && enabled;
     };
 
     return KnimePlotlyInterface;

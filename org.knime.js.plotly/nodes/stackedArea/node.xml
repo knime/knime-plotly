@@ -194,15 +194,26 @@
 				</colorOption>
 				<checkBoxOption name="Use WebGL graphic library"
 					id="enableGL" label="Use WebGL graphic library"
-					defaultValue="false">
-					This option enables the use of an additional WebGL
-					library when rendering the plot.
-					This can improve performance with
-					larger dataset. It can also lead to unexpected behavior
-					with some plots, data, operating systems and browsers. This behavior
-					can range from styles not
-					being applied properly to the view not
-					showing up at all. Enable this option with CAUTION.
+					defaultValue="true">
+					This option enables the use of an additional WebGL library when rendering the plot.
+					This can improve performance with larger dataset. It can also lead to unexpected behavior 
+					with some plots, data, operating systems and browsers. This behavior can range from styles not
+					being applied properly to the view not showing up at all. 
+
+
+					If you are know your computer
+					does not support WebGL, then please unselect this option. This node will attempt to determine
+					if your browser supports WebGL and use traditional rendering (DOM and SVG) as a fallback.
+
+
+					Additionally, if you are using
+					Custom CSS styles, they will not be applied when this option is enabled. If you are creating
+					an image with this node (SVG) by enabling the "Generate image" option, the node will create
+					the image using traditional SVG elements (not WebGL), but the interactive view will still
+					render with WebGL. This can cause the output image and the interactive view to look different.
+					It may also cause performance issues when working with extremely large datasets, at the svg
+					generation will not benefit from the WebGL graphics. If this occurs, consider reducing the
+					size of your data, or disabling the "Generate image" option if possible.
 				</checkBoxOption>
 			</options>
 		</tab>
