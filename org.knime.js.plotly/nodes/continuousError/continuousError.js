@@ -35,8 +35,7 @@ window.knimeContinuousErrorPlot = (function () {
             });
         }
         this.KPI.createElement('knime-continuous-error');
-        this.KPI.drawChart(t, l, c);
-        this.KPI.Plotly.addTraces(this.KPI.divID, this.auxillaryTraces);
+        this.KPI.drawChart(t.concat(this.auxillaryTraces), l, c);
     };
 
     ContinuousError.createTraces = function () {
@@ -376,6 +375,7 @@ window.knimeContinuousErrorPlot = (function () {
                 shape: 'spline',
                 smoothing: .1
             },
+            type: 'scatter',
             mode: 'lines+markers',
             showlegend: false,
             type: 'scatter',

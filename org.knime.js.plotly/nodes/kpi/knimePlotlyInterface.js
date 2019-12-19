@@ -168,15 +168,21 @@ window.KnimePlotlyInterface = function () {
         If WebGL supported, option enabled and running in a non-headless instance
         then we will tell Plotly to render with WebGL.
         */
-        if (this.supportsWebGl &&
-            this.representation.options.enableGL &&
-            this.representation.runningInView) {
-            traceArr.forEach(function (trace) {
-                if (trace.type) {
-                    trace.type += 'gl';
+        if (this.representation.options.enableGL) {
+            if (this.supportsWebGl) {
+                if (this.representation.runningInView) {
+                    traceArr.forEach(function (trace) {
+                        if (trace.type) {
+                            trace.type += 'gl';
+                        }
+                    });
                 }
-            });
+            } else if (this.value.options.showWarnings) {
+                knimeService.setWarningMessage('Option "Use WebGL graphic library" was selected but this browser ' +
+                'does not support WebGL. Falling back to SVG rendering!', 'WEB_GL_WARNING');
+            }
         }
+
         this.indexTraces(traceArr);
         var layoutObj = layout;
         if (traceArr[0] && traceArr[0].y) {
