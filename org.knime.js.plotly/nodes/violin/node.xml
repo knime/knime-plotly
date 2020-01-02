@@ -303,7 +303,8 @@
 		</tab>
 	</fullDescription>
 	<outputOptions>
-		<dataOutputOption outPortIndex="1" id="selection"
+		<dataOutputOption 
+			outputType="APPEND_SELECTION_COLUMN" outPortIndex="1" id="selection"
 			additionalColumnName="Violin Plot Selection"
 			additionalColumnType="BOOLEAN" inPortIndex="0" />
 	</outputOptions>

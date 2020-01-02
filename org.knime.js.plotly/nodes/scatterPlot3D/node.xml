@@ -314,7 +314,8 @@
 		</tab>
 	</fullDescription>
 	<outputOptions>
-		<dataOutputOption outPortIndex="0" id="selection"
+		<dataOutputOption 
+			outputType="APPEND_SELECTION_COLUMN" outPortIndex="1" id="selection"
 			additionalColumnName="3D Scatter Plot Selection"
 			additionalColumnType="BOOLEAN" inPortIndex="0" />
 	</outputOptions>

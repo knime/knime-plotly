@@ -22,6 +22,46 @@
  */
 window.KnimePlotlyInterface = function () {
 
+    /** WE MUST INITIALIZE Object.keys() if not available (as in IE11) */
+    // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
+    if (!Object.keys) {
+        Object.keys = (function () {
+            'use strict';
+            var hasOwnProperty = Object.prototype.hasOwnProperty;
+            var hasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString');
+            var dontEnums = [
+                'toString',
+                'toLocaleString',
+                'valueOf',
+                'hasOwnProperty',
+                'isPrototypeOf',
+                'propertyIsEnumerable',
+                'constructor'
+            ];
+            var dontEnumsLength = dontEnums.length;
+            return function (obj) {
+                if (typeof obj !== 'function' && (typeof obj !== 'object' || obj === null)) {
+                    throw new TypeError('Object.keys called on non-object');
+                }
+                var result = [];
+                var prop;
+                for (prop in obj) {
+                    if (hasOwnProperty.call(obj, prop)) {
+                        result.push(prop);
+                    }
+                }
+                if (hasDontEnumBug) {
+                    for (var i = 0; i < dontEnumsLength; i++) {
+                        if (hasOwnProperty.call(obj, dontEnums[i])) {
+                            result.push(dontEnums[i]);
+                        }
+                    }
+                }
+                return result;
+            };
+        })();
+    }
+
     /**
      * Version 1.0.0: original implementation
      * Version 1.0.1: documentation added
@@ -196,12 +236,10 @@ window.KnimePlotlyInterface = function () {
             selectionButtons.forEach(function (selBut) { config.modeBarButtonsToRemove.push(selBut); });
         }
         this.Plotly.newPlot(this.divID, traceArr, layoutObj, config);
-        if (this.representation.options.enableSelection) {
-            if (this.value.options.selectedrows && this.value.options.selectedrows.length > 0) {
-                this.totalSelected = this.value.options.selectedrows.length;
-                this.selected = new this.KSet(this.value.options.selectedrows);
-                this.update();
-            }
+        if (this.value.outColumns && this.value.outColumns.selection) {
+            this.totalSelected = this.value.outColumns.selection.length;
+            this.selected = new this.KSet(this.value.outColumns.selection);
+            this.update();
         }
     };
 
@@ -274,13 +312,17 @@ window.KnimePlotlyInterface = function () {
      */
     KnimePlotlyInterface.getComponentValue = function () {
         var self = this;
-        var selectedObj = {};
-        Object.keys(this.rowDirectory).forEach(function (rowKey) {
-            selectedObj[rowKey] = self.selected.has(rowKey);
-        });
         this.value.outColumns = {
-            selection: selectedObj
+            selection: {
+                selectedRows: []
+            }
         };
+        Object.keys(this.rowDirectory).forEach(function (rowKey) {
+            if (self.selected.has(rowKey)) {
+                self.value.outColumns.selection.selectedRows.push(rowKey);
+            }
+        });
+        delete this.value.options.selectedrows;
         return this.value;
     };
 
