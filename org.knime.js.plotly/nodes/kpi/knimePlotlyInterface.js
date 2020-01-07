@@ -236,9 +236,10 @@ window.KnimePlotlyInterface = function () {
             selectionButtons.forEach(function (selBut) { config.modeBarButtonsToRemove.push(selBut); });
         }
         this.Plotly.newPlot(this.divID, traceArr, layoutObj, config);
-        if (this.value.outColumns && this.value.outColumns.selection) {
-            this.totalSelected = this.value.outColumns.selection.length;
-            this.selected = new this.KSet(this.value.outColumns.selection);
+        if (this.value.outColumns && this.value.outColumns.selection &&
+            this.value.outColumns.selection.selectedRows) {
+            this.totalSelected = this.value.outColumns.selection.selectedRows.length;
+            this.selected = new this.KSet(this.value.outColumns.selection.selectedRows);
             this.update();
         }
     };
