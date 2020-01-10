@@ -331,8 +331,7 @@
 	<outputOptions>
 		<dataOutputOption 
 			outputType="APPEND_SELECTION_COLUMN" outPortIndex="1" id="selection"
-			additionalColumnName="Line Plot Selection"
-			additionalColumnType="BOOLEAN" inPortIndex="0" />
+			additionalColumnName="Line Plot Selection" inPortIndex="0" />
 	</outputOptions>
 	<interactiveView name="Line Plot">
 		The KNIME Line Plot with Plotly.

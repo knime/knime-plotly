@@ -333,8 +333,7 @@
 	<outputOptions>
 		<dataOutputOption 
 			outputType="APPEND_SELECTION_COLUMN" outPortIndex="1" id="selection"
-			additionalColumnName="Bubble Chart Selection"
-			additionalColumnType="BOOLEAN" inPortIndex="0" />
+			additionalColumnName="Bubble Chart Selection" inPortIndex="0" />
 	</outputOptions>
 	<interactiveView name="Bubble Chart">
 		The KNIME Bubble Chart with

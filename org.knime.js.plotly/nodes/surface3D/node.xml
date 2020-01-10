@@ -253,8 +253,7 @@
 	<outputOptions>
 		<dataOutputOption 
 			outputType="APPEND_SELECTION_COLUMN" outPortIndex="1" id="selection"
-			additionalColumnName="Surface Selection"
-			additionalColumnType="BOOLEAN" inPortIndex="0" />
+			additionalColumnName="Surface Selection" inPortIndex="0" />
 	</outputOptions>
 	<interactiveView name="Surface Plot">
 		The KNIME Surface Plot with

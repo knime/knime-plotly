@@ -340,8 +340,7 @@
 	<outputOptions>
 		<dataOutputOption 
 			outputType="APPEND_SELECTION_COLUMN" outPortIndex="1" id="selection"
-			additionalColumnName="Radar Plot Selection"
-			additionalColumnType="BOOLEAN" inPortIndex="0" />
+			additionalColumnName="Radar Plot Selection" inPortIndex="0" />
 	</outputOptions>
 	<interactiveView name="Radar Plot">
 		The KNIME Radar Plot with Plotly.

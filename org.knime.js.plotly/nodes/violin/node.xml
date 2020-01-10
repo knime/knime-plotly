@@ -305,8 +305,7 @@
 	<outputOptions>
 		<dataOutputOption 
 			outputType="APPEND_SELECTION_COLUMN" outPortIndex="1" id="selection"
-			additionalColumnName="Violin Plot Selection"
-			additionalColumnType="BOOLEAN" inPortIndex="0" />
+			additionalColumnName="Violin Plot Selection" inPortIndex="0" />
 	</outputOptions>
 	<interactiveView name="Violin Plot">
 		The KNIME Violin Plot with

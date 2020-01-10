@@ -338,8 +338,7 @@
 	<outputOptions>
 		<dataOutputOption 
 			outputType="APPEND_SELECTION_COLUMN" outPortIndex="1" id="selection"
-			additionalColumnName="Stacked Area Selection"
-			additionalColumnType="BOOLEAN" inPortIndex="0" />
+			additionalColumnName="Stacked Area Selection" inPortIndex="0" />
 	</outputOptions>
 	<interactiveView name="Stacked Area Chart">
 		The KNIME Stacked Area Chart with

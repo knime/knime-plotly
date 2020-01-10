@@ -421,8 +421,7 @@
 	<outputOptions>
 		<dataOutputOption 
 			outputType="APPEND_SELECTION_COLUMN" outPortIndex="1" id="selection"
-			additionalColumnName="Error Bars Selection"
-			additionalColumnType="BOOLEAN" inPortIndex="0" />
+			additionalColumnName="Error Bars Selection" inPortIndex="0" />
 	</outputOptions>
 	<interactiveView name="Error Bars Plot">
 		The KNIME Error Bars Plot with

@@ -431,8 +431,7 @@
 	<outputOptions>
 		<dataOutputOption 
 			outputType="APPEND_SELECTION_COLUMN" outPortIndex="1" id="selection"
-			additionalColumnName="Continuous Error Selection"
-			additionalColumnType="BOOLEAN" inPortIndex="0" />
+			additionalColumnName="Continuous Error Selection" inPortIndex="0" />
 	</outputOptions>
 	<interactiveView name="Continuous Error Plot">
 		The KNIME Continuous Error Plot

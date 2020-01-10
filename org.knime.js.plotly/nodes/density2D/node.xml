@@ -353,8 +353,7 @@
 	<outputOptions>
 		<dataOutputOption 
 			outputType="APPEND_SELECTION_COLUMN" outPortIndex="1" id="selection"
-			additionalColumnName="2D Density Selection"
-			additionalColumnType="BOOLEAN" inPortIndex="0" />
+			additionalColumnName="2D Density Selection" inPortIndex="0" />
 	</outputOptions>
 	<interactiveView name="2D Density Plot">
 		The KNIME 2D Density Plot with

@@ -316,8 +316,7 @@
 	<outputOptions>
 		<dataOutputOption 
 			outputType="APPEND_SELECTION_COLUMN" outPortIndex="1" id="selection"
-			additionalColumnName="3D Scatter Plot Selection"
-			additionalColumnType="BOOLEAN" inPortIndex="0" />
+			additionalColumnName="3D Scatter Plot Selection" inPortIndex="0" />
 	</outputOptions>
 	<interactiveView name="3D Scatter Plot">
 		The KNIME 3D Scatter Plot with

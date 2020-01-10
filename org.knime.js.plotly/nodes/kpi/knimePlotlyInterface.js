@@ -90,6 +90,7 @@ window.KnimePlotlyInterface = function () {
 
         var self = this;
         this.supportsWebGl = this.checkWebGlInBrowser();
+        this.selectionOutKey = window.dynamicJSNode.APPEND_SELECTION_GLOBAL_OUT_VALUE_KEY;
         this.representation = rep;
         this.value = val;
         this.table = knimeDataTable;
@@ -237,9 +238,9 @@ window.KnimePlotlyInterface = function () {
         }
         this.Plotly.newPlot(this.divID, traceArr, layoutObj, config);
         if (this.value.outColumns && this.value.outColumns.selection &&
-            this.value.outColumns.selection.selectedRows) {
-            this.totalSelected = this.value.outColumns.selection.selectedRows.length;
-            this.selected = new this.KSet(this.value.outColumns.selection.selectedRows);
+            this.value.outColumns.selection[this.selectionOutKey]) {
+            this.totalSelected = this.value.outColumns.selection[this.selectionOutKey].length;
+            this.selected = new this.KSet(this.value.outColumns.selection[this.selectionOutKey]);
             this.update();
         }
     };
@@ -313,14 +314,15 @@ window.KnimePlotlyInterface = function () {
      */
     KnimePlotlyInterface.getComponentValue = function () {
         var self = this;
+        
         this.value.outColumns = {
             selection: {
-                selectedRows: []
+                [self.selectionOutKey]: []
             }
         };
         Object.keys(this.rowDirectory).forEach(function (rowKey) {
             if (self.selected.has(rowKey)) {
-                self.value.outColumns.selection.selectedRows.push(rowKey);
+                self.value.outColumns.selection[self.selectionOutKey].push(rowKey);
             }
         });
         delete this.value.options.selectedrows;
