@@ -1,5 +1,6 @@
 package org.knime.js.plotly.configcheck;
 
+import java.util.Arrays;
 import java.util.HashSet;
 
 import org.knime.core.data.DataTableSpec;
@@ -52,6 +53,20 @@ public class ConfigCheck extends DynamicStatefulJSProcessor {
 			}
 		}
 		
+		if (config.getModel("columns") != null) {
+
+			final SettingsModel selectedColumnModel = config.getModel("columns");
+			DataTableSpec inSpec = ((BufferedDataTable) inObjects[0]).getDataTableSpec();
+			FilterResult filterResult = ((SettingsModelColumnFilter2) selectedColumnModel).applyTo(inSpec);
+			String[] selectedColumns = filterResult.getIncludes();
+
+			if (selectedColumns.length < 1) {
+				throw new IllegalArgumentException("Included column list empty. Select at least one column.");
+			}
+			colNames.addAll(Arrays.asList(selectedColumns));
+			colCount += selectedColumns.length; 
+		}
+		
 		if(colCount == 0) {
 			throw new IllegalArgumentException("This node has not been configured yet. Please open the dialog and "
 					+ "ensure the proper columns have been selected.");
@@ -61,20 +76,6 @@ public class ConfigCheck extends DynamicStatefulJSProcessor {
 			setWarningMessage("One or more of the columns chosen are duplicated. This may affect the initial "
 					+ "appearance of the view. If this was unintentional, please be sure to change the node settings"
 					+ " either in the configuration dialog or in the view itself.");
-		}
-
-		if (config.getModel("columns") != null) {
-
-			String[] selectedColumns = new String[0];
-			final SettingsModel selectedColumnModel = config.getModel("columns");
-			DataTableSpec inSpec = ((BufferedDataTable) inObjects[0]).getDataTableSpec();
-			FilterResult filterResult = ((SettingsModelColumnFilter2) selectedColumnModel).applyTo(inSpec);
-			selectedColumns = filterResult.getIncludes();
-
-			if (selectedColumns.length < 1) {
-				throw new IllegalArgumentException("Included column list empty. Select at least one column.");
-			}
-
 		}
 
 		long tableSize = table.size();
