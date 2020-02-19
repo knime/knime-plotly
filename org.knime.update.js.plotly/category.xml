@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature id="org.knime.features.js.plotly" version="0.0.0">
+        <category name="knime-plotly" />
+   </feature>
+
+   <feature id="org.knime.features.js.plotly.source" version="0.0.0">
+        <category name="knime-plotly" />
+   </feature>
+
+   <category-def name="knime-plotly" label="Build artifacts from knime-plotly">
+       <description>Build artifacts from knime-plotly</description>
+   </category-def>
+</site>
