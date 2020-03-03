@@ -564,20 +564,20 @@ window.KnimePlotlyInterface = function () {
                         self.traceDirectory[tInd][rowId] = -1;
                         return;
                     }
-
-                    self.traceDirectory[tInd].dataKeys.forEach(function (key, keyInd) {
-                        if (key) {
-                            changeKeys[keyInd].forEach(function (plotlyKey) {
-                                var newPID = changeObj[plotlyKey][tInd].push(self.data[key][rowObj.pInd]) - 1;
-                                self.traceDirectory[tInd][rowId] = newPID;
-                            });
-                        } else {
-                            changeKeys[keyInd].forEach(function (plotlyKey) {
-                                changeObj[plotlyKey][tInd] = null;
-                            });
-                        }
-                    });
-
+                    if (self.traceDirectory[tInd].dataKeys) {
+                        self.traceDirectory[tInd].dataKeys.forEach(function (key, keyInd) {
+                            if (key) {
+                                changeKeys[keyInd].forEach(function (plotlyKey) {
+                                    var newPID = changeObj[plotlyKey][tInd].push(self.data[key][rowObj.pInd]) - 1;
+                                    self.traceDirectory[tInd][rowId] = newPID;
+                                });
+                            } else {
+                                changeKeys[keyInd].forEach(function (plotlyKey) {
+                                    changeObj[plotlyKey][tInd] = null;
+                                });
+                            }
+                        });
+                    }
                 });
             });
         }
