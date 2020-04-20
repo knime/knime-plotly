@@ -15,18 +15,14 @@ properties([
 try {
     knimetools.defaultTychoBuild('org.knime.update.js.plotly')
 
-    // workflowTests.runTests(
-    //     dependencies: [
-    //       repositories: ['knime-plotly', 'knime-js-base'],
-    //         // an optional list of additional bundles/plug-ins from the repositories above that must be installed
-    //         // ius: ['org.knime.json.tests']
-    //     ],
-    //     withAssertions: true,
-    // )
+    workflowTests.runTests(
+        dependencies: [
+          repositories: ['knime-plotly', 'knime-xml']
+        ]
+    )
     stage('Sonarqube analysis') {
         env.lastStage = env.STAGE_NAME
-        // TODO: remove empty configuration once workflow tests are enabled.
-        workflowTests.runSonar([])
+        workflowTests.runSonar()
     }
 } catch (ex) {
     currentBuild.result = 'FAILURE'
