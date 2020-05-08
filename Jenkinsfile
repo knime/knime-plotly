@@ -17,7 +17,7 @@ try {
 
     workflowTests.runTests(
         dependencies: [
-          repositories: ['knime-plotly', 'knime-xml']
+          repositories: ['knime-plotly', 'knime-xml', 'knime-js-base', 'knime-js-core']
         ]
     )
     stage('Sonarqube analysis') {
