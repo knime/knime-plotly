@@ -7,6 +7,7 @@ properties([
     pipelineTriggers([
         upstream('knime-js-base/' + env.BRANCH_NAME.replaceAll('/', '%2F'))
     ]),
+    parameters(workflowTests.getConfigurationsAsParameters()),
     buildDiscarder(logRotator(numToKeepStr: '5')),
     disableConcurrentBuilds()
 ])
@@ -17,7 +18,7 @@ try {
 
     workflowTests.runTests(
         dependencies: [
-          repositories: ['knime-plotly', 'knime-xml', 'knime-js-base', 'knime-js-core']
+            repositories: ['knime-plotly', 'knime-xml', 'knime-js-base', 'knime-js-core']
         ]
     )
     stage('Sonarqube analysis') {
