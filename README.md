@@ -1,4 +1,10 @@
-# ![Image](https://www.knime.com/files/knime_logo_github_40x40_4layers.png) KNIME® Plotly Integration
+# KNIME® Plotly
+
+[![Jenkins](https://jenkins.knime.com/buildStatus/icon?job=knime-plotly%2Fmaster)](https://jenkins.knime.com/job/knime-plotly/job/master/)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=KNIME_knime-plotly&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=KNIME_knime-plotly)
+
+This repository is maintained by the [KNIME UI Extensions Development Team](mailto:team-ui-extensions@knime.com).
+
 This repository contains the plugins for the KNIME Plotly Integration which contains a set of KNIME nodes for creating Plotly.js visualizations in KNIME.
 
 ### Overview
