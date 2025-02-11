@@ -25,7 +25,7 @@
     "@babel/plugin-transform-template-literals": "7.10.1",
     "@babel/preset-env": "7.10.1",
     "babel-loader": "8.1.0",
-    "webpack": "4.43.0",
+    "webpack": "5.97.1",
     "webpack-cli": "3.3.11"
   },
   "dependencies": {
