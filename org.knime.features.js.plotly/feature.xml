@@ -735,8 +735,6 @@ propagated with or for interoperation with KNIME.
 
    <plugin
          id="org.knime.js.plotly"
-         download-size="0"
-         install-size="0"
          version="0.0.0"/>
 
 </feature>
