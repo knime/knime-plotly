@@ -2,7 +2,7 @@
 <feature
       id="org.knime.features.js.plotly"
       label="KNIME Plotly"
-      version="5.8.0.qualifier"
+      version="5.9.0.qualifier"
       provider-name="KNIME AG, Zurich, Switzerland"
       plugin="org.knime.js.plotly"
       image="icons/knime64.gif">
